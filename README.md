@@ -9,18 +9,17 @@ The current build is a trust-first product prototype. Runtime values are either 
 Implemented live signals:
 
 - Data Access overview for live, user-selected, planned, unavailable, and avoided data paths.
-- System CPU load from macOS CPU ticks.
-- System RAM estimate from VM statistics.
-- Top CPU process groups from public process information.
-- Top RAM process groups from public process information.
-- Process path lookup for grouping helpers under their owning `.app` bundle when available.
+- System CPU load and user/system/idle split from macOS CPU ticks.
+- System RAM fields from VM statistics: used, wired, compressed, and swap.
+- Live process table with PID, user, thread count, CPU %, resident memory, and physical footprint when macOS returns it.
+- App grouping derived from real process rows, kept separate from individual process rows.
 - Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
 - Battery cycle count, maximum capacity, and condition when safe battery registry keys are present.
 - Startup volume total, used, available, and available percent.
 - Startup volume breakdown as used vs available space.
 - User-selected storage folder scan for largest folders/files, item count, unreadable count, and scan size.
 - Short local performance history for sustained CPU interpretation.
-- Live swap usage and a Corewise memory-pressure estimate. This is not Activity Monitor parity.
+- Live swap usage. Memory pressure remains unavailable until Corewise has a reliable public parity source.
 - Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report folder parsing for app crash counts and repeated-crash patterns.

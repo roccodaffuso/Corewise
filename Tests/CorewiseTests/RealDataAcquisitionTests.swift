@@ -70,17 +70,12 @@ import Testing
   #expect(issues.crashesByApp.isEmpty)
 }
 
-@Test func memoryPressureEstimateUsesMemoryAndSwapContext() {
-  let low = SystemMetricsSampler.memoryPressureEstimate(memoryPercent: 40, swapUsedGB: 0)
-  let medium = SystemMetricsSampler.memoryPressureEstimate(memoryPercent: 82, swapUsedGB: 0)
-  let high = SystemMetricsSampler.memoryPressureEstimate(memoryPercent: 95, swapUsedGB: 9)
+@Test func memoryPressureStaysUnavailableWithoutReliablePublicParitySource() {
+  let metric = SystemMetricsSampler.memoryPressureEstimate(memoryPercent: 95, swapUsedGB: 9)
 
-  #expect(low.label == "Low")
-  #expect(low.status == .good)
-  #expect(medium.label == "Medium")
-  #expect(medium.status == .info)
-  #expect(high.label == "High")
-  #expect(high.status == .warning)
+  #expect(metric.value == "Unavailable")
+  #expect(metric.dataMode == .unavailable)
+  #expect(metric.explanation.contains("public source"))
 }
 
 private func report(process: String, identifier: String, version: String, date: String) -> String {

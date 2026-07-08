@@ -12,6 +12,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Pair color with labels and icons; never rely on color alone.
 - Keep typography compact and readable in narrow macOS windows.
 - Prefer calm density over marketing-style hero composition.
+- Put operational live diagnostics before explanatory access panels in the first viewport.
 
 ## Status Language
 
@@ -50,7 +51,7 @@ Every diagnostic page should include:
 ## Chart Rules
 
 - Charts should answer one question quickly.
-- Use horizontal bars for process and offender rankings.
+- Use tables for process diagnostics; use horizontal bars only for compact app-group summaries and storage offenders.
 - Use compact breakdown charts for storage.
 - Keep unit labels visible.
 - Avoid random colors; use status colors.
@@ -61,4 +62,5 @@ Every diagnostic page should include:
 - Explain behavior in plain language.
 - Prefer "review", "inspect", "check", and "open" over action-heavy wording.
 - Do not imply a value is real unless it is marked `Live`.
+- Do not claim Activity Monitor exact parity; describe CPU, footprint, RSS, VM memory, and swap by their actual sources.
 - Do not make unsupported claims about performance, battery service, thermal sensors, or system power.

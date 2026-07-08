@@ -16,8 +16,8 @@ Statuses:
 | Health score | Planned | Corewise scoring model | High | Not calculated until scoring has enough live inputs. |
 | Score confidence | Implemented | DataMode coverage count | High | Describes coverage, not device health. |
 | Overall status | Planned | Corewise scoring model | High | UI shows Not Scored Yet until real scoring exists. |
-| CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | Short sample window; not identical to Activity Monitor. |
-| RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Estimate based on active, wired, and compressed pages. |
+| CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | 1 second sample; not a sysmond clone. |
+| RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Corewise VM view based on active, wired, and compressed pages. |
 | System power watts | Unavailable | Safe public API check | High | No reliable whole-system wattage through safe public APIs in this MVP. |
 | Main attention area | Unavailable | Corewise scoring model | High | Cross-section prioritization is not implemented. |
 | Data access capabilities | Implemented | Static capability matrix plus scan state | High | Explains access state; it is not a device-health signal. |
@@ -56,12 +56,15 @@ Statuses:
 
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| System CPU now | Implemented | `host_statistics` CPU ticks | Medium | Instant sample, not a long-term trend. |
-| System RAM now | Implemented | `host_statistics64` VM stats | Medium | Estimate, not exact Activity Monitor parity. |
-| Top CPU processes | Implemented | `proc_listallpids`, `proc_pidinfo(PROC_PIDTASKINFO)` | Medium | Short sample window; inaccessible processes may be omitted. |
-| Top RAM processes | Implemented | `proc_pidinfo(PROC_PIDTASKINFO)` resident size | Medium | Resident memory alone is not necessarily bad. |
-| App grouping | Implemented | `proc_pidpath` path parsing for `.app` bundles | Medium | Falls back to process names when path is not readable. |
-| Memory pressure estimate | Implemented | VM memory estimate plus swap usage | Low | Corewise estimate; not Activity Monitor parity. |
+| System CPU now | Implemented | `host_statistics` CPU ticks | Medium | 1 second sample with user/system/idle split. |
+| System RAM now | Implemented | `host_statistics64` VM stats | Medium | Shows Corewise VM view, wired, compressed, and swap. |
+| Process table | Implemented | `proc_listallpids`, `proc_pidinfo(PROC_PIDTASKINFO)` | Medium | Inaccessible processes may be omitted. |
+| Process CPU | Implemented | Delta of `pti_total_user + pti_total_system` | Medium | 1 second sample; values may differ slightly from Monitoraggio Attività. |
+| Process memory footprint | Implemented when present | `proc_pid_rusage(RUSAGE_INFO_V4)` / `ri_phys_footprint` | High | Falls back to resident memory when footprint is unavailable. |
+| Process resident memory | Implemented | `proc_pidinfo(PROC_PIDTASKINFO)` resident size | Medium | Kept separate from footprint. |
+| Process identity | Implemented | `proc_pidpath`, `proc_name`, short BSD info | Medium | Provides path, app bundle, PID, user, and thread count where readable. |
+| App grouping | Implemented | Derived from live process rows and `.app` bundle paths | Medium | Separate from individual process rows so helper aggregation is explicit. |
+| Memory pressure | Unavailable | No selected public parity source | High | Corewise does not show an estimated pressure value as live. |
 | Swap used | Implemented | `sysctl vm.swapusage` | Medium | Available when macOS returns swap usage. |
 | Uptime | Implemented | `ProcessInfo.systemUptime` | High | Local process uptime signal; not a performance diagnosis by itself. |
 | Sustained high CPU | Implemented | In-memory recent process history | Medium | Unavailable until enough samples are collected; not persisted. |
@@ -76,7 +79,7 @@ Statuses:
 | Launch daemons | Implemented | Read-only plist inventory | Medium | Reads accessible `/Library/LaunchDaemons` metadata only. |
 | Background items | Planned | Public visibility if available | Low | Some items are intentionally abstracted by macOS. |
 | Privileged helpers | Planned | Read-only helper path inventory | Low | Never suggest direct removal. |
-| Signed/unsigned | Planned | Code signing checks | Medium | Current rows show `Not checked`. |
+| Signed/unsigned | Implemented when path readable | Security framework static code check | Medium | Rows remain `Not checked` when the executable path is missing or unreadable. |
 | Recently added | Implemented | Plist modification date | Low | Metadata can be misleading and is only a clue. |
 
 ## Thermal

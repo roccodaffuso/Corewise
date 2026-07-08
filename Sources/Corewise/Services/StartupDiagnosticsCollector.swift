@@ -1,4 +1,5 @@
 import Foundation
+import Security
 
 struct StartupDiagnosticsCollector {
   private var locations: [StartupScanLocation]
@@ -37,7 +38,7 @@ struct StartupDiagnosticsCollector {
         metric("Launch Daemons", "\(launchDaemons.count)", "items", .live, launchDaemons.isEmpty ? .good : .info, min(launchDaemons.count * 5, 100), "Accessible system launch daemon plist files found by a read-only scan.", "LaunchDaemons folders", "Live / medium", "Handle daemons carefully and prefer vendor uninstallers.", now),
         metric("Background Items", "Planned", "", .planned, .info, 0, "Background items use newer macOS visibility surfaces that are not integrated yet.", "Background item collector", "Planned / low", "Use System Settings for background item review.", now),
         metric("Privileged Helpers", "Planned", "", .planned, .info, 0, "Privileged helper inventory needs a separate safe collector and clear wording.", "Privileged helper collector", "Planned / low", "Manage helpers through the owning app.", now),
-        metric("Code Signing", "Planned", "", .planned, .info, 0, "Corewise does not check startup item signatures in this build.", "Code signing collector", "Planned / medium", "Treat signed state as not checked, not suspicious.", now)
+        metric("Code Signing", "Best Effort", "", .live, .info, 0, "Corewise checks executable signatures only when a launch plist points to a readable executable path.", "Security framework", "Live / medium", "Treat unreadable or missing executables as not checked, not suspicious.", now)
       ],
       loginItems: [],
       launchAgents: launchAgents,
@@ -62,7 +63,7 @@ struct StartupDiagnosticsCollector {
         SafeAction(title: "Review the owning app first", body: "Use app settings, System Settings, or package managers before editing startup files.", systemImage: "app.badge", status: .good),
         SafeAction(title: "Do not remove plist files from Corewise", body: "Corewise only explains startup metadata in this MVP; it does not modify launch files.", systemImage: "lock.shield", status: .info)
       ],
-      sourceNote: "Live read-only startup data. Corewise reads accessible LaunchAgents and LaunchDaemons plist metadata only. Login items, background items, privileged helpers, and signing checks remain unavailable or planned."
+      sourceNote: "Live read-only startup data. Corewise reads accessible LaunchAgents and LaunchDaemons plist metadata and checks executable signatures only when a readable executable path is present. Login items, background items, and privileged helpers remain unavailable or planned."
     )
   }
 
@@ -93,6 +94,7 @@ struct StartupDiagnosticsCollector {
     let recentlyAdded = modifiedAt.map { now.timeIntervalSince($0) <= 14 * 24 * 60 * 60 } ?? false
     let label = (dictionary["Label"] as? String) ?? url.deletingPathExtension().lastPathComponent
     let program = programDescription(dictionary)
+    let signedState = executablePath(dictionary).map(signedState(for:)) ?? "Not checked"
     let runAtLoad = dictionary["RunAtLoad"] as? Bool
     let keepAlive = keepAliveDescription(dictionary["KeepAlive"])
     let impact = startupImpact(runAtLoad: runAtLoad, keepAlive: keepAlive)
@@ -102,7 +104,7 @@ struct StartupDiagnosticsCollector {
       kind: location.kind,
       path: displayPath(url),
       startupImpact: impact.label,
-      signedState: "Not checked",
+      signedState: signedState,
       recentlyAdded: recentlyAdded,
       dataMode: .live,
       status: impact.status,
@@ -155,6 +157,37 @@ struct StartupDiagnosticsCollector {
     }
 
     return "Not specified"
+  }
+
+  private func executablePath(_ dictionary: [String: Any]) -> String? {
+    if let program = dictionary["Program"] as? String, program.hasPrefix("/") {
+      return program
+    }
+
+    if let arguments = dictionary["ProgramArguments"] as? [String],
+       let first = arguments.first,
+       first.hasPrefix("/") {
+      return first
+    }
+
+    return nil
+  }
+
+  private func signedState(for path: String) -> String {
+    guard fileManager.isReadableFile(atPath: path) else {
+      return "Not checked"
+    }
+
+    let url = URL(fileURLWithPath: path)
+    var staticCode: SecStaticCode?
+    let createStatus = SecStaticCodeCreateWithPath(url as CFURL, SecCSFlags(), &staticCode)
+
+    guard createStatus == errSecSuccess, let staticCode else {
+      return "Unsigned or unreadable"
+    }
+
+    let checkStatus = SecStaticCodeCheckValidityWithErrors(staticCode, SecCSFlags(), nil, nil)
+    return checkStatus == errSecSuccess ? "Signed" : "Unsigned or invalid"
   }
 
   private func keepAliveDescription(_ value: Any?) -> String {

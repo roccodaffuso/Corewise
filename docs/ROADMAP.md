@@ -26,16 +26,20 @@
 
 ## Phase 4: Performance History
 
-- Keep live CPU/RAM sampling.
+- Implemented: live CPU split, VM memory fields, and dense process rows.
+- Implemented: process physical footprint through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns it.
+- Implemented: app groups are derived from process rows and kept separate from the process table.
 - Implemented: short local in-memory history for sustained CPU and repeated high process usage.
 - Implemented: uptime from `ProcessInfo.systemUptime`.
-- Implemented: swap usage and a Corewise memory-pressure estimate from safe local VM signals.
+- Implemented: swap usage from safe local VM signals.
+- Unavailable: memory pressure until a reliable public parity source is selected.
 - Keep WindowServer interpretation planned until there is enough context.
 
 ## Phase 5: Startup Inventory
 
 - Implemented: read-only inventory for accessible LaunchAgents and LaunchDaemons plist metadata.
-- Keep login items, background items, privileged helpers, and code signing planned/unavailable until safe collectors exist.
+- Implemented when path is readable: best-effort startup executable signing state.
+- Keep login items, background items, and privileged helpers planned/unavailable until safe collectors exist.
 - Avoid raw deletion suggestions; route actions through System Settings, app settings, package managers, or uninstallers.
 
 ## Phase 6: Thermal And App Issues

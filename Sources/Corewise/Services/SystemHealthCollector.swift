@@ -7,10 +7,10 @@ struct SystemHealthCollector: SystemHealthCollecting {
     let now = Date()
     let instant = await SystemMetricsSampler.sample()
     let historySummary = performanceHistory.record(instant: instant, now: now)
-    let cpuValue = instant.cpuPercent.map { number($0) } ?? "N/A"
-    let memoryUsedValue = number(instant.usedMemoryGB)
-    let memoryTotalValue = number(instant.totalMemoryGB)
-    let memoryPercentValue = number(instant.memoryPercent)
+    let cpuValue = instant.cpu.totalPercent.map { number($0) } ?? "N/A"
+    let memoryUsedValue = number(instant.memory.usedGB)
+    let memoryTotalValue = number(instant.memory.physicalGB)
+    let memoryPercentValue = number(instant.memory.usedPercent)
     let batteryHealth = BatteryDiagnosticsCollector().currentBattery(now: now)
     let storageHealth = StorageDiagnosticsCollector().currentStorage(now: now)
     let startupHealth = StartupDiagnosticsCollector().currentStartup(now: now)
@@ -20,21 +20,24 @@ struct SystemHealthCollector: SystemHealthCollecting {
     let thermalStateStatus = thermalStatus(thermalState)
     let uptimeDays = ProcessInfo.processInfo.systemUptime / 86_400
     let sustainedCPU = sustainedCPUMetric(historySummary, now: now)
+    let processes = instant.processes
+    let appGroups = instant.appGroups
+    let cpuProcesses = processes.sorted { $0.cpuPercent > $1.cpuPercent }
 
     let performanceMetrics = [
-      metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Instant CPU load sampled over a short window from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Watch sustained high CPU, not a single short spike.", now, dataMode: .live),
-      metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is actively used or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Close heavy apps only if memory pressure or swap also stays high.", now, dataMode: .live),
-      metric("RAM Used Now", memoryPercentValue, "%", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "This is an instant memory-use estimate from active, wired, and compressed pages.", "host_statistics64 VM_INFO64", "Live / medium", "Use this as a direction signal rather than an exact Activity Monitor duplicate.", now, dataMode: .live),
+      metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU load sampled over a 1 second window from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Watch sustained high CPU, not a single short spike.", now, dataMode: instant.cpu.dataMode),
+      metric("CPU User", instant.cpu.userPercent.map { number($0) } ?? "Unavailable", "%", .info, cpuSeverity(instant.cpu.userPercent), "User CPU share from the same live CPU tick window.", instant.cpu.source, instant.cpu.confidence, "Use with system CPU to understand where load comes from.", now, dataMode: instant.cpu.dataMode),
+      metric("CPU System", instant.cpu.systemPercent.map { number($0) } ?? "Unavailable", "%", .info, cpuSeverity(instant.cpu.systemPercent), "System CPU share from the same live CPU tick window.", instant.cpu.source, instant.cpu.confidence, "High system CPU can be normal during indexing, I/O, or monitoring.", now, dataMode: instant.cpu.dataMode),
+      metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is active, wired, or compressed in Corewise's VM view.", instant.memory.source, instant.memory.confidence, "Use footprint, wired, compressed, and swap together before blaming an app.", now, dataMode: instant.memory.dataMode),
+      metric("Wired Memory", number(instant.memory.wiredGB), "GB", .info, 0, "Wired memory reported by macOS VM statistics.", instant.memory.source, instant.memory.confidence, "Wired memory is managed by macOS and is not a cleanup target.", now, dataMode: instant.memory.dataMode),
+      metric("Compressed Memory", number(instant.memory.compressedGB), "GB", .info, 0, "Compressed memory reported by macOS VM statistics.", instant.memory.source, instant.memory.confidence, "Compression is normal; interpret it together with swap and symptoms.", now, dataMode: instant.memory.dataMode),
       metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Use wattage later only if Corewise can obtain it through a safe, user-approved path.", now, dataMode: .unavailable),
-      metric("Memory Pressure", instant.memoryPressure.label, "", instant.memoryPressure.status, instant.memoryPressure.severityScore, instant.memoryPressure.explanation, "VM statistics and swap usage estimate", "Live / low", "Treat this as Corewise context, not exact Activity Monitor parity.", now, dataMode: .live),
-      swapMetric(instant.swapUsedGB, now: now),
+      SystemMetricsSampler.memoryPressureEstimate(memoryPercent: instant.memory.usedPercent, swapUsedGB: instant.memory.swapUsedGB),
+      swapMetric(instant.memory.swapUsedGB, now: now),
       metric("Uptime", number(uptimeDays), "days", .info, min(max(Int(uptimeDays.rounded()), 0), 100), "Current system uptime reported by ProcessInfo.", "ProcessInfo.systemUptime", "Live / high", "Restart only if performance symptoms persist.", now, dataMode: .live),
       sustainedCPU,
       metric("WindowServer Impact", "Planned", "", .info, 0, "WindowServer interpretation needs careful live process context before Corewise can present it.", "Process interpretation", "Planned / low", "Use live CPU rows as context, not a WindowServer diagnosis.", now, dataMode: .planned)
     ]
-
-    let cpuProcesses = instant.topCPUProcesses
-    let memoryProcesses = instant.topMemoryProcesses
 
     let thermalMetrics = [
       metric("Thermal State", thermalStateValue, "", thermalStateStatus, thermalSeverity(thermalState), "macOS high-level thermal pressure state.", "ProcessInfo.thermalState", "Live / high", "No action needed unless macOS reports elevated thermal pressure.", now, dataMode: .live),
@@ -52,8 +55,8 @@ struct SystemHealthCollector: SystemHealthCollecting {
         battery: batteryHealth,
         storage: storageHealth,
         performanceMetrics: performanceMetrics,
-        cpuProcesses: cpuProcesses,
-        memoryProcesses: memoryProcesses,
+        processes: processes,
+        appGroups: appGroups,
         startup: startupHealth,
         thermalMetrics: thermalMetrics,
         issueMetrics: issueMetrics,
@@ -69,8 +72,8 @@ struct SystemHealthCollector: SystemHealthCollecting {
       overallStatus: .notScored,
       overviewMetrics: [
         metric("Health Score", "Not Scored Yet", "", .info, 0, "Corewise does not calculate a global health score until enough section data is live.", "Corewise scoring model", "Planned / high", "Use section-level Live badges instead of a global score for now.", now, dataMode: .planned),
-        metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Live CPU usage sampled from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Refresh or wait a few seconds to see whether this is sustained.", now, dataMode: .live),
-        metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryPercentValue)% of physical memory is estimated as active, wired, or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Check memory pressure before blaming a single app.", now, dataMode: .live),
+        metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU usage sampled from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Refresh or wait a few seconds to see whether this is sustained.", now, dataMode: instant.cpu.dataMode),
+        metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryPercentValue)% of physical memory is active, wired, or compressed in Corewise's VM view.", instant.memory.source, instant.memory.confidence, "Check footprint and swap before blaming a single app.", now, dataMode: instant.memory.dataMode),
         metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Do not show unsupported or elevated-tool wattage readings in the MVP.", now, dataMode: .unavailable),
         metric("Main Attention Area", "Unavailable", "", .info, 0, "Corewise has not implemented real cross-section prioritization yet.", "Corewise scoring model", "Unavailable / high", "Review section-level live data instead of a generated priority.", now, dataMode: .unavailable),
         scoreConfidence,
@@ -81,15 +84,17 @@ struct SystemHealthCollector: SystemHealthCollecting {
       storage: storageHealth,
       performance: PerformanceHealth(
         summary: performanceMetrics[0],
+        cpu: instant.cpu,
+        memory: instant.memory,
         metrics: performanceMetrics,
-        cpuProcesses: cpuProcesses,
-        memoryProcesses: memoryProcesses,
-        findings: performanceFindings(historySummary, cpuProcesses: cpuProcesses),
+        processes: cpuProcesses,
+        appGroups: appGroups,
+        findings: performanceFindings(historySummary, processes: processes),
         actions: [
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
           SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
-        sourceNote: "Mixed data. CPU, RAM, process rankings, uptime, swap, memory-pressure estimate, and sustained CPU history are live. WindowServer interpretation remains planned until safe context is added."
+        sourceNote: "Live data. CPU split, process rows, thread count, resident memory, footprint when macOS returns it, system VM memory, uptime, swap, and sustained CPU history are read locally. Memory pressure and WindowServer interpretation remain unavailable/planned until a reliable public source is selected."
       ),
       startup: startupHealth,
       thermal: ThermalHealth(
@@ -209,9 +214,9 @@ struct SystemHealthCollector: SystemHealthCollecting {
     ]
   }
 
-  private func performanceFindings(_ summary: PerformanceHistorySummary, cpuProcesses: [ProcessSample]) -> [DiagnosticFinding] {
+  private func performanceFindings(_ summary: PerformanceHistorySummary, processes: [ProcessObservation]) -> [DiagnosticFinding] {
     var findings = [
-      DiagnosticFinding(title: "Live process ranking is available", detail: "Top CPU and memory charts are based on short per-process samples when macOS returns process data.", status: .info, severityScore: 24)
+      DiagnosticFinding(title: "Live process table is available", detail: "Process rows include PID, user, thread count, CPU, resident memory, and footprint when macOS returns it.", status: .info, severityScore: 24)
     ]
 
     if !summary.hasEnoughSamples {
@@ -236,7 +241,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
       findings.append(
         DiagnosticFinding(
           title: "No repeated CPU load yet",
-          detail: cpuProcesses.isEmpty ? "No live process samples are available right now." : "Current spikes have not repeated enough to count as sustained.",
+          detail: processes.isEmpty ? "No live process samples are available right now." : "Current spikes have not repeated enough to count as sustained.",
           status: .good,
           severityScore: 8
         )
@@ -251,8 +256,8 @@ struct SystemHealthCollector: SystemHealthCollecting {
     battery: BatteryHealth,
     storage: StorageHealth,
     performanceMetrics: [DiagnosticMetric],
-    cpuProcesses: [ProcessSample],
-    memoryProcesses: [ProcessSample],
+    processes: [ProcessObservation],
+    appGroups: [AppProcessGroup],
     startup: StartupHealth,
     thermalMetrics: [DiagnosticMetric],
     issueMetrics: [DiagnosticMetric],
@@ -269,8 +274,8 @@ struct SystemHealthCollector: SystemHealthCollecting {
       + storage.browserCaches.map(\.dataMode)
       + storage.spaceOffenders.map(\.dataMode)
       + performanceMetrics.map(\.dataMode)
-      + cpuProcesses.map(\.dataMode)
-      + memoryProcesses.map(\.dataMode)
+      + processes.map(\.dataMode)
+      + appGroups.map(\.dataMode)
       + startup.metrics.map(\.dataMode)
       + startup.loginItems.map(\.dataMode)
       + startup.launchAgents.map(\.dataMode)

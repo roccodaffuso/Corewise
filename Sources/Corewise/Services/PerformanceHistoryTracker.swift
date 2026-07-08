@@ -23,10 +23,9 @@ final class PerformanceHistoryTracker {
     samples.append(
       PerformanceHistorySample(
         timestamp: now,
-        cpuPercent: instant.cpuPercent,
-        memoryPercent: instant.memoryPercent,
-        cpuProcesses: instant.topCPUProcesses,
-        memoryProcesses: instant.topMemoryProcesses
+        cpuPercent: instant.cpu.totalPercent,
+        memoryUsedPercent: instant.memory.usedPercent,
+        processes: instant.processes
       )
     )
     prune(now: now)
@@ -41,8 +40,8 @@ final class PerformanceHistoryTracker {
     var highProcessCounts: [String: Int] = [:]
 
     for sample in recentSamples {
-      for process in sample.cpuProcesses where process.value >= sustainedCPUThreshold {
-        highProcessCounts[process.name, default: 0] += 1
+      for process in sample.processes where process.cpuPercent >= sustainedCPUThreshold {
+        highProcessCounts[process.displayName, default: 0] += 1
       }
     }
 
@@ -85,7 +84,39 @@ struct PerformanceHistorySummary {
 private struct PerformanceHistorySample {
   var timestamp: Date
   var cpuPercent: Double?
-  var memoryPercent: Double
-  var cpuProcesses: [ProcessSample]
-  var memoryProcesses: [ProcessSample]
+  var memoryUsedPercent: Double
+  var processes: [ProcessObservation]
+}
+
+extension SystemMemoryReading {
+  var usedPercent: Double {
+    guard physicalBytes > 0 else {
+      return 0
+    }
+    return Double(usedBytes) / Double(physicalBytes) * 100
+  }
+
+  var usedGB: Double {
+    Double(usedBytes) / SystemMetricsSampler.bytesPerGB
+  }
+
+  var physicalGB: Double {
+    Double(physicalBytes) / SystemMetricsSampler.bytesPerGB
+  }
+
+  var freeGB: Double {
+    Double(freeBytes) / SystemMetricsSampler.bytesPerGB
+  }
+
+  var wiredGB: Double {
+    Double(wiredBytes) / SystemMetricsSampler.bytesPerGB
+  }
+
+  var compressedGB: Double {
+    Double(compressedBytes) / SystemMetricsSampler.bytesPerGB
+  }
+
+  var swapUsedGB: Double? {
+    swapUsedBytes.map { Double($0) / SystemMetricsSampler.bytesPerGB }
+  }
 }

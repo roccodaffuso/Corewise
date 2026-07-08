@@ -169,19 +169,54 @@ struct StorageScanResult {
 
 struct PerformanceHealth {
   var summary: DiagnosticMetric
+  var cpu: SystemCPUReading
+  var memory: SystemMemoryReading
   var metrics: [DiagnosticMetric]
-  var cpuProcesses: [ProcessSample]
-  var memoryProcesses: [ProcessSample]
+  var processes: [ProcessObservation]
+  var appGroups: [AppProcessGroup]
   var findings: [DiagnosticFinding]
   var actions: [SafeAction]
   var sourceNote: String
 }
 
-struct ProcessSample: Identifiable {
-  let id = UUID()
-  var name: String
-  var value: Double
-  var unit: String
+struct SystemCPUReading {
+  var totalPercent: Double?
+  var userPercent: Double?
+  var systemPercent: Double?
+  var idlePercent: Double?
+  var nicePercent: Double?
+  var dataMode: DataMode = .unavailable
+  var source: String
+  var confidence: String
+  var lastUpdated: Date
+}
+
+struct SystemMemoryReading {
+  var physicalBytes: UInt64
+  var usedBytes: UInt64
+  var freeBytes: UInt64
+  var wiredBytes: UInt64
+  var compressedBytes: UInt64
+  var swapUsedBytes: UInt64?
+  var dataMode: DataMode = .unavailable
+  var source: String
+  var confidence: String
+  var lastUpdated: Date
+}
+
+struct ProcessObservation: Identifiable {
+  var id: Int32 { pid }
+  var pid: Int32
+  var processName: String
+  var displayName: String
+  var appName: String?
+  var path: String?
+  var user: String
+  var cpuPercent: Double
+  var cpuTimeSeconds: Double
+  var threadCount: Int32
+  var residentMemoryBytes: UInt64
+  var physicalFootprintBytes: UInt64?
   var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var severityScore: Int
@@ -189,6 +224,21 @@ struct ProcessSample: Identifiable {
   var source: String
   var confidence: String
   var recommendedAction: String
+  var lastUpdated: Date
+}
+
+struct AppProcessGroup: Identifiable {
+  var id: String { name }
+  var name: String
+  var processCount: Int
+  var cpuPercent: Double
+  var residentMemoryBytes: UInt64
+  var physicalFootprintBytes: UInt64?
+  var dataMode: DataMode = .unavailable
+  var status: FindingSeverity
+  var severityScore: Int
+  var source: String
+  var confidence: String
   var lastUpdated: Date
 }
 

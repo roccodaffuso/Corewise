@@ -8,8 +8,6 @@ struct OverviewView: View {
     VStack(alignment: .leading, spacing: 20) {
       CommandCenterHeader(snapshot: snapshot)
 
-      DataAccessPanel(capabilities: snapshot.dataAccess)
-
       LiveLoadPanel(performance: snapshot.performance)
 
       HStack(alignment: .top, spacing: 14) {
@@ -26,6 +24,7 @@ struct OverviewView: View {
       }
 
       MetricBoard(metrics: snapshot.overviewMetrics)
+      DataAccessPanel(capabilities: snapshot.dataAccess)
       SourceNote(text: "Overview combines live signals with planned and unavailable coverage. Corewise shows missing data honestly and keeps every action manual.")
     }
   }
@@ -116,27 +115,55 @@ struct StorageView: View {
 
 struct PerformanceView: View {
   var performance: PerformanceHealth
+  @State private var selectedMode: PerformanceMode = .cpu
 
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       SectionHero(
         title: "Performance",
-        subtitle: "Live CPU and RAM by process, with context for pressure and sustained load.",
+        subtitle: "Live process rows with CPU, memory footprint, resident memory, threads, PID, and user.",
         systemImage: "cpu",
         metric: performance.summary
       )
 
-      LiveLoadPanel(performance: performance)
-      MetricBoard(metrics: performance.metrics)
+      PerformanceSystemStrip(performance: performance)
 
-      HStack(alignment: .top, spacing: 14) {
-        ProcessList(title: "CPU Details", subtitle: "Processes sampled over a short live window.", items: performance.cpuProcesses)
-        ProcessList(title: "Memory Details", subtitle: "Resident memory currently held by each process.", items: performance.memoryProcesses)
+      Picker("Performance mode", selection: $selectedMode) {
+        ForEach(PerformanceMode.allCases) { mode in
+          Text(mode.title).tag(mode)
+        }
       }
+      .pickerStyle(.segmented)
+      .frame(maxWidth: 360)
+
+      ProcessObservationTable(
+        mode: selectedMode,
+        processes: selectedMode == .cpu
+          ? performance.processes.sorted { $0.cpuPercent > $1.cpuPercent }
+          : performance.processes.sorted {
+            ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) > ($1.physicalFootprintBytes ?? $1.residentMemoryBytes)
+          }
+      )
+
+      MetricBoard(metrics: performance.metrics)
 
       PriorityPanel(title: "Findings", subtitle: "Signals that deserve interpretation.", findings: performance.findings)
       SafeActionPanel(title: "Safe actions", actions: performance.actions)
       SourceNote(text: performance.sourceNote, dataMode: performance.summary.dataMode)
+    }
+  }
+}
+
+private enum PerformanceMode: String, CaseIterable, Identifiable {
+  case cpu
+  case memory
+
+  var id: String { rawValue }
+
+  var title: String {
+    switch self {
+    case .cpu: "CPU"
+    case .memory: "Memory"
     }
   }
 }
@@ -333,20 +360,22 @@ private struct LiveLoadPanel: View {
 
   var body: some View {
     HStack(alignment: .top, spacing: 14) {
-      ProcessChartPanel(
+      AppGroupChartPanel(
         title: "CPU now",
-        subtitle: "Top app groups from live samples; idle apps may not appear.",
+        subtitle: "Top app groups derived from live process rows.",
         systemImage: "cpu",
-        processes: performance.cpuProcesses,
-        unit: "% CPU"
+        groups: performance.appGroups.sorted { $0.cpuPercent > $1.cpuPercent },
+        mode: .cpu
       )
 
-      ProcessChartPanel(
+      AppGroupChartPanel(
         title: "Memory now",
-        subtitle: "Grouped by app bundle so helpers roll up to the app.",
+        subtitle: "Footprint when available, resident memory otherwise.",
         systemImage: "memorychip",
-        processes: performance.memoryProcesses,
-        unit: "GB"
+        groups: performance.appGroups.sorted {
+          ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) > ($1.physicalFootprintBytes ?? $1.residentMemoryBytes)
+        },
+        mode: .memory
       )
     }
   }
@@ -437,16 +466,16 @@ private struct ManualScanPanel: View {
   }
 }
 
-private struct ProcessChartPanel: View {
+private struct AppGroupChartPanel: View {
   var title: String
   var subtitle: String
   var systemImage: String
-  var processes: [ProcessSample]
-  var unit: String
+  var groups: [AppProcessGroup]
+  var mode: PerformanceMode
 
   var body: some View {
     PremiumPanel(title: title, subtitle: subtitle, systemImage: systemImage) {
-      ProcessBarChart(processes: processes, unit: unit)
+      AppGroupBarChart(groups: Array(groups.prefix(8)), mode: mode)
     }
   }
 }
@@ -721,43 +750,113 @@ private struct HorizontalBarChart: View {
   }
 }
 
-private struct ProcessBarChart: View {
-  var processes: [ProcessSample]
-  var unit: String
+private struct PerformanceSystemStrip: View {
+  var performance: PerformanceHealth
+
+  var body: some View {
+    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
+      CompactStat(title: "CPU", value: percent(performance.cpu.totalPercent), detail: "total")
+      CompactStat(title: "User", value: percent(performance.cpu.userPercent), detail: "CPU")
+      CompactStat(title: "System", value: percent(performance.cpu.systemPercent), detail: "CPU")
+      CompactStat(title: "Memory", value: bytes(performance.memory.usedBytes), detail: "used")
+      CompactStat(title: "Wired", value: bytes(performance.memory.wiredBytes), detail: "memory")
+      CompactStat(title: "Compressed", value: bytes(performance.memory.compressedBytes), detail: "memory")
+      CompactStat(title: "Swap", value: performance.memory.swapUsedBytes.map(bytes) ?? "N/A", detail: "used")
+      CompactStat(title: "Processes", value: "\(performance.processes.count)", detail: "visible")
+    }
+  }
+}
+
+private struct CompactStat: View {
+  var title: String
+  var value: String
+  var detail: String
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Text(title)
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+      Text(value)
+        .font(.system(size: 18, weight: .semibold, design: .rounded))
+        .monospacedDigit()
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+      Text(detail)
+        .font(.caption2)
+        .foregroundStyle(.tertiary)
+    }
+    .padding(10)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+  }
+}
+
+private struct AppGroupBarChart: View {
+  var groups: [AppProcessGroup]
+  var mode: PerformanceMode
 
   private var maxValue: Double {
-    max(processes.map(\.value).max() ?? 1, 1)
+    max(groups.map(value).max() ?? 1, 1)
   }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      if processes.isEmpty {
-        Text(unit == "% CPU" ? "No sustained CPU load detected yet" : "No live process samples available yet")
+      if groups.isEmpty {
+        Text("No process crossed the current display threshold")
           .font(.caption)
           .foregroundStyle(.secondary)
           .frame(maxWidth: .infinity, minHeight: 72, alignment: .center)
       } else {
-        ForEach(processes) { process in
-          ProcessUsageRow(process: process, maxValue: maxValue)
+        ForEach(groups) { group in
+          AppGroupUsageRow(group: group, mode: mode, maxValue: maxValue)
         }
       }
     }
-    .frame(minHeight: processes.isEmpty ? 72 : CGFloat(max(processes.count, 3)) * 42)
+    .frame(minHeight: groups.isEmpty ? 72 : CGFloat(max(groups.count, 3)) * 42)
+  }
+
+  private func value(_ group: AppProcessGroup) -> Double {
+    switch mode {
+    case .cpu:
+      group.cpuPercent
+    case .memory:
+      Double(group.physicalFootprintBytes ?? group.residentMemoryBytes) / SystemMetricsSampler.bytesPerGB
+    }
   }
 }
 
-private struct ProcessUsageRow: View {
-  var process: ProcessSample
+private struct AppGroupUsageRow: View {
+  var group: AppProcessGroup
+  var mode: PerformanceMode
   var maxValue: Double
 
+  private var currentValue: Double {
+    switch mode {
+    case .cpu:
+      group.cpuPercent
+    case .memory:
+      Double(group.physicalFootprintBytes ?? group.residentMemoryBytes) / SystemMetricsSampler.bytesPerGB
+    }
+  }
+
   private var fraction: Double {
-    min(max(process.value / maxValue, 0), 1)
+    min(max(currentValue / maxValue, 0), 1)
+  }
+
+  private var valueText: String {
+    switch mode {
+    case .cpu:
+      "\(number(group.cpuPercent)) %"
+    case .memory:
+      bytes(group.physicalFootprintBytes ?? group.residentMemoryBytes)
+    }
   }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 5) {
       HStack(alignment: .firstTextBaseline, spacing: 10) {
-        Text(process.name)
+        Text(group.name)
           .font(.caption.weight(.semibold))
           .foregroundStyle(.primary)
           .lineLimit(1)
@@ -765,13 +864,13 @@ private struct ProcessUsageRow: View {
 
         Spacer(minLength: 10)
 
-        Text("\(number(process.value)) \(process.unit)")
+        Text(valueText)
           .font(.caption.weight(.semibold))
           .monospacedDigit()
-          .foregroundStyle(color(for: process.status))
+          .foregroundStyle(color(for: group.status))
           .layoutPriority(1)
 
-        DataModeBadge(dataMode: process.dataMode)
+        DataModeBadge(dataMode: group.dataMode)
       }
 
       GeometryReader { proxy in
@@ -779,11 +878,131 @@ private struct ProcessUsageRow: View {
           RoundedRectangle(cornerRadius: 4)
             .fill(.quaternary)
           RoundedRectangle(cornerRadius: 4)
-            .fill(color(for: process.status))
-            .frame(width: max(proxy.size.width * fraction, process.value > 0 ? 4 : 0))
+            .fill(color(for: group.status))
+            .frame(width: max(proxy.size.width * fraction, currentValue > 0 ? 4 : 0))
         }
       }
       .frame(height: 9)
+    }
+  }
+}
+
+private struct ProcessObservationTable: View {
+  var mode: PerformanceMode
+  var processes: [ProcessObservation]
+
+  var body: some View {
+    PremiumPanel(title: "Processes", subtitle: "Individual live rows, not app-group estimates.", systemImage: "list.bullet.rectangle") {
+      if processes.isEmpty {
+        EmptyDiagnosticState(
+          title: "No process crossed the current display threshold",
+          message: "Corewise is receiving the system sample, but no readable process row passed the current CPU or memory threshold.",
+          dataMode: .unavailable
+        )
+      } else {
+        VStack(spacing: 0) {
+          ProcessTableHeader(mode: mode)
+          ForEach(processes.prefix(40)) { process in
+            ProcessTableRow(process: process, mode: mode)
+            Divider()
+          }
+        }
+        .font(.caption)
+      }
+    }
+  }
+}
+
+private struct ProcessTableHeader: View {
+  var mode: PerformanceMode
+
+  var body: some View {
+    Grid(horizontalSpacing: 12, verticalSpacing: 0) {
+      GridRow {
+        header("Name").gridColumnAlignment(.leading)
+        header(mode == .cpu ? "% CPU" : "Footprint").gridColumnAlignment(.trailing)
+        header("RSS").gridColumnAlignment(.trailing)
+        header("Threads").gridColumnAlignment(.trailing)
+        header("PID").gridColumnAlignment(.trailing)
+        header("User").gridColumnAlignment(.leading)
+      }
+    }
+    .padding(.horizontal, 8)
+    .padding(.bottom, 6)
+  }
+
+  private func header(_ title: String) -> some View {
+    Text(title)
+      .font(.caption2.weight(.semibold))
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+  }
+}
+
+private struct ProcessTableRow: View {
+  var process: ProcessObservation
+  var mode: PerformanceMode
+
+  var body: some View {
+    Grid(horizontalSpacing: 12, verticalSpacing: 0) {
+      GridRow {
+        VStack(alignment: .leading, spacing: 2) {
+          HStack(spacing: 6) {
+            Text(process.displayName)
+              .font(.caption.weight(.semibold))
+              .lineLimit(1)
+            if process.processName == "Corewise" {
+              Text("This app")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.blue)
+            }
+          }
+          Text(process.appName ?? process.path ?? "No app bundle")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .lineLimit(1)
+        }
+        .gridColumnAlignment(.leading)
+
+        Text(primaryValue)
+          .font(.caption.weight(.semibold))
+          .monospacedDigit()
+          .foregroundStyle(color(for: process.status))
+          .gridColumnAlignment(.trailing)
+
+        Text(bytes(process.residentMemoryBytes))
+          .monospacedDigit()
+          .foregroundStyle(.secondary)
+          .gridColumnAlignment(.trailing)
+
+        Text("\(process.threadCount)")
+          .monospacedDigit()
+          .foregroundStyle(.secondary)
+          .gridColumnAlignment(.trailing)
+
+        Text("\(process.pid)")
+          .monospacedDigit()
+          .foregroundStyle(.secondary)
+          .gridColumnAlignment(.trailing)
+
+        HStack(spacing: 6) {
+          Text(process.user)
+            .lineLimit(1)
+          DataModeBadge(dataMode: process.dataMode)
+        }
+        .gridColumnAlignment(.leading)
+      }
+    }
+    .padding(.horizontal, 8)
+    .padding(.vertical, 7)
+  }
+
+  private var primaryValue: String {
+    switch mode {
+    case .cpu:
+      "\(number(process.cpuPercent)) %"
+    case .memory:
+      process.physicalFootprintBytes.map(bytes) ?? "N/A"
     }
   }
 }
@@ -814,30 +1033,6 @@ private struct StorageItemGroup: View {
             dataMode: item.dataMode
           )
         }
-      }
-    }
-  }
-}
-
-private struct ProcessList: View {
-  var title: String
-  var subtitle: String
-  var items: [ProcessSample]
-
-  var body: some View {
-    DataGroup(title: title, subtitle: subtitle, systemImage: "waveform.path.ecg") {
-      ForEach(items) { item in
-        DetailRow(
-          title: item.name,
-          subtitle: item.explanation,
-          value: "\(number(item.value)) \(item.unit)",
-          status: item.status,
-          severityScore: item.severityScore,
-          explanation: item.recommendedAction,
-          action: item.source,
-          source: item.confidence,
-          dataMode: item.dataMode
-        )
       }
     }
   }
@@ -1124,6 +1319,23 @@ private func displayValue(_ metric: DiagnosticMetric) -> String {
 
 private func gb(_ value: Double) -> String {
   "\(number(value)) GB"
+}
+
+private func bytes(_ value: UInt64) -> String {
+  let gb = Double(value) / SystemMetricsSampler.bytesPerGB
+  if gb >= 1 {
+    return "\(number(gb)) GB"
+  }
+
+  let mb = Double(value) / (1024.0 * 1024.0)
+  return "\(number(mb)) MB"
+}
+
+private func percent(_ value: Double?) -> String {
+  guard let value else {
+    return "N/A"
+  }
+  return "\(number(value))%"
 }
 
 private func number(_ value: Double) -> String {

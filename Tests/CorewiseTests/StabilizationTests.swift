@@ -17,7 +17,7 @@ import Testing
 
 @Test func performanceHistoryIsUnavailableUntilEnoughSamples() {
   let tracker = PerformanceHistoryTracker()
-  let summary = tracker.record(instant: instant(cpuProcesses: [process("Indexer", value: 40)]), now: Date())
+  let summary = tracker.record(instant: instant(processes: [process("Indexer", cpu: 40)]), now: Date())
 
   #expect(summary.hasEnoughSamples == false)
   #expect(summary.hasSustainedHighCPU == false)
@@ -28,9 +28,9 @@ import Testing
   let tracker = PerformanceHistoryTracker()
   let start = Date()
 
-  _ = tracker.record(instant: instant(cpuProcesses: [process("Indexer", value: 30)]), now: start)
-  _ = tracker.record(instant: instant(cpuProcesses: [process("Indexer", value: 32)]), now: start.addingTimeInterval(10))
-  let summary = tracker.record(instant: instant(cpuProcesses: [process("Indexer", value: 35)]), now: start.addingTimeInterval(20))
+  _ = tracker.record(instant: instant(processes: [process("Indexer", cpu: 30)]), now: start)
+  _ = tracker.record(instant: instant(processes: [process("Indexer", cpu: 32)]), now: start.addingTimeInterval(10))
+  let summary = tracker.record(instant: instant(processes: [process("Indexer", cpu: 35)]), now: start.addingTimeInterval(20))
 
   #expect(summary.hasEnoughSamples)
   #expect(summary.hasSustainedHighCPU)
@@ -41,8 +41,8 @@ import Testing
   let tracker = PerformanceHistoryTracker()
   let start = Date()
 
-  _ = tracker.record(instant: instant(cpuProcesses: [process("Old", value: 30)]), now: start)
-  let summary = tracker.record(instant: instant(cpuProcesses: [process("New", value: 30)]), now: start.addingTimeInterval(130))
+  _ = tracker.record(instant: instant(processes: [process("Old", cpu: 30)]), now: start)
+  let summary = tracker.record(instant: instant(processes: [process("New", cpu: 30)]), now: start.addingTimeInterval(130))
 
   #expect(summary.retainedSampleCount == 1)
   #expect(summary.repeatedHighCPUProcesses.isEmpty)
@@ -130,29 +130,55 @@ import Testing
   #expect(!overviewText.contains("Helper" + "Service"))
 }
 
-private func instant(cpuProcesses: [ProcessSample]) -> InstantSystemMetrics {
-  InstantSystemMetrics(
-    cpuPercent: 20,
-    usedMemoryGB: 4,
-    totalMemoryGB: 16,
-    memoryPercent: 25,
-    swapUsedGB: 0,
-    memoryPressure: SystemMetricsSampler.memoryPressureEstimate(memoryPercent: 25, swapUsedGB: 0),
-    topCPUProcesses: cpuProcesses,
-    topMemoryProcesses: [],
+private func instant(processes: [ProcessObservation]) -> InstantSystemMetrics {
+  let now = Date()
+  return InstantSystemMetrics(
+    cpu: SystemCPUReading(
+      totalPercent: 20,
+      userPercent: 12,
+      systemPercent: 8,
+      idlePercent: 80,
+      nicePercent: 0,
+      dataMode: .live,
+      source: "Unit test",
+      confidence: "Live / high",
+      lastUpdated: now
+    ),
+    memory: SystemMemoryReading(
+      physicalBytes: 16 * 1024 * 1024 * 1024,
+      usedBytes: 4 * 1024 * 1024 * 1024,
+      freeBytes: 12 * 1024 * 1024 * 1024,
+      wiredBytes: 1 * 1024 * 1024 * 1024,
+      compressedBytes: 512 * 1024 * 1024,
+      swapUsedBytes: 0,
+      dataMode: .live,
+      source: "Unit test",
+      confidence: "Live / high",
+      lastUpdated: now
+    ),
+    processes: processes,
+    appGroups: [],
     systemWatts: nil,
     powerSourceNote: "Unavailable"
   )
 }
 
-private func process(_ name: String, value: Double) -> ProcessSample {
-  ProcessSample(
-    name: name,
-    value: value,
-    unit: "% CPU",
+private func process(_ name: String, cpu: Double) -> ProcessObservation {
+  ProcessObservation(
+    pid: Int32(abs(name.hashValue % 30_000) + 100),
+    processName: name,
+    displayName: name,
+    appName: nil,
+    path: nil,
+    user: "tester",
+    cpuPercent: cpu,
+    cpuTimeSeconds: 10,
+    threadCount: 4,
+    residentMemoryBytes: 128 * 1024 * 1024,
+    physicalFootprintBytes: 160 * 1024 * 1024,
     dataMode: .live,
     status: .info,
-    severityScore: Int(value),
+    severityScore: Int(cpu),
     explanation: "Synthetic sample.",
     source: "Unit test",
     confidence: "Live / high",
@@ -178,8 +204,8 @@ private func allDataModes(in snapshot: HealthSnapshot) -> [DataMode] {
     + snapshot.storage.browserCaches.map(\.dataMode)
     + snapshot.storage.spaceOffenders.map(\.dataMode)
     + snapshot.performance.metrics.map(\.dataMode)
-    + snapshot.performance.cpuProcesses.map(\.dataMode)
-    + snapshot.performance.memoryProcesses.map(\.dataMode)
+    + snapshot.performance.processes.map(\.dataMode)
+    + snapshot.performance.appGroups.map(\.dataMode)
     + snapshot.startup.metrics.map(\.dataMode)
     + snapshot.startup.loginItems.map(\.dataMode)
     + snapshot.startup.launchAgents.map(\.dataMode)

@@ -1,57 +1,81 @@
+import Darwin
 import Darwin.Mach
 import Foundation
 
-struct MemoryPressureEstimate {
-  var label: String
-  var status: FindingSeverity
-  var severityScore: Int
-  var explanation: String
-}
-
 struct InstantSystemMetrics {
-  var cpuPercent: Double?
-  var usedMemoryGB: Double
-  var totalMemoryGB: Double
-  var memoryPercent: Double
-  var swapUsedGB: Double?
-  var memoryPressure: MemoryPressureEstimate
-  var topCPUProcesses: [ProcessSample]
-  var topMemoryProcesses: [ProcessSample]
+  var cpu: SystemCPUReading
+  var memory: SystemMemoryReading
+  var processes: [ProcessObservation]
+  var appGroups: [AppProcessGroup]
   var systemWatts: Double?
   var powerSourceNote: String
 }
 
 enum SystemMetricsSampler {
   static func sample() async -> InstantSystemMetrics {
-    async let cpu = sampleCPUPercent()
-    async let processes = sampleProcesses()
+    async let cpu = sampleCPU()
+    async let processSample = sampleProcesses()
     let memory = sampleMemory()
-    let swapUsedGB = sampleSwapUsedGB()
-    let pressure = memoryPressureEstimate(memoryPercent: memory.percent, swapUsedGB: swapUsedGB)
+
+    let sampledProcesses = await processSample
+    let processes = sampledProcesses.processes
+    let appGroups = groupProcesses(processes, now: sampledProcesses.now)
 
     return await InstantSystemMetrics(
-      cpuPercent: cpu,
-      usedMemoryGB: memory.usedGB,
-      totalMemoryGB: memory.totalGB,
-      memoryPercent: memory.percent,
-      swapUsedGB: swapUsedGB,
-      memoryPressure: pressure,
-      topCPUProcesses: processes.cpu,
-      topMemoryProcesses: processes.memory,
+      cpu: cpu,
+      memory: memory,
+      processes: processes,
+      appGroups: appGroups,
       systemWatts: nil,
       powerSourceNote: "macOS does not expose reliable whole-system wattage through a safe public API. Corewise can show battery or power-source context later, but should not invent watts."
     )
   }
 
-  private static func sampleCPUPercent() async -> Double? {
+  static func memoryPressureEstimate(memoryPercent: Double, swapUsedGB: Double?) -> DiagnosticMetric {
+    let now = Date()
+    return DiagnosticMetric(
+      title: "Memory Pressure",
+      value: "Unavailable",
+      unit: "",
+      dataMode: .unavailable,
+      status: .info,
+      severityScore: 0,
+      explanation: "Corewise does not expose a live memory-pressure number until it can use a public source that matches macOS semantics reliably.",
+      source: "No reliable public parity source selected",
+      confidence: "Unavailable / high",
+      recommendedAction: "Use the real memory, footprint, and swap values as context instead.",
+      lastUpdated: now
+    )
+  }
+
+  static func processStatus(cpuPercent: Double, footprintBytes: UInt64?) -> FindingSeverity {
+    if cpuPercent >= 200 {
+      return .critical
+    }
+    if cpuPercent >= 75 || (footprintBytes ?? 0) >= 8 * bytesPerGBInt {
+      return .warning
+    }
+    if cpuPercent >= 25 || (footprintBytes ?? 0) >= 1 * bytesPerGBInt {
+      return .info
+    }
+    return .good
+  }
+
+  static func processSeverity(cpuPercent: Double, footprintBytes: UInt64?) -> Int {
+    let memoryGB = Double(footprintBytes ?? 0) / bytesPerGB
+    return min(max(Int(max(cpuPercent, memoryGB * 18).rounded()), 0), 100)
+  }
+
+  private static func sampleCPU() async -> SystemCPUReading {
+    let now = Date()
     guard let first = cpuTicks() else {
-      return nil
+      return unavailableCPU(now: now)
     }
 
-    try? await Task.sleep(nanoseconds: 250_000_000)
+    try? await Task.sleep(nanoseconds: 1_000_000_000)
 
     guard let second = cpuTicks() else {
-      return nil
+      return unavailableCPU(now: Date())
     }
 
     let userDelta = second.user - first.user
@@ -61,11 +85,40 @@ enum SystemMetricsSampler {
     let totalDelta = userDelta + systemDelta + niceDelta + idleDelta
 
     guard totalDelta > 0 else {
-      return nil
+      return unavailableCPU(now: Date())
     }
 
-    let activeDelta = totalDelta - idleDelta
-    return Double(activeDelta) / Double(totalDelta) * 100
+    let total = Double(totalDelta)
+    let idlePercent = Double(idleDelta) / total * 100
+    let userPercent = Double(userDelta) / total * 100
+    let systemPercent = Double(systemDelta) / total * 100
+    let nicePercent = Double(niceDelta) / total * 100
+
+    return SystemCPUReading(
+      totalPercent: max(0, 100 - idlePercent),
+      userPercent: userPercent,
+      systemPercent: systemPercent,
+      idlePercent: idlePercent,
+      nicePercent: nicePercent,
+      dataMode: .live,
+      source: "host_statistics HOST_CPU_LOAD_INFO",
+      confidence: "Live / medium",
+      lastUpdated: Date()
+    )
+  }
+
+  private static func unavailableCPU(now: Date) -> SystemCPUReading {
+    SystemCPUReading(
+      totalPercent: nil,
+      userPercent: nil,
+      systemPercent: nil,
+      idlePercent: nil,
+      nicePercent: nil,
+      dataMode: .unavailable,
+      source: "host_statistics HOST_CPU_LOAD_INFO",
+      confidence: "Unavailable / medium",
+      lastUpdated: now
+    )
   }
 
   private static func cpuTicks() -> CPUTicks? {
@@ -90,9 +143,10 @@ enum SystemMetricsSampler {
     )
   }
 
-  private static func sampleMemory() -> (usedGB: Double, totalGB: Double, percent: Double) {
-    let totalBytes = Double(ProcessInfo.processInfo.physicalMemory)
-    let pageSize = Double(vmPageSize())
+  private static func sampleMemory() -> SystemMemoryReading {
+    let now = Date()
+    let physicalBytes = UInt64(ProcessInfo.processInfo.physicalMemory)
+    let pageSize = UInt64(vmPageSize())
 
     var stats = vm_statistics64_data_t()
     var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.stride / MemoryLayout<integer_t>.stride)
@@ -103,50 +157,42 @@ enum SystemMetricsSampler {
       }
     }
 
-    guard result == KERN_SUCCESS, totalBytes > 0 else {
-      let totalGB = totalBytes / bytesPerGB
-      return (0, totalGB, 0)
-    }
-
-    let usedPages = Double(stats.active_count + stats.wire_count + stats.compressor_page_count)
-    let usedBytes = min(usedPages * pageSize, totalBytes)
-    let usedGB = usedBytes / bytesPerGB
-    let totalGB = totalBytes / bytesPerGB
-    let percent = usedBytes / totalBytes * 100
-
-    return (usedGB, totalGB, percent)
-  }
-
-  static func memoryPressureEstimate(memoryPercent: Double, swapUsedGB: Double?) -> MemoryPressureEstimate {
-    let swap = swapUsedGB ?? 0
-
-    if memoryPercent >= 92 || swap >= 8 {
-      return MemoryPressureEstimate(
-        label: "High",
-        status: .warning,
-        severityScore: 72,
-        explanation: "Corewise estimates high pressure from memory use and live swap usage. This is not Activity Monitor parity."
+    guard result == KERN_SUCCESS else {
+      return SystemMemoryReading(
+        physicalBytes: physicalBytes,
+        usedBytes: 0,
+        freeBytes: 0,
+        wiredBytes: 0,
+        compressedBytes: 0,
+        swapUsedBytes: sampleSwapUsedBytes(),
+        dataMode: .unavailable,
+        source: "host_statistics64 HOST_VM_INFO64",
+        confidence: "Unavailable / medium",
+        lastUpdated: now
       )
     }
 
-    if memoryPercent >= 80 || swap >= 2 {
-      return MemoryPressureEstimate(
-        label: "Medium",
-        status: .info,
-        severityScore: 42,
-        explanation: "Corewise estimates moderate pressure from memory use and live swap usage. Confirm with Activity Monitor if needed."
-      )
-    }
+    let freeBytes = UInt64(stats.free_count) * pageSize
+    let wiredBytes = UInt64(stats.wire_count) * pageSize
+    let compressedBytes = UInt64(stats.compressor_page_count) * pageSize
+    let activeBytes = UInt64(stats.active_count) * pageSize
+    let usedBytes = min(activeBytes + wiredBytes + compressedBytes, physicalBytes)
 
-    return MemoryPressureEstimate(
-      label: "Low",
-      status: .good,
-      severityScore: 10,
-      explanation: "Corewise estimates low pressure from memory use and live swap usage."
+    return SystemMemoryReading(
+      physicalBytes: physicalBytes,
+      usedBytes: usedBytes,
+      freeBytes: freeBytes,
+      wiredBytes: wiredBytes,
+      compressedBytes: compressedBytes,
+      swapUsedBytes: sampleSwapUsedBytes(),
+      dataMode: .live,
+      source: "host_statistics64 HOST_VM_INFO64",
+      confidence: "Live / medium",
+      lastUpdated: now
     )
   }
 
-  private static func sampleSwapUsedGB() -> Double? {
+  private static func sampleSwapUsedBytes() -> UInt64? {
     var usage = xsw_usage()
     var size = MemoryLayout<xsw_usage>.stride
     let result = sysctlbyname("vm.swapusage", &usage, &size, nil, 0)
@@ -155,167 +201,81 @@ enum SystemMetricsSampler {
       return nil
     }
 
-    return Double(usage.xsu_used) / bytesPerGB
+    return UInt64(usage.xsu_used)
   }
 
-  private static func sampleProcesses() async -> (cpu: [ProcessSample], memory: [ProcessSample]) {
+  private static func sampleProcesses() async -> (processes: [ProcessObservation], now: Date) {
     let first = processStats()
     let start = Date()
 
-    try? await Task.sleep(nanoseconds: 350_000_000)
+    try? await Task.sleep(nanoseconds: 1_000_000_000)
 
     let second = processStats()
-    let elapsed = max(Date().timeIntervalSince(start), 0.1)
+    let elapsed = max(Date().timeIntervalSince(start), 0.2)
     let now = Date()
 
-    var cpuByProcess: [String: ProcessAggregate] = [:]
-
-    for (pid, current) in second {
-      guard shouldIncludeProcess(current), let previous = first[pid] else {
-        continue
-      }
-
-      let displayName = normalizedProcessName(current)
-      guard !displayName.isEmpty else {
-        continue
+    let observations = second.values.compactMap { current -> ProcessObservation? in
+      guard let previous = first[current.pid] else {
+        return nil
       }
 
       let deltaNanoseconds = current.cpuNanoseconds > previous.cpuNanoseconds
         ? current.cpuNanoseconds - previous.cpuNanoseconds
         : 0
       let cpuPercent = Double(deltaNanoseconds) / 1_000_000_000 / elapsed * 100
+      let footprint = current.physicalFootprintBytes
+      let status = processStatus(cpuPercent: cpuPercent, footprintBytes: footprint)
+      let severity = processSeverity(cpuPercent: cpuPercent, footprintBytes: footprint)
+      let appName = appBundleName(from: current.path)
 
-      guard cpuPercent >= 0.1 else {
-        continue
-      }
-
-      cpuByProcess[displayName, default: ProcessAggregate(name: displayName, value: 0)].value += cpuPercent
-    }
-
-    let cpuSamples = cpuByProcess.values.map { aggregate in
-      ProcessSample(
-        name: aggregate.name,
-        value: aggregate.value,
-        unit: "% CPU",
+      return ProcessObservation(
+        pid: current.pid,
+        processName: current.name,
+        displayName: current.name,
+        appName: appName,
+        path: current.path,
+        user: current.user,
+        cpuPercent: cpuPercent,
+        cpuTimeSeconds: Double(current.cpuNanoseconds) / 1_000_000_000,
+        threadCount: current.threadCount,
+        residentMemoryBytes: current.residentBytes,
+        physicalFootprintBytes: footprint,
         dataMode: .live,
-        status: cpuProcessStatus(aggregate.value),
-        severityScore: severity(aggregate.value),
-        explanation: "Live CPU usage over the last short sampling window.",
-        source: "proc_pidinfo PROC_PIDTASKINFO",
-        confidence: "Live / medium",
-        recommendedAction: "If this process stays high across refreshes, inspect it before quitting anything.",
+        status: status,
+        severityScore: severity,
+        explanation: "Live process row sampled from public process APIs over a 1 second window.",
+        source: footprint == nil ? "proc_pidinfo PROC_PIDTASKINFO" : "proc_pidinfo + proc_pid_rusage RUSAGE_INFO_V4",
+        confidence: footprint == nil ? "Live / medium" : "Live / high",
+        recommendedAction: "Use repeated CPU, footprint, and process identity before deciding whether to quit anything.",
         lastUpdated: now
       )
     }
-    .sorted { $0.value > $1.value }
-    .prefix(8)
 
-    var memoryByProcess: [String: ProcessAggregate] = [:]
+    let readable = observations
+      .filter { $0.cpuPercent >= 0.05 || ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) >= 20 * 1024 * 1024 }
 
-    for stat in second.values where shouldIncludeProcess(stat) && stat.residentBytes > 0 {
-      let displayName = normalizedProcessName(stat)
-      guard !displayName.isEmpty else {
-        continue
-      }
+    let topCPU = readable
+      .sorted { $0.cpuPercent > $1.cpuPercent }
+      .prefix(80)
+    let topMemory = readable
+      .sorted { ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) > ($1.physicalFootprintBytes ?? $1.residentMemoryBytes) }
+      .prefix(80)
 
-      let memoryGB = Double(stat.residentBytes) / bytesPerGB
-      guard memoryGB >= 0.05 else {
-        continue
-      }
-      memoryByProcess[displayName, default: ProcessAggregate(name: displayName, value: 0)].value += memoryGB
+    var merged: [Int32: ProcessObservation] = [:]
+    for process in topCPU {
+      merged[process.pid] = process
+    }
+    for process in topMemory {
+      merged[process.pid] = process
     }
 
-    let memorySamples = memoryByProcess.values
-      .sorted { $0.value > $1.value }
-      .prefix(8)
-      .map { aggregate in
-        ProcessSample(
-          name: aggregate.name,
-          value: aggregate.value,
-          unit: "GB",
-          dataMode: .live,
-          status: memoryProcessStatus(aggregate.value),
-          severityScore: severity(aggregate.value * 20),
-          explanation: "Resident memory currently held by this app or process group.",
-          source: "proc_pidinfo PROC_PIDTASKINFO",
-          confidence: "Live / medium",
-          recommendedAction: "Use this with memory pressure; high RAM alone is not automatically bad.",
-          lastUpdated: now
-        )
-      }
-
-    return (Array(cpuSamples), Array(memorySamples))
-  }
-
-  private static func shouldIncludeProcess(_ stat: ProcessStat) -> Bool {
-    let currentPID = pid_t(ProcessInfo.processInfo.processIdentifier)
-    let name = normalizedProcessName(stat)
-
-    return stat.pid != currentPID && name != "Corewise"
-  }
-
-  private static func normalizedProcessName(_ stat: ProcessStat) -> String {
-    if let appName = appBundleName(from: stat.path) {
-      return appName
+    let sorted = merged.values.sorted {
+      let leftMemory = $0.physicalFootprintBytes ?? $0.residentMemoryBytes
+      let rightMemory = $1.physicalFootprintBytes ?? $1.residentMemoryBytes
+      return ($0.cpuPercent, leftMemory) > ($1.cpuPercent, rightMemory)
     }
 
-    return normalizedProcessName(stat.name)
-  }
-
-  private static func appBundleName(from path: String?) -> String? {
-    guard let path else {
-      return nil
-    }
-
-    let components = path.split(separator: "/")
-    guard let appComponent = components.first(where: { $0.hasSuffix(".app") }) else {
-      return nil
-    }
-
-    let appName = appComponent.dropLast(4)
-    return appName.isEmpty ? nil : String(appName)
-  }
-
-  private static func normalizedProcessName(_ rawName: String) -> String {
-    let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-    if name.isEmpty {
-      return ""
-    }
-
-    if name.localizedCaseInsensitiveContains("Google Chrome") {
-      return "Google Chrome"
-    }
-
-    if name.localizedCaseInsensitiveContains("Safari") && name.localizedCaseInsensitiveContains("Web") {
-      return "Safari"
-    }
-
-    if name.localizedCaseInsensitiveContains("Firefox") {
-      return "Firefox"
-    }
-
-    if name.localizedCaseInsensitiveContains("Microsoft Edge") {
-      return "Microsoft Edge"
-    }
-
-    if name.localizedCaseInsensitiveContains("Code Helper") {
-      return "Visual Studio Code"
-    }
-
-    if name.localizedCaseInsensitiveContains("Electron") {
-      return "Electron App"
-    }
-
-    if let helperRange = name.range(of: " Helper") {
-      return String(name[..<helperRange.lowerBound])
-    }
-
-    if let parenRange = name.range(of: " (") {
-      return String(name[..<parenRange.lowerBound])
-    }
-
-    return name
+    return (Array(sorted), now)
   }
 
   private static func processStats() -> [Int32: ProcessStat] {
@@ -332,34 +292,84 @@ enum SystemMetricsSampler {
     let actualCount = max(0, Int(actualBytes) / MemoryLayout<pid_t>.stride)
     var stats: [Int32: ProcessStat] = [:]
 
-    for pid in pids.prefix(actualCount) where pid > 0 {
-      var taskInfo = proc_taskinfo()
-      let infoSize = MemoryLayout<proc_taskinfo>.stride
-      let result = withUnsafeMutablePointer(to: &taskInfo) { pointer in
-        pointer.withMemoryRebound(to: UInt8.self, capacity: infoSize) { reboundPointer in
-          proc_pidinfo(pid, PROC_PIDTASKINFO, 0, reboundPointer, Int32(infoSize))
-        }
-      }
-
-      guard result == Int32(infoSize) else {
+    for pid in pids.prefix(actualCount) where pid >= 0 {
+      guard let taskInfo = taskInfo(pid: pid) else {
         continue
       }
 
       let name = processName(pid: pid)
       let path = processPath(pid: pid)
+      let user = userName(pid: pid)
       let cpuNanoseconds = taskInfo.pti_total_user + taskInfo.pti_total_system
-      let residentBytes = UInt64(taskInfo.pti_resident_size)
 
       stats[pid] = ProcessStat(
         pid: pid,
         name: name,
         path: path,
+        user: user,
         cpuNanoseconds: cpuNanoseconds,
-        residentBytes: residentBytes
+        threadCount: taskInfo.pti_threadnum,
+        residentBytes: UInt64(taskInfo.pti_resident_size),
+        physicalFootprintBytes: physicalFootprint(pid: pid)
       )
     }
 
     return stats
+  }
+
+  private static func taskInfo(pid: pid_t) -> proc_taskinfo? {
+    var taskInfo = proc_taskinfo()
+    let infoSize = MemoryLayout<proc_taskinfo>.stride
+    let result = withUnsafeMutablePointer(to: &taskInfo) { pointer in
+      pointer.withMemoryRebound(to: UInt8.self, capacity: infoSize) { reboundPointer in
+        proc_pidinfo(pid, PROC_PIDTASKINFO, 0, reboundPointer, Int32(infoSize))
+      }
+    }
+
+    guard result == Int32(infoSize) else {
+      return nil
+    }
+
+    return taskInfo
+  }
+
+  private static func physicalFootprint(pid: pid_t) -> UInt64? {
+    guard pid > 0 else {
+      return nil
+    }
+
+    var info = rusage_info_v4()
+    let result = withUnsafeMutablePointer(to: &info) { pointer -> Int32 in
+      UnsafeMutableRawPointer(pointer).withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { reboundPointer in
+        proc_pid_rusage(pid, RUSAGE_INFO_V4, reboundPointer)
+      }
+    }
+
+    guard result == 0, info.ri_phys_footprint > 0 else {
+      return nil
+    }
+
+    return info.ri_phys_footprint
+  }
+
+  private static func userName(pid: pid_t) -> String {
+    var info = proc_bsdshortinfo()
+    let infoSize = MemoryLayout<proc_bsdshortinfo>.stride
+    let result = withUnsafeMutablePointer(to: &info) { pointer in
+      pointer.withMemoryRebound(to: UInt8.self, capacity: infoSize) { reboundPointer in
+        proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, reboundPointer, Int32(infoSize))
+      }
+    }
+
+    guard result == Int32(infoSize) else {
+      return "unknown"
+    }
+
+    guard let entry = getpwuid(info.pbsi_uid), let name = entry.pointee.pw_name else {
+      return "\(info.pbsi_uid)"
+    }
+
+    return String(cString: name)
   }
 
   private static func processName(pid: pid_t) -> String {
@@ -390,34 +400,54 @@ enum SystemMetricsSampler {
     return String(cString: buffer)
   }
 
-  private static func cpuProcessStatus(_ percent: Double) -> FindingSeverity {
-    if percent >= 200 {
-      return .critical
+  private static func appBundleName(from path: String?) -> String? {
+    guard let path else {
+      return nil
     }
-    if percent >= 75 {
-      return .warning
+
+    let components = path.split(separator: "/")
+    guard let appComponent = components.first(where: { $0.hasSuffix(".app") }) else {
+      return nil
     }
-    if percent >= 25 {
-      return .info
-    }
-    return .good
+
+    let appName = appComponent.dropLast(4)
+    return appName.isEmpty ? nil : String(appName)
   }
 
-  private static func memoryProcessStatus(_ gb: Double) -> FindingSeverity {
-    if gb >= 8 {
-      return .critical
-    }
-    if gb >= 3 {
-      return .warning
-    }
-    if gb >= 1 {
-      return .info
-    }
-    return .good
-  }
+  private static func groupProcesses(_ processes: [ProcessObservation], now: Date) -> [AppProcessGroup] {
+    var grouped: [String: [ProcessObservation]] = [:]
 
-  private static func severity(_ value: Double) -> Int {
-    min(max(Int(value.rounded()), 0), 100)
+    for process in processes {
+      let name = process.appName ?? process.processName
+      grouped[name, default: []].append(process)
+    }
+
+    return grouped.map { name, rows in
+      let cpu = rows.reduce(0) { $0 + $1.cpuPercent }
+      let resident = rows.reduce(UInt64(0)) { $0 + $1.residentMemoryBytes }
+      let footprints = rows.compactMap(\.physicalFootprintBytes)
+      let footprint = footprints.isEmpty ? nil : footprints.reduce(UInt64(0), +)
+      let status = processStatus(cpuPercent: cpu, footprintBytes: footprint)
+
+      return AppProcessGroup(
+        name: name,
+        processCount: rows.count,
+        cpuPercent: cpu,
+        residentMemoryBytes: resident,
+        physicalFootprintBytes: footprint,
+        dataMode: .live,
+        status: status,
+        severityScore: processSeverity(cpuPercent: cpu, footprintBytes: footprint),
+        source: "Derived from live process rows",
+        confidence: footprint == nil ? "Live / medium" : "Live / high",
+        lastUpdated: now
+      )
+    }
+    .sorted {
+      let leftMemory = $0.physicalFootprintBytes ?? $0.residentMemoryBytes
+      let rightMemory = $1.physicalFootprintBytes ?? $1.residentMemoryBytes
+      return ($0.cpuPercent, leftMemory) > ($1.cpuPercent, rightMemory)
+    }
   }
 
   private static func vmPageSize() -> vm_size_t {
@@ -426,7 +456,8 @@ enum SystemMetricsSampler {
     return size
   }
 
-  private static let bytesPerGB = 1024.0 * 1024.0 * 1024.0
+  static let bytesPerGB = 1024.0 * 1024.0 * 1024.0
+  static let bytesPerGBInt = UInt64(1024 * 1024 * 1024)
 }
 
 private struct CPUTicks {
@@ -440,11 +471,9 @@ private struct ProcessStat {
   var pid: pid_t
   var name: String
   var path: String?
+  var user: String
   var cpuNanoseconds: UInt64
+  var threadCount: Int32
   var residentBytes: UInt64
-}
-
-private struct ProcessAggregate {
-  var name: String
-  var value: Double
+  var physicalFootprintBytes: UInt64?
 }

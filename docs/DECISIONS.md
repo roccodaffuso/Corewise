@@ -24,6 +24,24 @@ Decision: CPU, RAM, and process rankings use public macOS process and VM informa
 
 Reason: Performance is the first useful real diagnostic surface and can be collected locally without private APIs.
 
+## 2026-07-08: Performance Shows Process Rows Before Interpretation
+
+Decision: Corewise shows individual process rows with PID, user, CPU, thread count, resident memory, and footprint when available. App grouping is a derived view, not the primary source of truth.
+
+Reason: Monitoraggio Attività sets the user expectation; hiding process rows behind app groups makes real data look absent.
+
+## 2026-07-08: Footprint And RSS Are Separate
+
+Decision: Process memory footprint comes from `proc_pid_rusage(RUSAGE_INFO_V4)` when available, while resident memory remains a separate RSS-style value from `PROC_PIDTASKINFO`.
+
+Reason: Footprint is closer to the memory number users compare with Monitoraggio Attività, while RSS is still useful context.
+
+## 2026-07-08: No Estimated Memory Pressure
+
+Decision: Corewise does not show a live memory-pressure estimate until a reliable public source matching macOS semantics is selected.
+
+Reason: A weak estimate would look authoritative and repeat the trust problem the product is trying to solve.
+
 ## 2026-07-08: App Helpers Roll Up To App Names
 
 Decision: Helper processes should be grouped under their owning `.app` bundle when a process path is readable.
@@ -74,7 +92,7 @@ Reason: Repeated load is more useful than a single spike, but local-first trust 
 
 ## 2026-07-08: Startup Inventory Reads Plist Metadata Only
 
-Decision: Startup reads accessible LaunchAgents and LaunchDaemons plist metadata in read-only mode. Login items, background items, privileged helpers, and signing checks stay unavailable or planned.
+Decision: Startup reads accessible LaunchAgents and LaunchDaemons plist metadata in read-only mode. Code signing is checked only when a readable executable path is present. Login items, background items, and privileged helpers stay unavailable or planned.
 
 Reason: Plist metadata is useful context, but Corewise should not imply complete startup visibility or suggest raw file removal.
 
