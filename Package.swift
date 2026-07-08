@@ -14,6 +14,10 @@ let package = Package(
     .executableTarget(
       name: "Corewise",
       path: "Sources/Corewise"
+    ),
+    .testTarget(
+      name: "CorewiseTests",
+      dependencies: ["Corewise"]
     )
   ]
 )

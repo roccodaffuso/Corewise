@@ -35,6 +35,13 @@ enum FindingSeverity: String, CaseIterable {
   case critical = "Critical"
 }
 
+enum DataMode: String, CaseIterable {
+  case live = "Live"
+  case mock = "Mock"
+  case planned = "Planned"
+  case unavailable = "Unavailable"
+}
+
 struct HealthSnapshot {
   var generatedAt: Date
   var healthScore: Int
@@ -54,6 +61,7 @@ struct DiagnosticMetric: Identifiable {
   var title: String
   var value: String
   var unit: String
+  var dataMode: DataMode = .mock
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -84,6 +92,7 @@ struct ChartDatum: Identifiable {
   var title: String
   var value: Double
   var unit: String
+  var dataMode: DataMode = .mock
   var status: FindingSeverity
   var detail: String
 }
@@ -119,6 +128,7 @@ struct StorageItem: Identifiable {
   var title: String
   var path: String
   var sizeGB: Double
+  var dataMode: DataMode = .mock
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -143,6 +153,7 @@ struct ProcessSample: Identifiable {
   var name: String
   var value: Double
   var unit: String
+  var dataMode: DataMode = .mock
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -173,6 +184,7 @@ struct StartupItem: Identifiable {
   var startupImpact: String
   var signedState: String
   var recentlyAdded: Bool
+  var dataMode: DataMode = .mock
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -210,6 +222,7 @@ struct CrashIssue: Identifiable {
   var lastCrashDate: Date
   var repeatedCrash: Bool
   var diagnosticPermissionState: String
+  var dataMode: DataMode = .mock
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String

@@ -23,7 +23,8 @@ struct OverviewView: View {
         )
       }
 
-      SourceNote(text: "Overview combines live CPU/RAM process samples with mock diagnostic data for the remaining MVP sections. Corewise explains signals and safe review paths; it does not delete, repair, or optimize automatically.")
+      MetricBoard(metrics: snapshot.overviewMetrics)
+      SourceNote(text: "Overview combines live CPU/RAM process samples with mock diagnostic coverage for the remaining MVP sections. Corewise explains signals and safe review paths; it does not delete files or change system settings automatically.")
     }
   }
 
@@ -90,7 +91,7 @@ struct StorageView: View {
       StorageItemGroup(title: "Browser Caches", items: storage.browserCaches)
       PriorityPanel(title: "Findings", subtitle: "What the storage picture means.", findings: storage.findings)
       SafeActionPanel(title: "Safe actions", actions: storage.actions)
-      SourceNote(text: storage.sourceNote)
+      SourceNote(text: storage.sourceNote, dataMode: storage.summary.dataMode)
     }
   }
 }
@@ -117,7 +118,7 @@ struct PerformanceView: View {
 
       PriorityPanel(title: "Findings", subtitle: "Signals that deserve interpretation.", findings: performance.findings)
       SafeActionPanel(title: "Safe actions", actions: performance.actions)
-      SourceNote(text: performance.sourceNote)
+      SourceNote(text: performance.sourceNote, dataMode: performance.summary.dataMode)
     }
   }
 }
@@ -142,7 +143,7 @@ struct StartupView: View {
       StartupItemGroup(title: "Privileged Helpers", items: startup.privilegedHelpers)
       PriorityPanel(title: "Findings", subtitle: "Startup load without scare tactics.", findings: startup.findings)
       SafeActionPanel(title: "Safe actions", actions: startup.actions)
-      SourceNote(text: startup.sourceNote)
+      SourceNote(text: startup.sourceNote, dataMode: startup.summary.dataMode)
     }
   }
 }
@@ -185,7 +186,7 @@ struct IssuesView: View {
       CrashList(issues: appIssues.crashes)
       PriorityPanel(title: "Findings", subtitle: "Crash patterns Corewise can explain safely.", findings: appIssues.findings)
       SafeActionPanel(title: "Safe actions", actions: appIssues.actions)
-      SourceNote(text: appIssues.sourceNote)
+      SourceNote(text: appIssues.sourceNote, dataMode: appIssues.summary.dataMode)
     }
   }
 }
@@ -217,7 +218,7 @@ private struct DiagnosticPage: View {
       MetricBoard(metrics: metrics)
       PriorityPanel(title: "Findings", subtitle: "Plain-language interpretation.", findings: findings)
       SafeActionPanel(title: "Safe actions", actions: actions)
-      SourceNote(text: sourceNote)
+      SourceNote(text: sourceNote, dataMode: summary.dataMode)
     }
   }
 }
@@ -250,6 +251,7 @@ private struct CommandCenterHeader: View {
 
           HStack(spacing: 8) {
             StatusPill(status: snapshot.overallStatus)
+            DataModeBadge(dataMode: .mock)
             Text("Updated \(snapshot.generatedAt.formatted(date: .omitted, time: .shortened))")
               .font(.caption)
               .foregroundStyle(.tertiary)
@@ -287,7 +289,10 @@ private struct SectionHero: View {
         VStack(alignment: .trailing, spacing: 6) {
           Text(displayValue(metric))
             .font(.system(size: 30, weight: .semibold, design: .rounded))
-          StatusBadge(status: metric.status, score: metric.severityScore)
+          HStack(spacing: 6) {
+            DataModeBadge(dataMode: metric.dataMode)
+            StatusBadge(status: metric.status, score: metric.severityScore)
+          }
         }
       }
     }
@@ -384,9 +389,7 @@ private struct MetricTile: View {
           .foregroundStyle(.secondary)
           .lineLimit(1)
         Spacer(minLength: 8)
-        Text("\(metric.severityScore)")
-          .font(.caption2.weight(.medium))
-          .foregroundStyle(color(for: metric.status))
+        DataModeBadge(dataMode: metric.dataMode)
       }
 
       Text(displayValue(metric))
@@ -402,9 +405,7 @@ private struct MetricTile: View {
       Spacer(minLength: 0)
 
       HStack(spacing: 6) {
-        Circle()
-          .fill(color(for: metric.status))
-          .frame(width: 7, height: 7)
+        StatusDot(status: metric.status)
         Text(metric.source)
           .font(.caption2)
           .foregroundStyle(.tertiary)
@@ -489,7 +490,7 @@ private struct SafeActionPanel: View {
   var actions: [SafeAction]
 
   var body: some View {
-    PremiumPanel(title: title, subtitle: "No automatic cleanup. No magic repair.", systemImage: "checkmark.shield") {
+    PremiumPanel(title: title, subtitle: "No automatic cleanup. Manual review only.", systemImage: "checkmark.shield") {
       VStack(alignment: .leading, spacing: 10) {
         ForEach(actions) { action in
           HStack(alignment: .top, spacing: 10) {
@@ -555,7 +556,7 @@ private struct StorageBreakdownChart: View {
 
       VStack(alignment: .leading, spacing: 7) {
         ForEach(data) { item in
-          LegendRow(title: item.title, value: "\(number(item.value)) \(item.unit)", status: item.status)
+          LegendRow(title: item.title, value: "\(number(item.value)) \(item.unit)", dataMode: item.dataMode, status: item.status)
         }
       }
     }
@@ -575,9 +576,12 @@ private struct HorizontalBarChart: View {
       )
       .foregroundStyle(color(for: item.status))
       .annotation(position: .trailing) {
-        Text("\(number(item.value)) \(item.unit)")
-          .font(.caption2)
-          .foregroundStyle(.secondary)
+        HStack(spacing: 5) {
+          DataModeBadge(dataMode: item.dataMode)
+          Text("\(number(item.value)) \(item.unit)")
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(.secondary)
+        }
       }
     }
     .chartXAxisLabel(unit)
@@ -597,7 +601,7 @@ private struct ProcessBarChart: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       if processes.isEmpty {
-        Text("No readable process samples yet.")
+        Text("No live process samples available yet")
           .font(.caption)
           .foregroundStyle(.secondary)
           .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
@@ -635,6 +639,8 @@ private struct ProcessUsageRow: View {
           .monospacedDigit()
           .foregroundStyle(color(for: process.status))
           .layoutPriority(1)
+
+        DataModeBadge(dataMode: process.dataMode)
       }
 
       GeometryReader { proxy in
@@ -666,7 +672,8 @@ private struct StorageItemGroup: View {
           severityScore: item.severityScore,
           explanation: item.explanation,
           action: item.recommendedAction,
-          source: "\(item.source) · \(item.confidence)"
+          source: "\(item.source) · \(item.confidence)",
+          dataMode: item.dataMode
         )
       }
     }
@@ -689,7 +696,8 @@ private struct ProcessList: View {
           severityScore: item.severityScore,
           explanation: item.recommendedAction,
           action: item.source,
-          source: item.confidence
+          source: item.confidence,
+          dataMode: item.dataMode
         )
       }
     }
@@ -711,7 +719,8 @@ private struct StartupItemGroup: View {
           severityScore: item.severityScore,
           explanation: item.path,
           action: item.recommendedAction,
-          source: "\(item.source) · \(item.confidence)"
+          source: "\(item.source) · \(item.confidence)",
+          dataMode: item.dataMode
         )
       }
     }
@@ -732,7 +741,8 @@ private struct CrashList: View {
           severityScore: issue.severityScore,
           explanation: "Last crash \(issue.lastCrashDate.formatted(date: .abbreviated, time: .omitted)). \(issue.explanation)",
           action: issue.recommendedAction,
-          source: "\(issue.source) · \(issue.confidence) · \(issue.diagnosticPermissionState)"
+          source: "\(issue.source) · \(issue.confidence) · \(issue.diagnosticPermissionState)",
+          dataMode: issue.dataMode
         )
       }
     }
@@ -770,6 +780,7 @@ private struct DetailRow: View {
   var explanation: String
   var action: String
   var source: String
+  var dataMode: DataMode
 
   var body: some View {
     Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
@@ -797,10 +808,13 @@ private struct DetailRow: View {
           .foregroundStyle(.secondary)
           .fixedSize(horizontal: false, vertical: true)
 
-        Text("score \(severityScore)")
-          .font(.caption2)
-          .foregroundStyle(.tertiary)
-          .frame(maxWidth: .infinity, alignment: .trailing)
+        HStack(spacing: 6) {
+          DataModeBadge(dataMode: dataMode)
+          Text("score \(severityScore)")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
       }
 
       GridRow {
@@ -839,6 +853,7 @@ private struct IconPlate: View {
 private struct LegendRow: View {
   var title: String
   var value: String
+  var dataMode: DataMode
   var status: FindingSeverity
 
   var body: some View {
@@ -847,6 +862,7 @@ private struct LegendRow: View {
       Text(title)
         .lineLimit(1)
       Spacer(minLength: 8)
+      DataModeBadge(dataMode: dataMode)
       Text(value)
         .foregroundStyle(.secondary)
     }
@@ -881,6 +897,20 @@ private struct StatusBadge: View {
   }
 }
 
+private struct DataModeBadge: View {
+  var dataMode: DataMode
+
+  var body: some View {
+    Text(dataMode.rawValue)
+      .font(.caption2.weight(.semibold))
+      .foregroundStyle(color(for: dataMode))
+      .padding(.horizontal, 7)
+      .padding(.vertical, 3)
+      .background(color(for: dataMode).opacity(0.12), in: Capsule())
+      .accessibilityLabel("Data mode \(dataMode.rawValue)")
+  }
+}
+
 private struct StatusDot: View {
   var status: FindingSeverity
 
@@ -893,14 +923,20 @@ private struct StatusDot: View {
 
 private struct SourceNote: View {
   var text: String
+  var dataMode: DataMode? = nil
 
   var body: some View {
-    Text(text)
-      .font(.caption)
-      .foregroundStyle(.secondary)
-      .padding(12)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+    HStack(alignment: .firstTextBaseline, spacing: 8) {
+      if let dataMode {
+        DataModeBadge(dataMode: dataMode)
+      }
+      Text(text)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+    .padding(12)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
   }
 }
 
@@ -940,5 +976,18 @@ private func color(for severity: FindingSeverity) -> Color {
     Color(nsColor: .systemOrange)
   case .critical:
     Color(nsColor: .systemRed)
+  }
+}
+
+private func color(for dataMode: DataMode) -> Color {
+  switch dataMode {
+  case .live:
+    Color(nsColor: .systemGreen)
+  case .mock:
+    Color(nsColor: .systemOrange)
+  case .planned:
+    Color(nsColor: .systemBlue)
+  case .unavailable:
+    Color(nsColor: .tertiaryLabelColor)
   }
 }

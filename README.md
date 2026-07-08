@@ -13,14 +13,17 @@ Implemented live signals:
 - Top CPU process groups from public process information.
 - Top RAM process groups from public process information.
 - Process path lookup for grouping helpers under their owning `.app` bundle when available.
+- Startup volume total, used, available, and available percent.
+- Read-only sizes for selected known folders and large files where readable.
+- High-level thermal state from `ProcessInfo.thermalState`.
 
 Mock or scaffolded areas:
 
 - Overall health score.
 - Detailed battery health.
-- Storage breakdown and folder/file sizes.
 - Startup, login, agent, daemon, background item, and helper lists.
-- Thermal contributors beyond high-level public thermal state direction.
+- Memory pressure, swap, sustained CPU history, and WindowServer interpretation.
+- Thermal contributors beyond high-level public thermal state.
 - Crash/app issue counts and repeated-crash patterns.
 
 Unavailable by design in the MVP:

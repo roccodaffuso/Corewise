@@ -2,15 +2,15 @@
 
 ## Phase 1: Trust And Provenance
 
-- Add explicit `Live`, `Mock`, `Planned`, and `Unavailable` data modes to the model.
-- Render data-mode badges in metric cards, chart rows, findings, and source notes.
-- Remove or clearly label all fallback rows that can be mistaken for live diagnostics.
+- Implemented: explicit `Live`, `Mock`, `Planned`, and `Unavailable` data modes in the model.
+- Implemented: data-mode badges in metric cards, chart rows, source notes, and diagnostic rows.
+- Implemented: CPU/RAM process chart fallbacks removed.
 - Keep `DATA_SOURCES.md` synchronized with the UI.
 
 ## Phase 2: Storage Read-Only Collector
 
-- Implement real total, used, available, and available-percent values.
-- Add read-only folder/file sizing for selected safe paths.
+- Implemented: real total, used, available, and available-percent values.
+- Implemented: read-only folder/file sizing for selected safe paths.
 - Explain unreadable paths and permissions.
 - Never delete, move, or modify files.
 
@@ -35,7 +35,7 @@
 
 ## Phase 6: Thermal And App Issues
 
-- Use `ProcessInfo.thermalState` for safe high-level thermal state.
+- Implemented: use `ProcessInfo.thermalState` for safe high-level thermal state.
 - Avoid private temperature sensors.
 - Read permitted diagnostic reports for crash patterns only when access is available.
 - Show diagnostic permission state clearly.

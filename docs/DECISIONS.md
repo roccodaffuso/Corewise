@@ -41,3 +41,15 @@ Reason: Unsupported sensors and elevated tools would weaken the safety model.
 Decision: The repo documentation is the operational source of truth; Brain receives concise project memory.
 
 Reason: Engineers and agents need versioned docs next to the code.
+
+## 2026-07-08: DataMode Is Structured State
+
+Decision: Corewise uses an explicit `DataMode` model field for `Live`, `Mock`, `Planned`, and `Unavailable` instead of inferring provenance from source or confidence strings.
+
+Reason: The user must be able to tell immediately whether a value is real, scaffolded, planned, or intentionally unavailable.
+
+## 2026-07-08: Storage Collector Is Read-Only And Omit-Unknown
+
+Decision: Storage reads startup volume capacity and selected known paths only. Missing, absent, or unreadable folders are omitted instead of estimated.
+
+Reason: It is safer to show fewer real values than to fill the UI with plausible but false storage diagnostics.

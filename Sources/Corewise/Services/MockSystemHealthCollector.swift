@@ -8,6 +8,10 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     let memoryUsedValue = number(instant.usedMemoryGB)
     let memoryTotalValue = number(instant.totalMemoryGB)
     let memoryPercentValue = number(instant.memoryPercent)
+    let storageHealth = StorageDiagnosticsCollector().currentStorage(now: now)
+    let thermalState = ProcessInfo.processInfo.thermalState
+    let thermalStateValue = thermalStateLabel(thermalState)
+    let thermalStateStatus = thermalStatus(thermalState)
 
     let batteryMetrics = [
       metric("Charge", "74", "%", .good, 4, "The battery has enough charge for normal work.", "Power source snapshot", "Mock / high", "No action needed right now.", now),
@@ -20,53 +24,11 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
       metric("Battery Risk", "Low", "", .good, 18, "Capacity and cycle count do not point to an urgent issue.", "Corewise score", "Mock / medium", "Recheck after a few charge cycles.", now)
     ]
 
-    let storageMetrics = [
-      metric("Total Storage", "512", "GB", .info, 0, "Physical volume size used for the storage estimate.", "Volume capacity", "Mock / high", "No action needed.", now),
-      metric("Available", "84", "GB", .warning, 58, "Available space is usable but getting close to the point where updates and large builds can feel constrained.", "Volume capacity", "Mock / high", "Review large developer caches and old downloads.", now),
-      metric("Used", "428", "GB", .warning, 58, "Most of the internal drive is already allocated.", "Volume capacity", "Mock / high", "Look at the largest space offenders before deleting anything.", now),
-      metric("Available", "16.4", "%", .warning, 58, "Below roughly 20%, macOS and developer tools can have less room for temporary work.", "Corewise threshold", "Mock / high", "Aim for 20-25% free space if possible.", now),
-      metric("Downloads", "22", "GB", .info, 35, "Downloads often contain installers and archives that are safe to review manually.", "Folder size estimate", "Mock / medium", "Open Downloads and sort by size/date.", now),
-      metric("Trash", "5.8", "GB", .info, 25, "Trash has recoverable space, but Corewise will not empty it automatically.", "Folder size estimate", "Mock / medium", "Review Trash yourself before emptying it.", now),
-      metric("iOS Backups", "14", "GB", .warning, 48, "Old device backups can occupy meaningful local space.", "MobileSync estimate", "Mock / medium", "Review backups in Finder or device settings.", now),
-      metric("Container Data", "28", "GB", .warning, 62, "Container images and volumes can grow quietly when developer tools are installed.", "Container storage estimate", "Mock / medium", "Use the owning developer tool to review unused images and volumes.", now)
-    ]
-
-    let storageBreakdown = [
-      ChartDatum(title: "Apps", value: 74, unit: "GB", status: .info, detail: "Installed applications"),
-      ChartDatum(title: "User Files", value: 196, unit: "GB", status: .info, detail: "Documents, media, desktop files"),
-      ChartDatum(title: "Developer", value: 92, unit: "GB", status: .warning, detail: "Xcode, simulators, containers"),
-      ChartDatum(title: "Caches", value: 38, unit: "GB", status: .warning, detail: "App, browser, and build caches"),
-      ChartDatum(title: "System", value: 28, unit: "GB", status: .good, detail: "macOS and system data"),
-      ChartDatum(title: "Available", value: 84, unit: "GB", status: .good, detail: "Free space")
-    ]
-
-    let largeFolders = [
-      storageItem("Developer", "~/Library/Developer", 42, .warning, 64, "Developer data is the largest folder group in this mock scan.", "Folder scan", "Mock / medium", "Open the folder and review DerivedData, Archives, and simulators.", now),
-      storageItem("Movies", "~/Movies", 31, .info, 34, "Media files are large but usually user-owned and intentional.", "Folder scan", "Mock / medium", "Sort by size and archive old exports if you no longer need them.", now),
-      storageItem("Downloads", "~/Downloads", 22, .info, 35, "Downloads are a common place for forgotten installers and archives.", "Folder scan", "Mock / medium", "Review manually before removing anything.", now)
-    ]
-
-    let developerCaches = [
-      storageItem("Xcode DerivedData", "~/Library/Developer/Xcode/DerivedData", 18, .warning, 60, "DerivedData can grow quickly and slow indexing when stale.", "Folder estimate", "Mock / medium", "Use Xcode or Finder to review old project caches.", now),
-      storageItem("Simulators", "~/Library/Developer/CoreSimulator", 21, .warning, 66, "Simulator runtimes and device data can be heavy.", "Folder estimate", "Mock / medium", "Remove unused simulator devices from Xcode when ready.", now),
-      storageItem("Archives", "~/Library/Developer/Xcode/Archives", 9.5, .info, 32, "Old app archives take space but may be needed for release history.", "Folder estimate", "Mock / medium", "Keep recent releases and archive or delete older ones manually.", now)
-    ]
-
-    let browserCaches = [
-      storageItem("Safari Cache", "~/Library/Caches/com.apple.Safari", 3.2, .info, 22, "Browser caches are normal and often self-managed.", "Folder estimate", "Mock / low", "Clear from browser settings only if troubleshooting.", now),
-      storageItem("Chrome Cache", "~/Library/Caches/Google/Chrome", 4.8, .info, 28, "Chrome cache is noticeable but not alarming.", "Folder estimate", "Mock / low", "Review through Chrome settings if needed.", now)
-    ]
-
-    let largeFiles = [
-      storageItem("Screen recording", "~/Desktop/demo-recording.mov", 7.4, .info, 30, "Large video exports are easy to identify and move.", "File scan", "Mock / medium", "Open in Finder and decide whether to archive it.", now),
-      storageItem("VM disk image", "~/Documents/VMs/test-machine.qcow2", 16, .warning, 54, "Virtual machine disk images can expand quietly.", "File scan", "Mock / medium", "Review whether the VM is still needed.", now)
-    ]
-
     let performanceMetrics = [
-      metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Instant CPU load sampled over a short window from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Watch sustained high CPU, not a single short spike.", now),
-      metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is actively used or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Close heavy apps only if memory pressure or swap also stays high.", now),
-      metric("RAM Used Now", memoryPercentValue, "%", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "This is an instant memory-use estimate from active, wired, and compressed pages.", "host_statistics64 VM_INFO64", "Live / medium", "Use this as a direction signal rather than an exact Activity Monitor duplicate.", now),
-      metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Live / high", "Use wattage later only if Corewise can obtain it through a safe, user-approved path.", now),
+      metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Instant CPU load sampled over a short window from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Watch sustained high CPU, not a single short spike.", now, dataMode: .live),
+      metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is actively used or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Close heavy apps only if memory pressure or swap also stays high.", now, dataMode: .live),
+      metric("RAM Used Now", memoryPercentValue, "%", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "This is an instant memory-use estimate from active, wired, and compressed pages.", "host_statistics64 VM_INFO64", "Live / medium", "Use this as a direction signal rather than an exact Activity Monitor duplicate.", now, dataMode: .live),
+      metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Use wattage later only if Corewise can obtain it through a safe, user-approved path.", now, dataMode: .unavailable),
       metric("Memory Pressure", "Moderate", "", .warning, 58, "The Mac has enough memory, but swap and large apps suggest pressure during heavier work.", "Activity sample", "Mock / medium", "Close unused simulators or browser windows before heavy builds.", now),
       metric("Swap Used", "3.1", "GB", .warning, 56, "Swap means macOS is using disk as overflow memory; occasional use is normal, sustained high use can feel slow.", "VM statistics", "Mock / medium", "Watch whether this stays high after closing heavy apps.", now),
       metric("Uptime", "9", "days", .info, 24, "Long uptime is fine, but a restart can clear stuck background work.", "System uptime", "Mock / high", "Restart only if performance feels unusually degraded.", now),
@@ -74,19 +36,8 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
       metric("WindowServer Impact", "Elevated", "", .info, 38, "WindowServer usage is higher with external displays, screen recording, or many animated windows.", "Process sample", "Mock / medium", "Close unneeded display-heavy apps if UI feels sluggish.", now)
     ]
 
-    let fallbackCPUProcesses = [
-      process("Xcode", 31, "% CPU", .warning, 60, "Indexing and builds are currently the largest CPU source.", "Process sample", "Mock / medium", "Let indexing finish or pause heavy builds on battery.", now),
-      process("WindowServer", 12, "% CPU", .info, 34, "Window drawing is noticeable but not critical.", "Process sample", "Mock / medium", "Reduce display-heavy work if animations stutter.", now),
-      process("Safari", 8, "% CPU", .info, 20, "A few tabs are active.", "Process sample", "Mock / medium", "Close video or heavy web apps if needed.", now)
-    ]
-    let cpuProcesses = instant.topCPUProcesses.isEmpty ? fallbackCPUProcesses : instant.topCPUProcesses
-
-    let fallbackMemoryProcesses = [
-      process("Safari", 2.4, "GB", .info, 36, "Several tabs are active and using memory.", "Process sample", "Mock / medium", "Close unused tabs or windows.", now),
-      process("Simulator", 1.8, "GB", .warning, 48, "Simulator sessions are memory-heavy.", "Process sample", "Mock / medium", "Quit unused simulator devices.", now),
-      process("Xcode", 1.6, "GB", .info, 35, "Expected for a large workspace.", "Process sample", "Mock / medium", "No action unless memory pressure rises.", now),
-    ]
-    let memoryProcesses = instant.topMemoryProcesses.isEmpty ? fallbackMemoryProcesses : instant.topMemoryProcesses
+    let cpuProcesses = instant.topCPUProcesses
+    let memoryProcesses = instant.topMemoryProcesses
 
     let startupMetrics = [
       metric("Login Items", "5", "items", .info, 32, "A few apps start when you sign in.", "Login item list", "Mock / medium", "Keep the ones you use every day.", now),
@@ -107,13 +58,13 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     ]
 
     let thermalMetrics = [
-      metric("Thermal State", "Nominal", "", .good, 8, "macOS is not reporting thermal pressure in this snapshot.", "ProcessInfo.thermalState", "Mock / high", "No action needed.", now),
-      metric("Low Power Mode", "Off", "", .info, 12, "Low Power Mode is not modeled as active.", "Power settings", "Mock / medium", "Turn it on manually when battery life matters more than peak speed.", now),
-      metric("Likely Contributors", "Xcode, builds", "", .warning, 44, "Current heat contributors are likely CPU-heavy developer tools.", "Process correlation", "Mock / low", "Let builds finish or pause background work if fans stay loud.", now)
+      metric("Thermal State", thermalStateValue, "", thermalStateStatus, thermalSeverity(thermalState), "macOS high-level thermal pressure state.", "ProcessInfo.thermalState", "Live / high", "No action needed unless macOS reports elevated thermal pressure.", now, dataMode: .live),
+      metric("Low Power Mode", "Planned", "", .info, 0, "Low Power Mode is not collected in this build.", "Power settings", "Planned / medium", "Use macOS settings when battery life matters more than peak speed.", now, dataMode: .planned),
+      metric("Likely Contributors", "Planned", "", .info, 0, "Corewise needs sustained live process history before attributing heat to apps.", "Process correlation", "Planned / low", "Use live CPU rows as context, not a thermal diagnosis.", now, dataMode: .planned)
     ]
 
     let issueMetrics = [
-      metric("Diagnostic Access", "Limited", "", .info, 20, "Corewise can explain crash patterns only from data macOS allows it to read.", "Permission state", "Mock / medium", "Grant access only if you want deeper diagnostics later.", now),
+      metric("Diagnostic Access", "Limited", "", .info, 20, "Corewise can explain crash patterns only from data macOS allows it to read.", "Permission state", "Unavailable / medium", "Grant access only if you want deeper diagnostics later.", now, dataMode: .unavailable),
       metric("Crashes Last 7 Days", "6", "crashes", .warning, 52, "One app appears to be failing repeatedly this week.", "Diagnostic reports", "Mock / medium", "Update or reinstall the repeated-crash app first.", now),
       metric("Crashes Last 30 Days", "14", "crashes", .warning, 46, "Crash volume is noticeable but not system-wide critical.", "Diagnostic reports", "Mock / medium", "Look for repeated bundle IDs rather than one-off crashes.", now),
       metric("Repeated Crash Flag", "Yes", "", .warning, 60, "At least one app has multiple recent crashes.", "Corewise score", "Mock / medium", "Focus on the repeated app before broad troubleshooting.", now)
@@ -131,10 +82,11 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
       overallStatus: .needsAttention,
       overviewMetrics: [
         metric("Health Score", "74", "/100", .warning, 42, "Corewise sees a mostly healthy Mac with storage and background activity worth reviewing.", "Corewise scoring model", "Mock / medium", "Start with storage and startup items; no destructive action needed.", now),
-        metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Live CPU usage sampled from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Refresh or wait a few seconds to see whether this is sustained.", now),
-        metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryPercentValue)% of physical memory is estimated as active, wired, or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Check memory pressure before blaming a single app.", now),
-        metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Live / high", "Do not show private-sensor wattage or sudo-only readings in the MVP.", now),
+        metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Live CPU usage sampled from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Refresh or wait a few seconds to see whether this is sustained.", now, dataMode: .live),
+        metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryPercentValue)% of physical memory is estimated as active, wired, or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Check memory pressure before blaming a single app.", now, dataMode: .live),
+        metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Do not show unsupported or elevated-tool wattage readings in the MVP.", now, dataMode: .unavailable),
         metric("Main Attention Area", "Storage", "", .warning, 58, "Available space is the strongest current signal.", "Corewise scoring model", "Mock / medium", "Review largest space offenders manually.", now),
+        metric("Score Confidence", "Low", "", .info, 20, "The current score mixes live and mock coverage, so it is not a final diagnostic score.", "Corewise scoring model", "Mock / high", "Use section-level badges before trusting the score.", now),
         metric("Data Mode", "Mock", "", .info, 0, "This build uses realistic mock data until safe collectors are implemented.", "App build", "High", "Treat values as UI/product scaffolding, not real device diagnostics.", now)
       ],
       battery: BatteryHealth(
@@ -150,36 +102,7 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
         ],
         sourceNote: "Mock data. Real battery metrics should come from safe power-source APIs and documented macOS battery health surfaces where available."
       ),
-      storage: StorageHealth(
-        summary: storageMetrics[1],
-        totalGB: 512,
-        availableGB: 84,
-        usedGB: 428,
-        availablePercent: 16.4,
-        metrics: storageMetrics,
-        breakdown: storageBreakdown,
-        largeFolders: largeFolders,
-        largeFiles: largeFiles,
-        developerCaches: developerCaches,
-        browserCaches: browserCaches,
-        spaceOffenders: [
-          ChartDatum(title: "Developer", value: 42, unit: "GB", status: .warning, detail: "~/Library/Developer"),
-          ChartDatum(title: "Container Data", value: 28, unit: "GB", status: .warning, detail: "Container images and volumes"),
-          ChartDatum(title: "Downloads", value: 22, unit: "GB", status: .info, detail: "~/Downloads"),
-          ChartDatum(title: "Simulators", value: 21, unit: "GB", status: .warning, detail: "CoreSimulator"),
-          ChartDatum(title: "VM Disk", value: 16, unit: "GB", status: .warning, detail: "Virtual machine disk image"),
-          ChartDatum(title: "iOS Backups", value: 14, unit: "GB", status: .warning, detail: "MobileSync backups")
-        ],
-        findings: [
-          DiagnosticFinding(title: "Free space is below comfort range", detail: "16.4% free is workable, but large builds and macOS updates have less room.", status: .warning, severityScore: 58),
-          DiagnosticFinding(title: "Developer data is the biggest clear category", detail: "Xcode, simulators, and container data account for several top offenders.", status: .warning, severityScore: 64)
-        ],
-        actions: [
-          SafeAction(title: "Open folders, do not auto-delete", body: "Corewise should help you inspect large folders and files without removing anything automatically.", systemImage: "folder", status: .good),
-          SafeAction(title: "Use vendor tools for caches", body: "Use Xcode or browser settings for cleanup so each app stays consistent.", systemImage: "wrench.and.screwdriver", status: .info)
-        ],
-        sourceNote: "Mock data. Real storage scanning must stay read-only, avoid hidden destructive cleanup, and explain permission-limited folders clearly."
-      ),
+      storage: storageHealth,
       performance: PerformanceHealth(
         summary: performanceMetrics[0],
         metrics: performanceMetrics,
@@ -191,7 +114,7 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
         ],
         actions: [
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
-          SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should not present it as a magic fix.", systemImage: "power", status: .info)
+          SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
         sourceNote: "Mock data. Real performance collectors should sample public process information and present approximations honestly."
       ),
@@ -223,15 +146,15 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
         summary: thermalMetrics[0],
         metrics: thermalMetrics,
         contributors: [
-          DiagnosticFinding(title: "Thermal state is nominal", detail: "The safe public signal does not indicate throttling.", status: .good, severityScore: 8),
-          DiagnosticFinding(title: "Temperature sensors are intentionally absent", detail: "Corewise should not rely on private sensor APIs for a consumer MVP.", status: .info, severityScore: 12),
+          DiagnosticFinding(title: "Thermal state is \(thermalStateValue.lowercased())", detail: "The safe public signal is read from ProcessInfo.", status: thermalStateStatus, severityScore: thermalSeverity(thermalState)),
+          DiagnosticFinding(title: "Low-level readings are intentionally absent", detail: "Corewise should not rely on unsupported hardware APIs for a consumer MVP.", status: .info, severityScore: 12),
           DiagnosticFinding(title: "CPU-heavy tools can still create heat", detail: "Xcode, builds, and background developer tasks are likely contributors if fans are audible.", status: .warning, severityScore: 44)
         ],
         actions: [
           SafeAction(title: "Trust macOS thermal pressure", body: "Use ProcessInfo thermal state for safe high-level thermal status.", systemImage: "thermometer.medium", status: .good),
           SafeAction(title: "Reduce sustained load", body: "Pause long builds or containers if the Mac feels hot for a long period.", systemImage: "speedometer", status: .info)
         ],
-        sourceNote: "Mock data. Real thermal basics should prefer ProcessInfo.thermalState and avoid private temperature sensor claims."
+        sourceNote: "Mixed data. Thermal state is live from ProcessInfo.thermalState; low power mode and likely contributors remain planned. Corewise avoids unsupported low-level hardware readings."
       ),
       appIssues: AppIssuesHealth(
         summary: issueMetrics[1],
@@ -268,12 +191,14 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     _ source: String,
     _ confidence: String,
     _ recommendedAction: String,
-    _ lastUpdated: Date
+    _ lastUpdated: Date,
+    dataMode: DataMode = .mock
   ) -> DiagnosticMetric {
     DiagnosticMetric(
       title: title,
       value: value,
       unit: unit,
+      dataMode: dataMode,
       status: status,
       severityScore: severityScore,
       explanation: explanation,
@@ -294,12 +219,14 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     _ source: String,
     _ confidence: String,
     _ recommendedAction: String,
-    _ lastUpdated: Date
+    _ lastUpdated: Date,
+    dataMode: DataMode = .mock
   ) -> StorageItem {
     StorageItem(
       title: title,
       path: path,
       sizeGB: sizeGB,
+      dataMode: dataMode,
       status: status,
       severityScore: severityScore,
       explanation: explanation,
@@ -320,12 +247,14 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     _ source: String,
     _ confidence: String,
     _ recommendedAction: String,
-    _ lastUpdated: Date
+    _ lastUpdated: Date,
+    dataMode: DataMode = .mock
   ) -> ProcessSample {
     ProcessSample(
       name: name,
       value: value,
       unit: unit,
+      dataMode: dataMode,
       status: status,
       severityScore: severityScore,
       explanation: explanation,
@@ -349,7 +278,8 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     _ source: String,
     _ confidence: String,
     _ recommendedAction: String,
-    _ lastUpdated: Date
+    _ lastUpdated: Date,
+    dataMode: DataMode = .mock
   ) -> StartupItem {
     StartupItem(
       title: title,
@@ -358,6 +288,7 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
       startupImpact: startupImpact,
       signedState: signedState,
       recentlyAdded: recentlyAdded,
+      dataMode: dataMode,
       status: status,
       severityScore: severityScore,
       explanation: explanation,
@@ -382,7 +313,8 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     _ explanation: String,
     _ source: String,
     _ confidence: String,
-    _ recommendedAction: String
+    _ recommendedAction: String,
+    dataMode: DataMode = .mock
   ) -> CrashIssue {
     CrashIssue(
       appName: appName,
@@ -393,6 +325,7 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
       lastCrashDate: lastCrashDate,
       repeatedCrash: repeatedCrash,
       diagnosticPermissionState: diagnosticPermissionState,
+      dataMode: dataMode,
       status: status,
       severityScore: severityScore,
       explanation: explanation,
@@ -451,5 +384,50 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
 
   private func memorySeverity(_ percent: Double) -> Int {
     min(max(Int(percent.rounded()), 0), 100)
+  }
+
+  private func thermalStateLabel(_ state: ProcessInfo.ThermalState) -> String {
+    switch state {
+    case .nominal:
+      return "Nominal"
+    case .fair:
+      return "Fair"
+    case .serious:
+      return "Serious"
+    case .critical:
+      return "Critical"
+    @unknown default:
+      return "Unknown"
+    }
+  }
+
+  private func thermalStatus(_ state: ProcessInfo.ThermalState) -> FindingSeverity {
+    switch state {
+    case .nominal:
+      return .good
+    case .fair:
+      return .info
+    case .serious:
+      return .warning
+    case .critical:
+      return .critical
+    @unknown default:
+      return .info
+    }
+  }
+
+  private func thermalSeverity(_ state: ProcessInfo.ThermalState) -> Int {
+    switch state {
+    case .nominal:
+      return 8
+    case .fair:
+      return 28
+    case .serious:
+      return 66
+    case .critical:
+      return 92
+    @unknown default:
+      return 20
+    }
   }
 }

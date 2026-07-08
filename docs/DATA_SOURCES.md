@@ -15,6 +15,7 @@ Statuses:
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
 | Health score | Mock | Corewise scoring model placeholder | Medium | Mixes live and mock inputs; not a final diagnostic score. |
+| Score confidence | Mock | Corewise scoring model placeholder | High | Currently low because the score includes mock coverage. |
 | Overall status | Mock | Derived from placeholder score | Medium | Must be relabeled when real scoring exists. |
 | CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | Short sample window; not identical to Activity Monitor. |
 | RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Estimate based on active, wired, and compressed pages. |
@@ -38,17 +39,16 @@ Statuses:
 
 | Metric | Status | Planned source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Total, used, available | Mock | `FileManager` volume resource values | High | Current values are placeholders. |
-| Available percent | Mock | Derived from real volume values | High | Current value is placeholder. |
-| Large folders | Mock | Read-only folder scan | Medium | Must handle permissions and avoid hidden destructive actions. |
-| Large files | Mock | Read-only file enumeration | Medium | Must avoid scanning restricted folders without explanation. |
-| Developer caches | Mock | Read-only known-path review | Medium | Only show paths that exist and are readable. |
-| Browser caches | Mock | Read-only known-path review | Low | Browser-owned cleanup should point to browser settings. |
-| Downloads | Mock | Read-only folder size | Medium | User must decide what to keep. |
-| Trash | Mock | Read-only folder size | Medium | Corewise must not empty Trash. |
-| iOS backups | Mock | Read-only known-path review | Medium | Prefer Finder/device settings for action. |
-| Xcode DerivedData, simulators, archives | Mock | Read-only known-path review | Medium | Prefer Xcode for removal actions. |
-| Container data | Mock | Read-only known-path review | Low | Must be generic unless a specific installed tool is detected. |
+| Total, used, available | Implemented | `FileManager` volume resource values | High | Startup volume only. |
+| Available percent | Implemented | Derived from real volume values | High | Startup volume only. |
+| Large folders | Implemented | Read-only known-path scan | Medium | Only existing readable known paths are shown. |
+| Large files | Implemented | Read-only Downloads scan | Medium | Restricted to Downloads in the current MVP. |
+| Developer caches | Implemented | Read-only known-path review | Medium | Only paths that exist and are readable are shown. |
+| Browser caches | Implemented | Read-only known-path review | Low | Browser-owned cleanup should point to browser settings. |
+| Downloads | Implemented | Read-only folder size | Medium | User must decide what to keep. |
+| Trash | Implemented | Read-only folder size | Medium | Corewise must not empty Trash. |
+| iOS backups | Planned | Read-only known-path review | Medium | Prefer Finder/device settings for action. |
+| Container data | Planned | Read-only known-path review | Low | Must be generic unless a specific installed tool is detected. |
 
 ## Performance
 
@@ -59,7 +59,7 @@ Statuses:
 | Top CPU processes | Implemented | `proc_listallpids`, `proc_pidinfo(PROC_PIDTASKINFO)` | Medium | Short sample window; inaccessible processes may be omitted. |
 | Top RAM processes | Implemented | `proc_pidinfo(PROC_PIDTASKINFO)` resident size | Medium | Resident memory alone is not necessarily bad. |
 | App grouping | Implemented | `proc_pidpath` path parsing for `.app` bundles | Medium | Falls back to process names when path is not readable. |
-| Memory pressure | Mock | Public VM pressure signal or safe approximation | Medium | Current value is placeholder. |
+| Memory pressure | Mock | Public VM pressure signal or safe approximation | Medium | Current value is placeholder and labeled mock. |
 | Swap used | Mock | VM statistics if exposed safely | Medium | Current value is placeholder. |
 | Uptime | Mock | `ProcessInfo.systemUptime` | High | Easy planned live conversion. |
 | Sustained high CPU | Mock | Repeated samples over time | Medium | Requires in-app history. |
@@ -81,16 +81,16 @@ Statuses:
 
 | Metric | Status | Planned source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Thermal state | Mock | `ProcessInfo.thermalState` | High | Safe high-level signal; should become live. |
-| Low Power Mode | Mock | Public power mode where available | Medium | Availability varies. |
+| Thermal state | Implemented | `ProcessInfo.thermalState` | High | Safe high-level signal, not a temperature reading. |
+| Low Power Mode | Planned | Public power mode where available | Medium | Availability varies. |
 | Temperature sensors | Avoided | Private sensor APIs | High | Not part of the MVP trust model. |
-| Likely contributors | Mock | CPU/process correlation | Low | Must be framed as likely, not certain. |
+| Likely contributors | Planned | CPU/process correlation | Low | Requires sustained live process history. |
 
 ## App Issues
 
 | Metric | Status | Planned source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Diagnostic permission state | Mock | Permission/access check | Medium | Must disclose incomplete access. |
+| Diagnostic permission state | Unavailable | Permission/access check | Medium | Not implemented; must disclose incomplete access. |
 | Crashes last 7 days | Mock | Permitted diagnostic reports | Medium | Access may be limited. |
 | Crashes last 30 days | Mock | Permitted diagnostic reports | Medium | Access may be limited. |
 | Last crash date | Mock | Diagnostic report metadata | Medium | Must avoid reading unnecessary content. |
