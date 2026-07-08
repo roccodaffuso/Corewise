@@ -18,9 +18,9 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 Use these user-facing data badges:
 
 - `Live`: read from the current Mac during this session.
-- `Mock`: realistic placeholder used to shape the MVP.
 - `Planned`: not implemented yet, but planned through safe APIs or read-only review.
 - `Unavailable`: not safely available in the MVP.
+- `Avoided`: intentionally excluded because the source or behavior would weaken the trust model.
 
 Use these health states:
 

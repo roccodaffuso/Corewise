@@ -1,6 +1,6 @@
 import Foundation
 
-struct MockSystemHealthCollector: SystemHealthCollecting {
+struct SystemHealthCollector: SystemHealthCollecting {
   private let performanceHistory = PerformanceHistoryTracker()
 
   func currentSnapshot() async throws -> HealthSnapshot {
@@ -25,11 +25,11 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
       metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is actively used or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Close heavy apps only if memory pressure or swap also stays high.", now, dataMode: .live),
       metric("RAM Used Now", memoryPercentValue, "%", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "This is an instant memory-use estimate from active, wired, and compressed pages.", "host_statistics64 VM_INFO64", "Live / medium", "Use this as a direction signal rather than an exact Activity Monitor duplicate.", now, dataMode: .live),
       metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Use wattage later only if Corewise can obtain it through a safe, user-approved path.", now, dataMode: .unavailable),
-      metric("Memory Pressure", "Moderate", "", .warning, 58, "The Mac has enough memory, but swap and large apps suggest pressure during heavier work.", "Activity sample", "Mock / medium", "Close unused simulators or browser windows before heavy builds.", now),
-      metric("Swap Used", "3.1", "GB", .warning, 56, "Swap means macOS is using disk as overflow memory; occasional use is normal, sustained high use can feel slow.", "VM statistics", "Mock / medium", "Watch whether this stays high after closing heavy apps.", now),
+      metric("Memory Pressure", "Unavailable", "", .info, 0, "Memory pressure is not collected in this build through a safe implemented source.", "Memory pressure collector", "Unavailable / medium", "Use Activity Monitor if you need memory pressure before Corewise implements it.", now, dataMode: .unavailable),
+      metric("Swap Used", "Planned", "GB", .info, 0, "Swap usage needs a safe implemented VM source before Corewise can display it.", "Swap collector", "Planned / medium", "Do not infer swap pressure from resident memory alone.", now, dataMode: .planned),
       metric("Uptime", number(uptimeDays), "days", .info, min(max(Int(uptimeDays.rounded()), 0), 100), "Current system uptime reported by ProcessInfo.", "ProcessInfo.systemUptime", "Live / high", "Restart only if performance symptoms persist.", now, dataMode: .live),
       sustainedCPU,
-      metric("WindowServer Impact", "Elevated", "", .info, 38, "WindowServer usage is higher with external displays, screen recording, or many animated windows.", "Process sample", "Mock / medium", "Close unneeded display-heavy apps if UI feels sluggish.", now)
+      metric("WindowServer Impact", "Planned", "", .info, 0, "WindowServer interpretation needs careful live process context before Corewise can present it.", "Process interpretation", "Planned / low", "Use live CPU rows as context, not a WindowServer diagnosis.", now, dataMode: .planned)
     ]
 
     let cpuProcesses = instant.topCPUProcesses
@@ -42,20 +42,14 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     ]
 
     let issueMetrics = [
-      metric("Diagnostic Access", "Limited", "", .info, 20, "Corewise can explain crash patterns only from data macOS allows it to read.", "Permission state", "Unavailable / medium", "Grant access only if you want deeper diagnostics later.", now, dataMode: .unavailable),
-      metric("Crashes Last 7 Days", "6", "crashes", .warning, 52, "One app appears to be failing repeatedly this week.", "Diagnostic reports", "Mock / medium", "Update or reinstall the repeated-crash app first.", now),
-      metric("Crashes Last 30 Days", "14", "crashes", .warning, 46, "Crash volume is noticeable but not system-wide critical.", "Diagnostic reports", "Mock / medium", "Look for repeated bundle IDs rather than one-off crashes.", now),
-      metric("Repeated Crash Flag", "Yes", "", .warning, 60, "At least one app has multiple recent crashes.", "Corewise score", "Mock / medium", "Focus on the repeated app before broad troubleshooting.", now)
+      metric("Diagnostic Access", "Not Read", "", .info, 0, "Corewise does not read diagnostic reports in this build.", "Diagnostic report collector", "Unavailable / high", "Grant access only if a future explicit crash diagnostics flow asks for it.", now, dataMode: .unavailable),
+      metric("Crashes Last 7 Days", "Unavailable", "crashes", .info, 0, "Crash counts are unavailable until Corewise implements permitted diagnostic report reading.", "Diagnostic report collector", "Unavailable / high", "Use Console or app update history for crash review until then.", now, dataMode: .unavailable),
+      metric("Crashes Last 30 Days", "Unavailable", "crashes", .info, 0, "Crash counts are unavailable until Corewise implements permitted diagnostic report reading.", "Diagnostic report collector", "Unavailable / high", "Look for repeated crashes manually only if you are troubleshooting a specific app.", now, dataMode: .unavailable),
+      metric("Repeated Crash Flag", "Planned", "", .info, 0, "Repeated crash detection needs real crash metadata before it can be trusted.", "Crash pattern collector", "Planned / medium", "Do not treat App Issues as diagnostic until this collector is implemented.", now, dataMode: .planned)
     ]
 
-    let crashes = [
-      crash("ExampleApp", "com.example.ExampleApp", "3.4.1", 3, 7, daysAgo(1), true, "Limited", .warning, 60, "This app has repeated crashes and is the clearest issue.", "Diagnostic reports", "Mock / medium", "Update the app, then relaunch and watch whether crashes stop."),
-      crash("PhotoTool", "com.vendor.PhotoTool", "9.2", 2, 4, daysAgo(3), false, "Limited", .info, 32, "Crashes are present but not yet clearly repeated.", "Diagnostic reports", "Mock / medium", "Check for an update if you rely on it."),
-      crash("HelperService", "com.vendor.HelperService", "1.8", 1, 3, daysAgo(6), false, "Limited", .info, 28, "Background helper crashes can come from stale vendor services.", "Diagnostic reports", "Mock / low", "Use the vendor app or uninstaller rather than deleting helpers.")
-    ]
-    let crashesByApp = crashes.map {
-      ChartDatum(title: $0.appName, value: Double($0.crashesLast30Days), unit: "crashes", status: $0.status, detail: $0.bundleID)
-    }
+    let crashes: [CrashIssue] = []
+    let crashesByApp: [ChartDatum] = []
     let scoreConfidence = ScoreConfidenceCalculator.metric(
       modes: coverageModes(
         battery: batteryHealth,
@@ -74,16 +68,16 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
 
     return HealthSnapshot(
       generatedAt: now,
-      healthScore: 74,
-      overallStatus: .needsAttention,
+      healthScore: 0,
+      overallStatus: .notScored,
       overviewMetrics: [
-        metric("Health Score", "74", "/100", .warning, 42, "The current score is still a placeholder; trust section-level live badges more than the global score.", "Corewise scoring model", "Mock / medium", "Use live section values for decisions until scoring is rebuilt.", now),
+        metric("Health Score", "Not Scored Yet", "", .info, 0, "Corewise does not calculate a global health score until enough section data is live.", "Corewise scoring model", "Planned / high", "Use section-level Live badges instead of a global score for now.", now, dataMode: .planned),
         metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Live CPU usage sampled from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Refresh or wait a few seconds to see whether this is sustained.", now, dataMode: .live),
         metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryPercentValue)% of physical memory is estimated as active, wired, or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Check memory pressure before blaming a single app.", now, dataMode: .live),
         metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Do not show unsupported or elevated-tool wattage readings in the MVP.", now, dataMode: .unavailable),
-        metric("Main Attention Area", "Storage", "", .warning, 58, "Available space is the strongest current signal, but detailed folder scans are not automatic.", "Corewise scoring model", "Mock / medium", "Review storage manually; Corewise will not inspect personal folders without an explicit flow.", now),
+        metric("Main Attention Area", "Unavailable", "", .info, 0, "Corewise has not implemented real cross-section prioritization yet.", "Corewise scoring model", "Unavailable / high", "Review section-level live data instead of a generated priority.", now, dataMode: .unavailable),
         scoreConfidence,
-        metric("Data Mode", "Mock", "", .info, 0, "This build uses realistic mock data until safe collectors are implemented.", "App build", "High", "Treat values as UI/product scaffolding, not real device diagnostics.", now)
+        metric("Synthetic Runtime Data", "None", "", .good, 0, "Corewise runtime values are now live, planned, unavailable, or avoided; synthetic diagnostic rows are not used.", "App build", "Live / high", "Treat missing areas as intentionally not implemented, not hidden diagnostics.", now, dataMode: .live)
       ],
       battery: batteryHealth,
       storage: storageHealth,
@@ -97,7 +91,7 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
           SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
-        sourceNote: "Mixed data. CPU, RAM, process rankings, uptime, and sustained CPU history are live. Memory pressure, swap, and WindowServer interpretation remain mock until safe sources are added."
+        sourceNote: "Mixed data. CPU, RAM, process rankings, uptime, and sustained CPU history are live. Memory pressure, swap, and WindowServer interpretation are unavailable or planned until safe sources are added."
       ),
       startup: startupHealth,
       thermal: ThermalHealth(
@@ -115,19 +109,19 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
         sourceNote: "Mixed data. Thermal state is live from ProcessInfo.thermalState; low power mode and likely contributors remain planned. Corewise avoids unsupported low-level hardware readings."
       ),
       appIssues: AppIssuesHealth(
-        summary: issueMetrics[1],
+        summary: issueMetrics[0],
         metrics: issueMetrics,
         crashes: crashes,
         crashesByApp: crashesByApp,
         findings: [
-          DiagnosticFinding(title: "One repeated-crash app stands out", detail: "ExampleApp accounts for half of the recent mock crash volume.", status: .warning, severityScore: 60),
-          DiagnosticFinding(title: "Crash data may be permission-limited", detail: "Corewise should disclose when diagnostic reports are incomplete or unavailable.", status: .info, severityScore: 20)
+          DiagnosticFinding(title: "Diagnostic reports not read yet", detail: "Corewise does not show crash patterns until a permitted read-only diagnostic report collector exists.", status: .info, severityScore: 0),
+          DiagnosticFinding(title: "No app crash rows are invented", detail: "This page stays empty rather than showing synthetic app names.", status: .good, severityScore: 0)
         ],
         actions: [
-          SafeAction(title: "Update the repeated-crash app", body: "Start with the app that repeats, not broad system cleanup.", systemImage: "arrow.down.app", status: .info),
+          SafeAction(title: "Use app updates first", body: "If you already know an app is crashing, update that app before broad troubleshooting.", systemImage: "arrow.down.app", status: .info),
           SafeAction(title: "Do not erase logs automatically", body: "Diagnostic data should be read to explain patterns, not cleaned away.", systemImage: "doc.text.magnifyingglass", status: .good)
         ],
-        sourceNote: "Mock data. Real crash diagnostics should read only permitted diagnostic reports and clearly show permission state."
+        sourceNote: "Unavailable data. Corewise does not read diagnostic reports yet, so App Issues does not invent crash rows or counts."
       ),
       suggestions: [
         Suggestion(title: "Keep storage review manual", body: "Corewise now reads startup volume capacity without opening personal folders automatically.", severity: .good),
@@ -268,7 +262,7 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     _ confidence: String,
     _ recommendedAction: String,
     _ lastUpdated: Date,
-    dataMode: DataMode = .mock
+    dataMode: DataMode = .unavailable
   ) -> DiagnosticMetric {
     DiagnosticMetric(
       title: title,
@@ -283,46 +277,6 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
       recommendedAction: recommendedAction,
       lastUpdated: lastUpdated
     )
-  }
-
-  private func crash(
-    _ appName: String,
-    _ bundleID: String,
-    _ appVersion: String,
-    _ crashesLast7Days: Int,
-    _ crashesLast30Days: Int,
-    _ lastCrashDate: Date,
-    _ repeatedCrash: Bool,
-    _ diagnosticPermissionState: String,
-    _ status: FindingSeverity,
-    _ severityScore: Int,
-    _ explanation: String,
-    _ source: String,
-    _ confidence: String,
-    _ recommendedAction: String,
-    dataMode: DataMode = .mock
-  ) -> CrashIssue {
-    CrashIssue(
-      appName: appName,
-      bundleID: bundleID,
-      appVersion: appVersion,
-      crashesLast7Days: crashesLast7Days,
-      crashesLast30Days: crashesLast30Days,
-      lastCrashDate: lastCrashDate,
-      repeatedCrash: repeatedCrash,
-      diagnosticPermissionState: diagnosticPermissionState,
-      dataMode: dataMode,
-      status: status,
-      severityScore: severityScore,
-      explanation: explanation,
-      source: source,
-      confidence: confidence,
-      recommendedAction: recommendedAction
-    )
-  }
-
-  private func daysAgo(_ days: Int) -> Date {
-    Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
   }
 
   private func number(_ value: Double) -> String {

@@ -1,12 +1,15 @@
 import Foundation
 
 enum OverallStatus: String, CaseIterable {
+  case notScored = "Not Scored Yet"
   case good = "Good"
   case needsAttention = "Needs Attention"
   case critical = "Critical"
 
   var summary: String {
     switch self {
+    case .notScored:
+      "Corewise has not calculated a health score yet."
     case .good:
       "Your Mac looks healthy."
     case .needsAttention:
@@ -18,6 +21,8 @@ enum OverallStatus: String, CaseIterable {
 
   var systemImage: String {
     switch self {
+    case .notScored:
+      "gauge.with.dots.needle.bottom.0percent"
     case .good:
       "checkmark.seal.fill"
     case .needsAttention:
@@ -37,9 +42,9 @@ enum FindingSeverity: String, CaseIterable {
 
 enum DataMode: String, CaseIterable {
   case live = "Live"
-  case mock = "Mock"
   case planned = "Planned"
   case unavailable = "Unavailable"
+  case avoided = "Avoided"
 }
 
 struct HealthSnapshot {
@@ -61,7 +66,7 @@ struct DiagnosticMetric: Identifiable {
   var title: String
   var value: String
   var unit: String
-  var dataMode: DataMode = .mock
+  var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -92,7 +97,7 @@ struct ChartDatum: Identifiable {
   var title: String
   var value: Double
   var unit: String
-  var dataMode: DataMode = .mock
+  var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var detail: String
 }
@@ -128,7 +133,7 @@ struct StorageItem: Identifiable {
   var title: String
   var path: String
   var sizeGB: Double
-  var dataMode: DataMode = .mock
+  var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -153,7 +158,7 @@ struct ProcessSample: Identifiable {
   var name: String
   var value: Double
   var unit: String
-  var dataMode: DataMode = .mock
+  var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -184,7 +189,7 @@ struct StartupItem: Identifiable {
   var startupImpact: String
   var signedState: String
   var recentlyAdded: Bool
-  var dataMode: DataMode = .mock
+  var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String
@@ -222,7 +227,7 @@ struct CrashIssue: Identifiable {
   var lastCrashDate: Date
   var repeatedCrash: Bool
   var diagnosticPermissionState: String
-  var dataMode: DataMode = .mock
+  var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var severityScore: Int
   var explanation: String

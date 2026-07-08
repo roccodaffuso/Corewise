@@ -48,15 +48,15 @@ import Testing
   #expect(summary.repeatedHighCPUProcesses.isEmpty)
 }
 
-@Test func scoreConfidenceStaysLowWhenMockValuesRemain() {
-  let metric = ScoreConfidenceCalculator.metric(modes: [.live, .live, .mock, .planned, .unavailable], now: Date())
+@Test func scoreConfidenceStaysLowWhenCoverageIsSparse() {
+  let metric = ScoreConfidenceCalculator.metric(modes: [.live, .planned, .unavailable, .avoided], now: Date())
 
   #expect(metric.value == "Low")
   #expect(metric.dataMode == .live)
-  #expect(metric.explanation.contains("1 mock"))
+  #expect(metric.explanation.contains("1 avoided"))
 }
 
-@Test func scoreConfidenceCanRiseWhenMocksAreGone() {
+@Test func scoreConfidenceCanRiseWhenLiveCoverageIsHigh() {
   let medium = ScoreConfidenceCalculator.metric(modes: [.live, .live, .planned, .unavailable], now: Date())
   let high = ScoreConfidenceCalculator.metric(modes: [.live, .live, .live, .live, .unavailable], now: Date())
 
@@ -113,6 +113,23 @@ import Testing
   #expect(startup.summary.dataMode == .live)
 }
 
+@Test func systemSnapshotContainsNoSyntheticRuntimeDiagnostics() async throws {
+  let snapshot = try await SystemHealthCollector().currentSnapshot()
+  let modes = allDataModes(in: snapshot)
+  let overviewText = snapshot.overviewMetrics.map { "\($0.title) \($0.value) \($0.explanation)" }.joined(separator: " ")
+
+  #expect(modes.allSatisfy { DataMode.allCases.contains($0) })
+  #expect(snapshot.overallStatus == .notScored)
+  #expect(snapshot.healthScore == 0)
+  #expect(snapshot.appIssues.crashes.isEmpty)
+  #expect(snapshot.appIssues.crashesByApp.isEmpty)
+  #expect(!overviewText.contains("Health Score 74"))
+  #expect(!snapshot.overviewMetrics.contains { $0.title == "Data Mode" })
+  #expect(!overviewText.contains("ExampleApp"))
+  #expect(!overviewText.contains("PhotoTool"))
+  #expect(!overviewText.contains("HelperService"))
+}
+
 private func instant(cpuProcesses: [ProcessSample]) -> InstantSystemMetrics {
   InstantSystemMetrics(
     cpuPercent: 20,
@@ -145,4 +162,29 @@ private func process(_ name: String, value: Double) -> ProcessSample {
 private func writePlist(_ dictionary: [String: Any], to url: URL) throws {
   let data = try PropertyListSerialization.data(fromPropertyList: dictionary, format: .xml, options: 0)
   try data.write(to: url)
+}
+
+private func allDataModes(in snapshot: HealthSnapshot) -> [DataMode] {
+  snapshot.overviewMetrics.map(\.dataMode)
+    + snapshot.battery.metrics.map(\.dataMode)
+    + snapshot.storage.metrics.map(\.dataMode)
+    + snapshot.storage.breakdown.map(\.dataMode)
+    + snapshot.storage.largeFolders.map(\.dataMode)
+    + snapshot.storage.largeFiles.map(\.dataMode)
+    + snapshot.storage.developerCaches.map(\.dataMode)
+    + snapshot.storage.browserCaches.map(\.dataMode)
+    + snapshot.storage.spaceOffenders.map(\.dataMode)
+    + snapshot.performance.metrics.map(\.dataMode)
+    + snapshot.performance.cpuProcesses.map(\.dataMode)
+    + snapshot.performance.memoryProcesses.map(\.dataMode)
+    + snapshot.startup.metrics.map(\.dataMode)
+    + snapshot.startup.loginItems.map(\.dataMode)
+    + snapshot.startup.launchAgents.map(\.dataMode)
+    + snapshot.startup.launchDaemons.map(\.dataMode)
+    + snapshot.startup.backgroundItems.map(\.dataMode)
+    + snapshot.startup.privilegedHelpers.map(\.dataMode)
+    + snapshot.thermal.metrics.map(\.dataMode)
+    + snapshot.appIssues.metrics.map(\.dataMode)
+    + snapshot.appIssues.crashes.map(\.dataMode)
+    + snapshot.appIssues.crashesByApp.map(\.dataMode)
 }

@@ -24,21 +24,21 @@ struct OverviewView: View {
       }
 
       MetricBoard(metrics: snapshot.overviewMetrics)
-      SourceNote(text: "Overview combines live CPU/RAM process samples with mock diagnostic coverage for the remaining MVP sections. Corewise explains signals and safe review paths; it does not delete files or change system settings automatically.")
+      SourceNote(text: "Overview combines live signals with planned and unavailable coverage. Corewise shows missing data honestly and keeps every action manual.")
     }
   }
 
   private var overviewFindings: [DiagnosticFinding] {
     [
-      DiagnosticFinding(title: "Storage pressure is the clearest issue", detail: "Available space is below the comfort range and developer data is a likely contributor.", status: .warning, severityScore: 58),
+      DiagnosticFinding(title: "Global score is not calculated yet", detail: "Corewise has live section data, but no real cross-section scoring model yet.", status: .info, severityScore: 0),
       DiagnosticFinding(title: "Live resource load is visible", detail: "CPU and memory rankings show which processes are currently consuming resources.", status: .info, severityScore: 24),
-      DiagnosticFinding(title: "No destructive action is required", detail: "The safest first step is review: inspect large folders, startup items, and repeated crashes.", status: .good, severityScore: 0)
+      DiagnosticFinding(title: "No destructive action is required", detail: "The safest first step is review: use live rows and ignore areas marked planned or unavailable.", status: .good, severityScore: 0)
     ]
   }
 
   private var overviewActions: [SafeAction] {
     [
-      SafeAction(title: "Inspect storage first", body: "Open the largest folders and review what you recognize.", systemImage: "internaldrive", status: .warning),
+      SafeAction(title: "Review live sections first", body: "Use CPU, RAM, storage capacity, battery basics, thermal state, and startup plist rows as the trustworthy set.", systemImage: "checkmark.shield", status: .good),
       SafeAction(title: "Watch CPU/RAM for repeats", body: "A single spike matters less than the same process staying high across refreshes.", systemImage: "chart.bar.xaxis", status: .info),
       SafeAction(title: "Keep control manual", body: "Use macOS or vendor tools for any change.", systemImage: "hand.raised", status: .good)
     ]
@@ -243,7 +243,7 @@ private struct CommandCenterHeader: View {
           Text("Your Mac’s health, explained clearly.")
             .font(.title3.weight(.medium))
 
-          Text("Corewise separates live signals from mock diagnostic coverage, tells you what matters, and keeps every action manual.")
+          Text("Corewise separates live signals from planned and unavailable coverage, tells you what it cannot know yet, and keeps every action manual.")
             .font(.callout)
             .foregroundStyle(.secondary)
             .lineLimit(3)
@@ -251,7 +251,7 @@ private struct CommandCenterHeader: View {
 
           HStack(spacing: 8) {
             StatusPill(status: snapshot.overallStatus)
-            DataModeBadge(dataMode: .mock)
+            DataModeBadge(dataMode: .planned)
             Text("Updated \(snapshot.generatedAt.formatted(date: .omitted, time: .shortened))")
               .font(.caption)
               .foregroundStyle(.tertiary)
@@ -345,6 +345,14 @@ private struct HealthScoreRing: View {
     min(max(Double(score) / 100, 0), 1)
   }
 
+  private var centerValue: String {
+    status == .notScored ? "--" : "\(score)"
+  }
+
+  private var centerLabel: String {
+    status == .notScored ? "Not scored" : "Score"
+  }
+
   var body: some View {
     ZStack {
       Circle()
@@ -355,14 +363,14 @@ private struct HealthScoreRing: View {
         .rotationEffect(.degrees(-90))
 
       VStack(spacing: 2) {
-        Text("\(score)")
+        Text(centerValue)
           .font(.system(size: 38, weight: .semibold, design: .rounded))
-        Text("Score")
+        Text(centerLabel)
           .font(.caption.weight(.medium))
           .foregroundStyle(.secondary)
       }
     }
-    .accessibilityLabel("Health score \(score) out of 100")
+    .accessibilityLabel(status == .notScored ? "Health score not calculated yet" : "Health score \(score) out of 100")
   }
 }
 
@@ -780,18 +788,26 @@ private struct CrashList: View {
 
   var body: some View {
     DataGroup(title: "Crash Details", subtitle: "Repeated failures and diagnostic limits", systemImage: "exclamationmark.bubble") {
-      ForEach(issues) { issue in
-        DetailRow(
-          title: issue.appName,
-          subtitle: "\(issue.bundleID) · v\(issue.appVersion) · \(issue.repeatedCrash ? "repeated" : "not repeated")",
-          value: "\(issue.crashesLast7Days)/\(issue.crashesLast30Days)",
-          status: issue.status,
-          severityScore: issue.severityScore,
-          explanation: "Last crash \(issue.lastCrashDate.formatted(date: .abbreviated, time: .omitted)). \(issue.explanation)",
-          action: issue.recommendedAction,
-          source: "\(issue.source) · \(issue.confidence) · \(issue.diagnosticPermissionState)",
-          dataMode: issue.dataMode
+      if issues.isEmpty {
+        EmptyDiagnosticState(
+          title: "Diagnostic reports not read yet",
+          message: "Corewise has not implemented permitted crash report reading, so it does not show app names or crash counts.",
+          dataMode: .unavailable
         )
+      } else {
+        ForEach(issues) { issue in
+          DetailRow(
+            title: issue.appName,
+            subtitle: "\(issue.bundleID) · v\(issue.appVersion) · \(issue.repeatedCrash ? "repeated" : "not repeated")",
+            value: "\(issue.crashesLast7Days)/\(issue.crashesLast30Days)",
+            status: issue.status,
+            severityScore: issue.severityScore,
+            explanation: "Last crash \(issue.lastCrashDate.formatted(date: .abbreviated, time: .omitted)). \(issue.explanation)",
+            action: issue.recommendedAction,
+            source: "\(issue.source) · \(issue.confidence) · \(issue.diagnosticPermissionState)",
+            dataMode: issue.dataMode
+          )
+        }
       }
     }
   }
@@ -1005,6 +1021,8 @@ private func number(_ value: Double) -> String {
 
 private func color(for status: OverallStatus) -> Color {
   switch status {
+  case .notScored:
+    Color(nsColor: .systemBlue)
   case .good:
     Color(nsColor: .systemGreen)
   case .needsAttention:
@@ -1031,11 +1049,11 @@ private func color(for dataMode: DataMode) -> Color {
   switch dataMode {
   case .live:
     Color(nsColor: .systemGreen)
-  case .mock:
-    Color(nsColor: .systemOrange)
   case .planned:
     Color(nsColor: .systemBlue)
   case .unavailable:
     Color(nsColor: .tertiaryLabelColor)
+  case .avoided:
+    Color(nsColor: .systemRed)
   }
 }

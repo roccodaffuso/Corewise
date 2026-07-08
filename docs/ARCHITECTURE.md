@@ -9,8 +9,8 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - App entry: `CorewiseApp` owns a `HealthDashboardStore`.
 - Store: `HealthDashboardStore` requests snapshots from `SystemHealthCollecting`.
 - Collector protocol: `SystemHealthCollecting.currentSnapshot()` returns a complete `HealthSnapshot`.
-- Current collector: `MockSystemHealthCollector` builds the full product-shaped snapshot.
-- Live helper: `SystemMetricsSampler` provides live CPU, RAM, and process samples to the mock collector.
+- Current collector: `SystemHealthCollector` builds the full product-shaped snapshot without synthetic runtime diagnostics.
+- Live helper: `SystemMetricsSampler` provides live CPU, RAM, and process samples to the collector.
 - History helper: `PerformanceHistoryTracker` keeps a short in-memory window for sustained CPU interpretation.
 - Battery helper: `BatteryDiagnosticsCollector` provides live safe power-source basics and unavailable/planned health details.
 - Storage helper: `StorageDiagnosticsCollector` provides read-only live startup-volume capacity only during automatic refresh.
@@ -21,8 +21,8 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 
 1. App starts and creates `HealthDashboardStore`.
 2. Store asks the configured collector for the current snapshot.
-3. `MockSystemHealthCollector` asks `SystemMetricsSampler` for live performance signals.
-4. The collector records short performance history in memory, then combines live battery/performance/storage/startup/thermal signals with remaining mock diagnostic coverage.
+3. `SystemHealthCollector` asks `SystemMetricsSampler` for live performance signals.
+4. The collector records short performance history in memory, then combines live battery/performance/storage/startup/thermal signals with planned and unavailable coverage.
 5. SwiftUI renders the snapshot into section pages.
 6. The store refreshes live data periodically.
 
@@ -48,10 +48,10 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Ignore missing or invalid plist files.
 - Keep login items, background items, privileged helpers, and code signing as unavailable/planned until safe collectors exist.
 
-`MockSystemHealthCollector` should be temporary:
+`SystemHealthCollector` should stay explicit:
 
-- It may preserve UI shape while real collectors are built.
-- It must label mock values through source/confidence metadata.
+- It may preserve page shape while real collectors are built.
+- It must use `Planned`, `Unavailable`, or `Avoided` instead of synthetic values when a collector does not exist.
 - It should not introduce app-specific examples that can be mistaken for real local diagnosis.
 
 ## Planned

@@ -2,7 +2,7 @@
 
 Corewise is a SwiftUI macOS utility that explains what a Mac is doing in plain language. It is local-first, has no account, no backend, and no tracking.
 
-The current build is a product prototype with a small live performance collector and broad mock diagnostic coverage. Treat the UI as a working shell for the product direction, not as a complete device diagnostic.
+The current build is a trust-first product prototype. Runtime values are either live, planned, unavailable, or avoided; Corewise no longer shows synthetic diagnostic data as if it came from the Mac.
 
 ## Current Truth
 
@@ -20,9 +20,9 @@ Implemented live signals:
 - Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
 
-Mock or scaffolded areas:
+Planned or unavailable areas:
 
-- Overall health score.
+- Overall health score and cross-section prioritization.
 - Detailed battery health: cycles, maximum capacity, condition, energy impact, and risk scoring.
 - Detailed storage folder scans, large files, caches, Trash, and personal folder offenders.
 - Modern login items, background items, privileged helpers, and startup code signing checks.
@@ -50,7 +50,7 @@ The app target is defined in `Package.swift` and requires macOS 14 or newer.
 - `PRODUCT.md` defines positioning and design principles.
 - `docs/PROJECT_STATUS.md` records the current product state and risks.
 - `docs/ARCHITECTURE.md` explains the SwiftUI shell, store, collectors, and data flow.
-- `docs/DATA_SOURCES.md` is the source-of-truth matrix for live, mock, planned, and avoided signals.
+- `docs/DATA_SOURCES.md` is the source-of-truth matrix for live, planned, unavailable, and avoided signals.
 - `docs/SAFETY_PRIVACY.md` defines the local-first and non-destructive rules.
 - `docs/DESIGN_SYSTEM.md` captures the intended Apple-native diagnostic UI.
 - `docs/ROADMAP.md` orders the next implementation phases.
@@ -58,4 +58,4 @@ The app target is defined in `Package.swift` and requires macOS 14 or newer.
 
 ## Operating Rule
 
-Every diagnostic value must be labeled honestly as `Live`, `Mock`, `Planned`, or `Unavailable`. If Corewise cannot read a signal through safe public macOS APIs, it should say so and offer a manual review path instead of implying certainty.
+Every diagnostic value must be labeled honestly as `Live`, `Planned`, `Unavailable`, or `Avoided`. If Corewise cannot read a signal through safe public macOS APIs, it should say so and offer a manual review path instead of implying certainty.

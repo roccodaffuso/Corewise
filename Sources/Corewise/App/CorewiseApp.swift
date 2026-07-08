@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct CorewiseApp: App {
   @NSApplicationDelegateAdaptor(AppActivationDelegate.self) private var appDelegate
-  @StateObject private var store = HealthDashboardStore(collector: MockSystemHealthCollector())
+  @StateObject private var store = HealthDashboardStore(collector: SystemHealthCollector())
 
   var body: some Scene {
     WindowGroup("Corewise") {

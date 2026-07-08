@@ -4,12 +4,12 @@ import Testing
 
 @Test func dataModeLabelsAreStable() {
   #expect(DataMode.live.rawValue == "Live")
-  #expect(DataMode.mock.rawValue == "Mock")
   #expect(DataMode.planned.rawValue == "Planned")
   #expect(DataMode.unavailable.rawValue == "Unavailable")
+  #expect(DataMode.avoided.rawValue == "Avoided")
 }
 
-@Test func diagnosticMetricDefaultsToMockDataMode() {
+@Test func diagnosticMetricDefaultsToUnavailableDataMode() {
   let metric = DiagnosticMetric(
     title: "Example",
     value: "1",
@@ -18,12 +18,12 @@ import Testing
     severityScore: 10,
     explanation: "Example metric.",
     source: "Unit test",
-    confidence: "Mock / high",
+    confidence: "Unavailable / high",
     recommendedAction: "No action.",
     lastUpdated: Date()
   )
 
-  #expect(metric.dataMode == .mock)
+  #expect(metric.dataMode == .unavailable)
 }
 
 @Test func storageCollectorReturnsLiveVolumeMetrics() {

@@ -13,14 +13,15 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Live performance sampling stays on-device.
 - Current process data is used for display and grouping, not upload.
 
-## Mock
+## Runtime Data
 
-- Several pages show realistic placeholders. These must be visibly labeled before the product is tested with non-build-team users.
-- Mock values must never be written as if they came from the user's Mac.
+- Runtime diagnostics must not use synthetic values, invented apps, or invented counts.
+- Missing collectors must show `Planned`, `Unavailable`, or `Avoided`.
+- Sparse pages are acceptable when data cannot be read safely.
 
 ## Planned Rules
 
-- Add visible provenance badges for `Live`, `Mock`, and `Unavailable`.
+- Keep visible provenance badges for `Live`, `Planned`, `Unavailable`, and `Avoided`.
 - Add source and confidence notes to every metric row.
 - Keep storage scanning read-only.
 - Prefer opening Finder, System Settings, or vendor-owned tools for user action.

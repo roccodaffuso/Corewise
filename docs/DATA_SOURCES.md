@@ -1,11 +1,10 @@
 # Data Sources
 
-This file is the source of truth for what Corewise reads today, what is mock, what is planned, and what is avoided.
+This file is the source of truth for what Corewise reads today, what is planned, what is unavailable, and what is avoided.
 
 Statuses:
 
 - `Implemented`: live or functional in the current local app.
-- `Mock`: realistic placeholder data used to shape the product.
 - `Planned`: intended safe implementation path.
 - `Unavailable`: intentionally not read in the MVP.
 - `Avoided`: not acceptable for Corewise's trust model.
@@ -14,13 +13,13 @@ Statuses:
 
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Health score | Mock | Corewise scoring model placeholder | Medium | Mixes live and mock inputs; not a final diagnostic score. |
-| Score confidence | Mock | Corewise scoring model placeholder | High | Currently low because the score includes mock coverage. |
-| Overall status | Mock | Derived from placeholder score | Medium | Must be relabeled when real scoring exists. |
+| Health score | Planned | Corewise scoring model | High | Not calculated until scoring has enough live inputs. |
+| Score confidence | Implemented | DataMode coverage count | High | Describes coverage, not device health. |
+| Overall status | Planned | Corewise scoring model | High | UI shows Not Scored Yet until real scoring exists. |
 | CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | Short sample window; not identical to Activity Monitor. |
 | RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Estimate based on active, wired, and compressed pages. |
 | System power watts | Unavailable | Safe public API check | High | No reliable whole-system wattage through safe public APIs in this MVP. |
-| Main attention area | Mock | Placeholder prioritization | Medium | Must be recalculated when real collectors land. |
+| Main attention area | Unavailable | Corewise scoring model | High | Cross-section prioritization is not implemented. |
 
 ## Battery
 
@@ -34,7 +33,7 @@ Statuses:
 | Maximum capacity | Unavailable | Documented battery health surface if available later | High | Not collected through the current safe power-source API path. |
 | Condition | Unavailable | macOS battery condition if safely/documentedly accessible later | High | Not collected through the current safe power-source API path. |
 | Recent energy impact | Planned | Energy/process correlation if public and safe | Low | Not all Energy tab data is exposed as public API. |
-| Battery risk | Mock | Corewise scoring model | Medium | Not scored until health and trend signals are available. |
+| Battery risk | Planned | Corewise scoring model | Medium | Not scored until health and trend signals are available. |
 
 ## Storage
 
@@ -60,11 +59,11 @@ Statuses:
 | Top CPU processes | Implemented | `proc_listallpids`, `proc_pidinfo(PROC_PIDTASKINFO)` | Medium | Short sample window; inaccessible processes may be omitted. |
 | Top RAM processes | Implemented | `proc_pidinfo(PROC_PIDTASKINFO)` resident size | Medium | Resident memory alone is not necessarily bad. |
 | App grouping | Implemented | `proc_pidpath` path parsing for `.app` bundles | Medium | Falls back to process names when path is not readable. |
-| Memory pressure | Mock | Public VM pressure signal or safe approximation | Medium | Current value is placeholder and labeled mock. |
-| Swap used | Mock | VM statistics if exposed safely | Medium | Current value is placeholder. |
+| Memory pressure | Unavailable | Public VM pressure signal or safe approximation | Medium | Not displayed until a safe source is implemented. |
+| Swap used | Planned | VM statistics if exposed safely | Medium | Not displayed until a safe source is implemented. |
 | Uptime | Implemented | `ProcessInfo.systemUptime` | High | Local process uptime signal; not a performance diagnosis by itself. |
 | Sustained high CPU | Implemented | In-memory recent process history | Medium | Unavailable until enough samples are collected; not persisted. |
-| WindowServer impact | Mock | Process sample plus explanation | Low | Needs careful wording because high usage can be normal. |
+| WindowServer impact | Planned | Process sample plus explanation | Low | Needs careful wording because high usage can be normal. |
 
 ## Startup
 
@@ -92,11 +91,11 @@ Statuses:
 | Metric | Status | Planned source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
 | Diagnostic permission state | Unavailable | Permission/access check | Medium | Not implemented; must disclose incomplete access. |
-| Crashes last 7 days | Mock | Permitted diagnostic reports | Medium | Access may be limited. |
-| Crashes last 30 days | Mock | Permitted diagnostic reports | Medium | Access may be limited. |
-| Last crash date | Mock | Diagnostic report metadata | Medium | Must avoid reading unnecessary content. |
-| Bundle ID and version | Mock | Diagnostic report metadata or app bundle metadata | Medium | May be unavailable for some reports. |
-| Repeated crash flag | Mock | Derived from crash counts | Medium | Should only highlight repeated patterns. |
+| Crashes last 7 days | Unavailable | Permitted diagnostic reports | Medium | Access may be limited; Corewise does not invent counts. |
+| Crashes last 30 days | Unavailable | Permitted diagnostic reports | Medium | Access may be limited; Corewise does not invent counts. |
+| Last crash date | Unavailable | Diagnostic report metadata | Medium | Must avoid reading unnecessary content. |
+| Bundle ID and version | Unavailable | Diagnostic report metadata or app bundle metadata | Medium | May be unavailable for some reports. |
+| Repeated crash flag | Planned | Derived from real crash counts | Medium | Should only highlight repeated patterns from real reports. |
 
 ## Privacy Notes
 

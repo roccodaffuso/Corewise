@@ -39,7 +39,7 @@ import Testing
   #expect(charging.value == "Charging")
 }
 
-@Test func batteryMissingKeysUsesUnavailableInsteadOfMockFallback() throws {
+@Test func batteryMissingKeysUseUnavailableInsteadOfFallbackValues() throws {
   let dictionary: [String: Any] = [
     kIOPSTypeKey as String: kIOPSInternalBatteryType as String
   ]

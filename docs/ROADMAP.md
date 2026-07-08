@@ -2,9 +2,10 @@
 
 ## Phase 1: Trust And Provenance
 
-- Implemented: explicit `Live`, `Mock`, `Planned`, and `Unavailable` data modes in the model.
+- Implemented: explicit `Live`, `Planned`, `Unavailable`, and `Avoided` data modes in the model.
 - Implemented: data-mode badges in metric cards, chart rows, source notes, and diagnostic rows.
 - Implemented: CPU/RAM process chart fallbacks removed.
+- Implemented: runtime synthetic diagnostic data removed.
 - Keep `DATA_SOURCES.md` synchronized with the UI.
 
 ## Phase 2: Storage Read-Only Collector
@@ -44,4 +45,4 @@
 
 ## Release Gate
 
-Before calling the MVP trustworthy, Corewise must show provenance for every metric and must not present mock values as live device state.
+Before calling the MVP trustworthy, Corewise must show provenance for every metric and must not present synthetic values as device state.

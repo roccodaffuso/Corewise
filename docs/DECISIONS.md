@@ -12,11 +12,11 @@ Decision: Corewise may explain and point to manual review paths, but it must not
 
 Reason: The app should not behave like an aggressive cleaner utility.
 
-## 2026-07-08: Mock Data Must Be Declared
+## 2026-07-08: Synthetic Data Was Temporary And Is Now Superseded
 
-Decision: Mock values are allowed for UI/product scaffolding, but every metric must be labeled by data mode and confidence.
+Decision: Early synthetic values were allowed only for UI/product scaffolding and have been superseded by the no-runtime-synthetic-data rule below.
 
-Reason: The current app mixes live CPU/RAM signals with broad mock diagnostic pages; hiding that would undermine trust.
+Reason: The product needed shape before real collectors existed, but the trust baseline now requires missing data to be shown as planned, unavailable, or avoided.
 
 ## 2026-07-08: Live Performance Uses Public macOS Signals
 
@@ -44,9 +44,9 @@ Reason: Engineers and agents need versioned docs next to the code.
 
 ## 2026-07-08: DataMode Is Structured State
 
-Decision: Corewise uses an explicit `DataMode` model field for `Live`, `Mock`, `Planned`, and `Unavailable` instead of inferring provenance from source or confidence strings.
+Decision: Corewise uses an explicit `DataMode` model field for `Live`, `Planned`, `Unavailable`, and `Avoided` instead of inferring provenance from source or confidence strings.
 
-Reason: The user must be able to tell immediately whether a value is real, scaffolded, planned, or intentionally unavailable.
+Reason: The user must be able to tell immediately whether a value is real, planned, intentionally unavailable, or intentionally avoided.
 
 ## 2026-07-08: Storage Collector Is Read-Only And Omit-Unknown
 
@@ -77,3 +77,9 @@ Reason: Repeated load is more useful than a single spike, but local-first trust 
 Decision: Startup reads accessible LaunchAgents and LaunchDaemons plist metadata in read-only mode. Login items, background items, privileged helpers, and signing checks stay unavailable or planned.
 
 Reason: Plist metadata is useful context, but Corewise should not imply complete startup visibility or suggest raw file removal.
+
+## 2026-07-08: No Runtime Synthetic Diagnostic Data
+
+Decision: Corewise runtime diagnostics must not use synthetic values, synthetic apps, or invented counts. Missing features must be `Planned`, `Unavailable`, or `Avoided`.
+
+Reason: A serious Mac diagnostic utility earns trust by showing fewer real values rather than filling pages with plausible but false data.

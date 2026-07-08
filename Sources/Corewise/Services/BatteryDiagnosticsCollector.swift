@@ -22,7 +22,7 @@ struct BatteryDiagnosticsCollector {
       powerSourceMetric(battery, now: now),
       chargingStateMetric(battery, now: now),
       metric("Recent Energy Impact", "Planned", "", .planned, .info, 0, "Recent energy impact needs a separate safe process-energy source before it can be trusted.", "Energy impact collector", "Planned / medium", "Use Activity Monitor's Energy tab for now.", now),
-      metric("Battery Risk", "Not Scored", "", .mock, .info, 0, "Battery risk remains unscored until capacity, condition, and trend signals are available.", "Corewise scoring model", "Mock / high", "Trust the live battery basics first; do not treat this as health scoring.", now)
+      metric("Battery Risk", "Planned", "", .planned, .info, 0, "Battery risk remains unscored until capacity, condition, and trend signals are available from safe sources.", "Corewise scoring model", "Planned / high", "Trust the live battery basics first; do not treat this as health scoring.", now)
     ]
 
     return BatteryHealth(
