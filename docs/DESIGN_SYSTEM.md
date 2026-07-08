@@ -7,6 +7,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 ## Visual Principles
 
 - Use native SwiftUI controls, system materials, soft transparency, and SF Symbols.
+- The app window background should be a real macOS material surface through a narrow AppKit bridge, with only a transparent color wash above it.
 - Prefer natural, muted system-adaptive colors: teal/blue for information, moss green for live/good, amber for attention, red only for critical or used storage.
 - The app detail background should feel layered and translucent, not flat black or generic dashboard gray.
 - Panels should use material plus a subtle adaptive tint and hairline, with no heavy shadows or decorative gradients.

@@ -9,9 +9,9 @@ enum CorewiseVisual {
   static var appBackground: some ShapeStyle {
     LinearGradient(
       colors: [
-        Color(nsColor: .windowBackgroundColor),
-        Color(nsColor: .controlBackgroundColor).opacity(0.94),
-        accentSoft.opacity(0.10)
+        accentSoft.opacity(0.16),
+        Color.clear,
+        moss.opacity(0.08)
       ],
       startPoint: .topLeading,
       endPoint: .bottomTrailing

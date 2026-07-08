@@ -98,9 +98,14 @@ struct ContentView: View {
       .navigationSplitViewColumnWidth(min: 230, ideal: 260)
     } detail: {
       ZStack {
+        MacWindowMaterialView()
+          .ignoresSafeArea()
         Rectangle()
           .fill(CorewiseVisual.appBackground)
           .ignoresSafeArea()
+          .allowsHitTesting(false)
+        WindowTransparencyConfigurator()
+          .frame(width: 0, height: 0)
 
         Group {
           if let snapshot = store.snapshot {
