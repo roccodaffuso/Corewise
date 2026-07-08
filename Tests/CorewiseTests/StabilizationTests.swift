@@ -174,6 +174,7 @@ import Testing
   #expect(snapshot.healthScore == 0)
   #expect(snapshot.coverageSummary.total > 0)
   #expect(snapshot.coverageSummary.live > 0)
+  #expect(snapshot.coverageSummary.total < 80)
   #expect(snapshot.appIssues.crashes.isEmpty)
   #expect(snapshot.appIssues.crashesByApp.isEmpty)
   #expect(!overviewText.contains("Health Score 74"))

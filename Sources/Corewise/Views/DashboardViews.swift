@@ -504,7 +504,7 @@ private struct CoverageRing: View {
   }
 
   private var centerValue: String {
-    "\(summary.live)"
+    "\(Int(summary.livePercent.rounded()))%"
   }
 
   var body: some View {
@@ -519,15 +519,15 @@ private struct CoverageRing: View {
       VStack(spacing: 2) {
         Text(centerValue)
           .font(.system(size: 38, weight: .semibold, design: .rounded))
-        Text("Live")
-          .font(.caption.weight(.medium))
-          .foregroundStyle(.secondary)
         Text("Coverage")
           .font(.caption.weight(.medium))
           .foregroundStyle(.secondary)
+        Text("\(summary.live)/\(summary.total) live")
+          .font(.caption2.weight(.medium))
+          .foregroundStyle(.tertiary)
       }
     }
-    .accessibilityLabel("Data coverage \(summary.live) live signals out of \(summary.total)")
+    .accessibilityLabel("Data coverage \(summary.live) live signal families out of \(summary.total)")
   }
 }
 

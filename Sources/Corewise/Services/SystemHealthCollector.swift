@@ -267,28 +267,31 @@ struct SystemHealthCollector: SystemHealthCollecting {
     crashes: [CrashIssue],
     crashCharts: [ChartDatum]
   ) -> [DataMode] {
-    dataAccess.map(\.dataMode)
+    let storageScanModes = [
+      storage.largeFolders.first?.dataMode,
+      storage.largeFiles.first?.dataMode,
+      storage.developerCaches.first?.dataMode,
+      storage.browserCaches.first?.dataMode,
+      storage.spaceOffenders.first?.dataMode
+    ].compactMap(\.self)
+    let processTableMode: DataMode = processes.isEmpty ? .unavailable : .live
+    let appGroupMode: DataMode = appGroups.isEmpty ? .unavailable : .live
+    let startupInventoryMode: DataMode = startup.launchAgents.isEmpty && startup.launchDaemons.isEmpty ? .unavailable : .live
+    let crashReportMode: DataMode = crashes.isEmpty && crashCharts.isEmpty ? .unavailable : .live
+
+    // Coverage is a product-level summary. Count diagnostic signal families, not every table row.
+    return dataAccess.map(\.dataMode)
       + battery.metrics.map(\.dataMode)
       + storage.metrics.map(\.dataMode)
       + storage.breakdown.map(\.dataMode)
-      + storage.largeFolders.map(\.dataMode)
-      + storage.largeFiles.map(\.dataMode)
-      + storage.developerCaches.map(\.dataMode)
-      + storage.browserCaches.map(\.dataMode)
-      + storage.spaceOffenders.map(\.dataMode)
+      + storageScanModes
       + performanceMetrics.map(\.dataMode)
-      + processes.map(\.dataMode)
-      + appGroups.map(\.dataMode)
+      + [processTableMode, appGroupMode]
       + startup.metrics.map(\.dataMode)
-      + startup.loginItems.map(\.dataMode)
-      + startup.launchAgents.map(\.dataMode)
-      + startup.launchDaemons.map(\.dataMode)
-      + startup.backgroundItems.map(\.dataMode)
-      + startup.privilegedHelpers.map(\.dataMode)
+      + [startupInventoryMode]
       + thermalMetrics.map(\.dataMode)
       + issueMetrics.map(\.dataMode)
-      + crashes.map(\.dataMode)
-      + crashCharts.map(\.dataMode)
+      + [crashReportMode]
   }
 
   private func metric(

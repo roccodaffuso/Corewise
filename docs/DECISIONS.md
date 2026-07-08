@@ -149,3 +149,9 @@ Reason: A premature score would look authoritative while still depending on inco
 Decision: The Overview hero uses `Live Signals` plus data coverage instead of a placeholder health score.
 
 Reason: A first-viewport score placeholder makes the product look unfinished or unreliable. Live signal coverage is verifiable and preserves trust while global scoring remains planned.
+
+## 2026-07-08: Coverage Counts Signal Families
+
+Decision: Overview coverage counts diagnostic signal families, not every process, chart point, launch plist, or crash row.
+
+Reason: Row-level coverage can produce confusing scales such as hundreds of live values. A small family-level count is easier to trust and does not imply device health.

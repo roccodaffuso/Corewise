@@ -8,7 +8,7 @@ The current build is a trust-first product prototype. Runtime values are either 
 
 Implemented live signals:
 
-- Overview `Live Signals` header with data coverage instead of a placeholder health score.
+- Overview `Live Signals` header with signal-family coverage instead of a placeholder health score. Coverage counts diagnostic families, not individual process rows.
 - Data Access overview for live, user-selected, planned, unavailable, and avoided data paths.
 - System CPU load and user/system/idle split from macOS CPU ticks.
 - System RAM fields from VM statistics: used, app memory, cached files, wired, compressed, and swap.

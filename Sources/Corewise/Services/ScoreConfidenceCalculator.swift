@@ -32,8 +32,8 @@ enum ScoreConfidenceCalculator {
       dataMode: .live,
       status: status,
       severityScore: severity,
-      explanation: "\(summary.live) of \(max(summary.total, 1)) diagnostic values are live; \(summary.planned) planned, \(summary.unavailable) unavailable, \(summary.avoided) avoided.",
-      source: "DataMode coverage count",
+      explanation: "\(summary.live) of \(max(summary.total, 1)) diagnostic signal families are live; \(summary.planned) planned, \(summary.unavailable) unavailable, \(summary.avoided) avoided.",
+      source: "DataMode signal family coverage",
       confidence: "Live calculation / high",
       recommendedAction: "Use section-level Live badges before trusting the global score.",
       lastUpdated: now
