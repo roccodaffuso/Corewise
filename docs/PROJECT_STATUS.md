@@ -9,7 +9,7 @@ Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer 
 The immediate priority is trust: the UI and docs must make it obvious which values are live, which are mock, which are planned, and which are unavailable by design.
 
 Baseline checkpoint: `34315cf` (`Checkpoint Corewise diagnostic MVP`).
-MVP trust baseline: `cc8e83a` (`Stabilize Corewise trust baseline`).
+MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 
 ## Implemented
 
