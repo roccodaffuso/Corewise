@@ -52,6 +52,7 @@ struct HealthSnapshot {
   var healthScore: Int
   var overallStatus: OverallStatus
   var overviewMetrics: [DiagnosticMetric]
+  var dataAccess: [DataAccessCapability]
   var battery: BatteryHealth
   var storage: StorageHealth
   var performance: PerformanceHealth
@@ -102,6 +103,15 @@ struct ChartDatum: Identifiable {
   var detail: String
 }
 
+struct DataAccessCapability: Identifiable {
+  let id = UUID()
+  var title: String
+  var dataMode: DataMode
+  var source: String
+  var reason: String
+  var actionLabel: String?
+}
+
 struct BatteryHealth {
   var summary: DiagnosticMetric
   var metrics: [DiagnosticMetric]
@@ -140,6 +150,20 @@ struct StorageItem: Identifiable {
   var source: String
   var confidence: String
   var recommendedAction: String
+  var lastUpdated: Date
+}
+
+struct StorageScanResult {
+  var rootTitle: String
+  var rootPath: String
+  var totalSizeGB: Double
+  var scannedItemCount: Int
+  var inaccessibleItemCount: Int
+  var scanDuration: TimeInterval
+  var largestItems: [StorageItem]
+  var largestFiles: [StorageItem]
+  var largestFolders: [StorageItem]
+  var chartData: [ChartDatum]
   var lastUpdated: Date
 }
 

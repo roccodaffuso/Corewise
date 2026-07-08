@@ -8,12 +8,14 @@ struct OverviewView: View {
     VStack(alignment: .leading, spacing: 20) {
       CommandCenterHeader(snapshot: snapshot)
 
+      DataAccessPanel(capabilities: snapshot.dataAccess)
+
       LiveLoadPanel(performance: snapshot.performance)
 
       HStack(alignment: .top, spacing: 14) {
         PriorityPanel(
-          title: "Needs attention",
-          subtitle: "The shortest path to understanding what matters.",
+          title: "What Corewise can see",
+          subtitle: "Live signals first. Missing data is explicit.",
           findings: overviewFindings
         )
 
@@ -31,8 +33,8 @@ struct OverviewView: View {
   private var overviewFindings: [DiagnosticFinding] {
     [
       DiagnosticFinding(title: "Global score is not calculated yet", detail: "Corewise has live section data, but no real cross-section scoring model yet.", status: .info, severityScore: 0),
-      DiagnosticFinding(title: "Live resource load is visible", detail: "CPU and memory rankings show which processes are currently consuming resources.", status: .info, severityScore: 24),
-      DiagnosticFinding(title: "No destructive action is required", detail: "The safest first step is review: use live rows and ignore areas marked planned or unavailable.", status: .good, severityScore: 0)
+      DiagnosticFinding(title: "Manual scans unlock detail", detail: "Storage folder details and crash reports are read only after you choose a folder.", status: .info, severityScore: 12),
+      DiagnosticFinding(title: "No destructive action is required", detail: "Corewise explains signals and leaves every change to you.", status: .good, severityScore: 0)
     ]
   }
 
@@ -64,6 +66,10 @@ struct BatteryView: View {
 
 struct StorageView: View {
   var storage: StorageHealth
+  var isScanning: Bool
+  var scanFolder: () -> Void
+  var scanDownloads: () -> Void
+  var scanDeveloperData: () -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
@@ -83,6 +89,18 @@ struct StorageView: View {
           HorizontalBarChart(data: storage.spaceOffenders, unit: "GB")
         }
       }
+
+      ManualScanPanel(
+        title: "Targeted scan",
+        subtitle: "Choose one folder. Corewise reads file sizes only.",
+        isRunning: isScanning,
+        primaryTitle: "Choose Folder",
+        primaryAction: scanFolder,
+        secondaryActions: [
+          ("Review Downloads", scanDownloads),
+          ("Review Developer Data", scanDeveloperData)
+        ]
+      )
 
       MetricBoard(metrics: storage.metrics)
       StorageItemGroup(title: "Large Folders", items: storage.largeFolders)
@@ -167,6 +185,8 @@ struct ThermalView: View {
 
 struct IssuesView: View {
   var appIssues: AppIssuesHealth
+  var isScanningReports: Bool
+  var scanReports: () -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
@@ -178,6 +198,15 @@ struct IssuesView: View {
       )
 
       MetricBoard(metrics: appIssues.metrics)
+
+      ManualScanPanel(
+        title: "Crash report scan",
+        subtitle: "Choose a reports folder. Corewise reads metadata only.",
+        isRunning: isScanningReports,
+        primaryTitle: "Choose Reports",
+        primaryAction: scanReports,
+        secondaryActions: []
+      )
 
       PremiumPanel(title: "Crashes by app", subtitle: "Last 30 days. Repetition matters more than one-offs.", systemImage: "chart.bar.xaxis") {
         HorizontalBarChart(data: appIssues.crashesByApp, unit: "crashes")
@@ -319,6 +348,91 @@ private struct LiveLoadPanel: View {
         processes: performance.memoryProcesses,
         unit: "GB"
       )
+    }
+  }
+}
+
+private struct DataAccessPanel: View {
+  var capabilities: [DataAccessCapability]
+
+  var body: some View {
+    PremiumPanel(title: "Data access", subtitle: "What Corewise reads, asks for, or avoids.", systemImage: "lock.shield") {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
+        ForEach(capabilities) { capability in
+          VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+              Text(capability.title)
+                .font(.callout.weight(.semibold))
+                .lineLimit(1)
+              Spacer(minLength: 8)
+              DataModeBadge(dataMode: capability.dataMode)
+            }
+
+            Text(capability.reason)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .lineLimit(3)
+              .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 6) {
+              Text(capability.source)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .lineLimit(1)
+              if let actionLabel = capability.actionLabel {
+                Spacer(minLength: 8)
+                Text(actionLabel)
+                  .font(.caption2.weight(.semibold))
+                  .foregroundStyle(color(for: capability.dataMode))
+              }
+            }
+          }
+          .padding(10)
+          .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
+          .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+        }
+      }
+    }
+  }
+}
+
+private struct ManualScanPanel: View {
+  var title: String
+  var subtitle: String
+  var isRunning: Bool
+  var primaryTitle: String
+  var primaryAction: () -> Void
+  var secondaryActions: [(String, () -> Void)]
+
+  var body: some View {
+    PremiumPanel(title: title, subtitle: subtitle, systemImage: "folder.badge.questionmark") {
+      HStack(alignment: .center, spacing: 10) {
+        Button {
+          primaryAction()
+        } label: {
+          Label(primaryTitle, systemImage: "folder")
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(isRunning)
+
+        ForEach(Array(secondaryActions.enumerated()), id: \.offset) { _, action in
+          Button {
+            action.1()
+          } label: {
+            Text(action.0)
+          }
+          .buttonStyle(.bordered)
+          .disabled(isRunning)
+        }
+
+        if isRunning {
+          ProgressView()
+            .controlSize(.small)
+            .padding(.leading, 4)
+        }
+
+        Spacer(minLength: 0)
+      }
     }
   }
 }
@@ -618,17 +732,17 @@ private struct ProcessBarChart: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       if processes.isEmpty {
-        Text("No live process samples available yet")
+        Text(unit == "% CPU" ? "No sustained CPU load detected yet" : "No live process samples available yet")
           .font(.caption)
           .foregroundStyle(.secondary)
-          .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
+          .frame(maxWidth: .infinity, minHeight: 72, alignment: .center)
       } else {
         ForEach(processes) { process in
           ProcessUsageRow(process: process, maxValue: maxValue)
         }
       }
     }
-    .frame(minHeight: CGFloat(max(processes.count, 3)) * 42)
+    .frame(minHeight: processes.isEmpty ? 72 : CGFloat(max(processes.count, 3)) * 42)
   }
 }
 
@@ -791,7 +905,7 @@ private struct CrashList: View {
       if issues.isEmpty {
         EmptyDiagnosticState(
           title: "Diagnostic reports not read yet",
-          message: "Corewise has not implemented permitted crash report reading, so it does not show app names or crash counts.",
+          message: "Choose a reports folder before Corewise can show app names or crash counts.",
           dataMode: .unavailable
         )
       } else {

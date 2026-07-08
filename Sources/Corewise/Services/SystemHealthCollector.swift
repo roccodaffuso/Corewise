@@ -14,6 +14,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
     let batteryHealth = BatteryDiagnosticsCollector().currentBattery(now: now)
     let storageHealth = StorageDiagnosticsCollector().currentStorage(now: now)
     let startupHealth = StartupDiagnosticsCollector().currentStartup(now: now)
+    let appIssuesHealth = CrashReportDiagnosticsCollector().unavailableAppIssues(now: now)
     let thermalState = ProcessInfo.processInfo.thermalState
     let thermalStateValue = thermalStateLabel(thermalState)
     let thermalStateStatus = thermalStatus(thermalState)
@@ -25,8 +26,8 @@ struct SystemHealthCollector: SystemHealthCollecting {
       metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is actively used or compressed.", "host_statistics64 VM_INFO64", "Live / medium", "Close heavy apps only if memory pressure or swap also stays high.", now, dataMode: .live),
       metric("RAM Used Now", memoryPercentValue, "%", memoryStatus(instant.memoryPercent), memorySeverity(instant.memoryPercent), "This is an instant memory-use estimate from active, wired, and compressed pages.", "host_statistics64 VM_INFO64", "Live / medium", "Use this as a direction signal rather than an exact Activity Monitor duplicate.", now, dataMode: .live),
       metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Use wattage later only if Corewise can obtain it through a safe, user-approved path.", now, dataMode: .unavailable),
-      metric("Memory Pressure", "Unavailable", "", .info, 0, "Memory pressure is not collected in this build through a safe implemented source.", "Memory pressure collector", "Unavailable / medium", "Use Activity Monitor if you need memory pressure before Corewise implements it.", now, dataMode: .unavailable),
-      metric("Swap Used", "Planned", "GB", .info, 0, "Swap usage needs a safe implemented VM source before Corewise can display it.", "Swap collector", "Planned / medium", "Do not infer swap pressure from resident memory alone.", now, dataMode: .planned),
+      metric("Memory Pressure", instant.memoryPressure.label, "", instant.memoryPressure.status, instant.memoryPressure.severityScore, instant.memoryPressure.explanation, "VM statistics and swap usage estimate", "Live / low", "Treat this as Corewise context, not exact Activity Monitor parity.", now, dataMode: .live),
+      swapMetric(instant.swapUsedGB, now: now),
       metric("Uptime", number(uptimeDays), "days", .info, min(max(Int(uptimeDays.rounded()), 0), 100), "Current system uptime reported by ProcessInfo.", "ProcessInfo.systemUptime", "Live / high", "Restart only if performance symptoms persist.", now, dataMode: .live),
       sustainedCPU,
       metric("WindowServer Impact", "Planned", "", .info, 0, "WindowServer interpretation needs careful live process context before Corewise can present it.", "Process interpretation", "Planned / low", "Use live CPU rows as context, not a WindowServer diagnosis.", now, dataMode: .planned)
@@ -41,17 +42,13 @@ struct SystemHealthCollector: SystemHealthCollecting {
       metric("Likely Contributors", "Planned", "", .info, 0, "Corewise needs sustained live process history before attributing heat to apps.", "Process correlation", "Planned / low", "Use live CPU rows as context, not a thermal diagnosis.", now, dataMode: .planned)
     ]
 
-    let issueMetrics = [
-      metric("Diagnostic Access", "Not Read", "", .info, 0, "Corewise does not read diagnostic reports in this build.", "Diagnostic report collector", "Unavailable / high", "Grant access only if a future explicit crash diagnostics flow asks for it.", now, dataMode: .unavailable),
-      metric("Crashes Last 7 Days", "Unavailable", "crashes", .info, 0, "Crash counts are unavailable until Corewise implements permitted diagnostic report reading.", "Diagnostic report collector", "Unavailable / high", "Use Console or app update history for crash review until then.", now, dataMode: .unavailable),
-      metric("Crashes Last 30 Days", "Unavailable", "crashes", .info, 0, "Crash counts are unavailable until Corewise implements permitted diagnostic report reading.", "Diagnostic report collector", "Unavailable / high", "Look for repeated crashes manually only if you are troubleshooting a specific app.", now, dataMode: .unavailable),
-      metric("Repeated Crash Flag", "Planned", "", .info, 0, "Repeated crash detection needs real crash metadata before it can be trusted.", "Crash pattern collector", "Planned / medium", "Do not treat App Issues as diagnostic until this collector is implemented.", now, dataMode: .planned)
-    ]
-
-    let crashes: [CrashIssue] = []
-    let crashesByApp: [ChartDatum] = []
+    let issueMetrics = appIssuesHealth.metrics
+    let crashes = appIssuesHealth.crashes
+    let crashesByApp = appIssuesHealth.crashesByApp
+    let dataAccess = dataAccessCapabilities()
     let scoreConfidence = ScoreConfidenceCalculator.metric(
       modes: coverageModes(
+        dataAccess: dataAccess,
         battery: batteryHealth,
         storage: storageHealth,
         performanceMetrics: performanceMetrics,
@@ -79,6 +76,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
         scoreConfidence,
         metric("Synthetic Runtime Data", "None", "", .good, 0, "Corewise runtime values are now live, planned, unavailable, or avoided; synthetic diagnostic rows are not used.", "App build", "Live / high", "Treat missing areas as intentionally not implemented, not hidden diagnostics.", now, dataMode: .live)
       ],
+      dataAccess: dataAccess,
       battery: batteryHealth,
       storage: storageHealth,
       performance: PerformanceHealth(
@@ -91,7 +89,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
           SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
-        sourceNote: "Mixed data. CPU, RAM, process rankings, uptime, and sustained CPU history are live. Memory pressure, swap, and WindowServer interpretation are unavailable or planned until safe sources are added."
+        sourceNote: "Mixed data. CPU, RAM, process rankings, uptime, swap, memory-pressure estimate, and sustained CPU history are live. WindowServer interpretation remains planned until safe context is added."
       ),
       startup: startupHealth,
       thermal: ThermalHealth(
@@ -108,21 +106,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
         ],
         sourceNote: "Mixed data. Thermal state is live from ProcessInfo.thermalState; low power mode and likely contributors remain planned. Corewise avoids unsupported low-level hardware readings."
       ),
-      appIssues: AppIssuesHealth(
-        summary: issueMetrics[0],
-        metrics: issueMetrics,
-        crashes: crashes,
-        crashesByApp: crashesByApp,
-        findings: [
-          DiagnosticFinding(title: "Diagnostic reports not read yet", detail: "Corewise does not show crash patterns until a permitted read-only diagnostic report collector exists.", status: .info, severityScore: 0),
-          DiagnosticFinding(title: "No app crash rows are invented", detail: "This page stays empty rather than showing synthetic app names.", status: .good, severityScore: 0)
-        ],
-        actions: [
-          SafeAction(title: "Use app updates first", body: "If you already know an app is crashing, update that app before broad troubleshooting.", systemImage: "arrow.down.app", status: .info),
-          SafeAction(title: "Do not erase logs automatically", body: "Diagnostic data should be read to explain patterns, not cleaned away.", systemImage: "doc.text.magnifyingglass", status: .good)
-        ],
-        sourceNote: "Unavailable data. Corewise does not read diagnostic reports yet, so App Issues does not invent crash rows or counts."
-      ),
+      appIssues: appIssuesHealth,
       suggestions: [
         Suggestion(title: "Keep storage review manual", body: "Corewise now reads startup volume capacity without opening personal folders automatically.", severity: .good),
         Suggestion(title: "Watch repeated CPU load", body: "Process history is more useful than a single spike once a few refreshes have been collected.", severity: .info),
@@ -179,6 +163,52 @@ struct SystemHealthCollector: SystemHealthCollecting {
     )
   }
 
+  private func swapMetric(_ swapUsedGB: Double?, now: Date) -> DiagnosticMetric {
+    guard let swapUsedGB else {
+      return metric(
+        "Swap Used",
+        "Unavailable",
+        "GB",
+        .info,
+        0,
+        "Swap usage was not returned by the safe VM query on this Mac.",
+        "sysctl vm.swapusage",
+        "Unavailable / medium",
+        "Do not infer swap pressure from resident memory alone.",
+        now,
+        dataMode: .unavailable
+      )
+    }
+
+    return metric(
+      "Swap Used",
+      number(swapUsedGB),
+      "GB",
+      swapUsedGB >= 8 ? .warning : (swapUsedGB >= 2 ? .info : .good),
+      min(Int((swapUsedGB * 10).rounded()), 100),
+      "Live swap usage reported by macOS through a safe VM query.",
+      "sysctl vm.swapusage",
+      "Live / medium",
+      "Interpret swap together with memory pressure and symptoms.",
+      now,
+      dataMode: .live
+    )
+  }
+
+  private func dataAccessCapabilities() -> [DataAccessCapability] {
+    [
+      DataAccessCapability(title: "CPU, RAM, and processes", dataMode: .live, source: "Mach and libproc", reason: "Read automatically from public local process and VM signals.", actionLabel: nil),
+      DataAccessCapability(title: "Startup volume capacity", dataMode: .live, source: "FileManager volume values", reason: "Read automatically without opening personal folders.", actionLabel: nil),
+      DataAccessCapability(title: "Battery basics", dataMode: .live, source: "IOKit power sources", reason: "Charge, power source, and charging state are read when macOS exposes an internal battery.", actionLabel: nil),
+      DataAccessCapability(title: "Thermal state", dataMode: .live, source: "ProcessInfo.thermalState", reason: "Safe high-level pressure signal, not a low-level hardware reading.", actionLabel: nil),
+      DataAccessCapability(title: "Launch plist inventory", dataMode: .live, source: "LaunchAgents and LaunchDaemons", reason: "Reads accessible plist metadata only.", actionLabel: nil),
+      DataAccessCapability(title: "Storage folder details", dataMode: .unavailable, source: "User-selected folder", reason: "Corewise waits for you to choose a folder before scanning personal files.", actionLabel: "Choose Folder"),
+      DataAccessCapability(title: "Crash report patterns", dataMode: .unavailable, source: "User-selected report folder", reason: "Crash reports may contain sensitive metadata, so Corewise reads them only after manual selection.", actionLabel: "Choose Reports"),
+      DataAccessCapability(title: "Detailed battery health", dataMode: .planned, source: "IOKit battery registry", reason: "Cycle count, condition, and capacity are used only when safe keys are present.", actionLabel: nil),
+      DataAccessCapability(title: "System watts and low-level readings", dataMode: .avoided, source: "Unsupported or elevated sources", reason: "Corewise avoids private hardware paths, elevated tools, and unsupported claims.", actionLabel: nil)
+    ]
+  }
+
   private func performanceFindings(_ summary: PerformanceHistorySummary, cpuProcesses: [ProcessSample]) -> [DiagnosticFinding] {
     var findings = [
       DiagnosticFinding(title: "Live process ranking is available", detail: "Top CPU and memory charts are based on short per-process samples when macOS returns process data.", status: .info, severityScore: 24)
@@ -217,6 +247,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
   }
 
   private func coverageModes(
+    dataAccess: [DataAccessCapability],
     battery: BatteryHealth,
     storage: StorageHealth,
     performanceMetrics: [DiagnosticMetric],
@@ -228,7 +259,8 @@ struct SystemHealthCollector: SystemHealthCollecting {
     crashes: [CrashIssue],
     crashCharts: [ChartDatum]
   ) -> [DataMode] {
-    battery.metrics.map(\.dataMode)
+    dataAccess.map(\.dataMode)
+      + battery.metrics.map(\.dataMode)
       + storage.metrics.map(\.dataMode)
       + storage.breakdown.map(\.dataMode)
       + storage.largeFolders.map(\.dataMode)

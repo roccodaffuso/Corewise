@@ -13,6 +13,8 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Live helper: `SystemMetricsSampler` provides live CPU, RAM, and process samples to the collector.
 - History helper: `PerformanceHistoryTracker` keeps a short in-memory window for sustained CPU interpretation.
 - Battery helper: `BatteryDiagnosticsCollector` provides live safe power-source basics and unavailable/planned health details.
+- Manual storage helper: `StorageTargetedScanCollector` scans only a user-selected folder and returns largest real items.
+- Manual crash helper: `CrashReportDiagnosticsCollector` parses metadata only from a user-selected reports folder.
 - Storage helper: `StorageDiagnosticsCollector` provides read-only live startup-volume capacity only during automatic refresh.
 - Startup helper: `StartupDiagnosticsCollector` provides read-only LaunchAgents and LaunchDaemons plist metadata.
 - UI: `ContentView` hosts navigation; `DashboardViews` renders section pages, cards, charts, findings, actions, and source notes.
@@ -25,6 +27,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 4. The collector records short performance history in memory, then combines live battery/performance/storage/startup/thermal signals with planned and unavailable coverage.
 5. SwiftUI renders the snapshot into section pages.
 6. The store refreshes live data periodically.
+7. User-selected storage or crash scans are owned by `HealthDashboardStore` and reapplied to later snapshots. Automatic refresh never starts personal-folder or report scans.
 
 ## Collector Boundaries
 
@@ -41,6 +44,19 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Read startup volume capacity resource values during automatic refresh.
 - Do not enumerate Downloads, Trash, user Library caches, developer folders, or browser caches automatically.
 - Leave detailed folder review unavailable or planned until there is an explicit targeted scan flow.
+
+`StorageTargetedScanCollector` should stay explicit:
+
+- Run only after a user folder choice.
+- Read file sizes and directory totals without modifying files.
+- Omit unreadable items and report their count instead of estimating them.
+- Do not persist folder access bookmarks in the first version.
+
+`CrashReportDiagnosticsCollector` should stay narrow:
+
+- Run only after a user folder choice.
+- Parse app name, bundle ID, version, date, and repeated counts when present.
+- Avoid showing stack traces or report contents in the first version.
 
 `StartupDiagnosticsCollector` should stay read-only:
 

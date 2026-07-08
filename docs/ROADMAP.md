@@ -13,14 +13,15 @@
 - Implemented: real total, used, available, and available-percent values.
 - Implemented: automatic refresh reads startup volume capacity only.
 - Implemented: Downloads, Trash, caches, and user Library folders are not scanned automatically.
-- Planned: explicit targeted scans with clear permission copy.
+- Implemented: explicit user-selected folder scan with largest folders/files, unreadable count, and scan duration.
+- Planned: refine scan presets and optional security-scoped persistence only if the product needs it.
 - Never delete, move, or modify files.
 
 ## Phase 3: Battery Collector
 
 - Implemented: live charge, power source, and charging state from safe IOKit power-source data.
 - Implemented: no-battery state and missing keys render unavailable values instead of placeholders.
-- Keep cycle count, maximum capacity, and condition unavailable until a safe documented source is selected.
+- Implemented when present: cycle count, maximum capacity, and condition from safe IOKit battery registry keys.
 - Keep service wording tied to macOS-provided state only.
 
 ## Phase 4: Performance History
@@ -28,7 +29,8 @@
 - Keep live CPU/RAM sampling.
 - Implemented: short local in-memory history for sustained CPU and repeated high process usage.
 - Implemented: uptime from `ProcessInfo.systemUptime`.
-- Add memory pressure and swap only through safe public signals or mark unavailable.
+- Implemented: swap usage and a Corewise memory-pressure estimate from safe local VM signals.
+- Keep WindowServer interpretation planned until there is enough context.
 
 ## Phase 5: Startup Inventory
 
@@ -40,8 +42,8 @@
 
 - Implemented: use `ProcessInfo.thermalState` for safe high-level thermal state.
 - Avoid private temperature sensors.
-- Read permitted diagnostic reports for crash patterns only when access is available.
-- Show diagnostic permission state clearly.
+- Implemented: read crash report metadata only after the user selects a reports folder.
+- Show diagnostic access state clearly.
 
 ## Release Gate
 

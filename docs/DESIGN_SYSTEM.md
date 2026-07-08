@@ -38,6 +38,14 @@ Every diagnostic page should include:
 - Findings.
 - Safe actions.
 - Data source note.
+- Manual scan controls only where the user explicitly grants scope.
+
+## Permission Controls
+
+- Use calm labels such as `Choose Folder` and `Choose Reports`.
+- Explain the scope before the picker opens.
+- Do not present manual scans as required, urgent, or automatic.
+- After a scan, keep `Live` badges tied to the selected folder/report source.
 
 ## Chart Rules
 

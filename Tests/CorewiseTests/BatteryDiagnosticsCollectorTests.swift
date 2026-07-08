@@ -14,6 +14,51 @@ import Testing
   #expect(battery.metrics.first { $0.title == "Battery Risk" }?.dataMode == .unavailable)
 }
 
+@Test func batteryRegistrySnapshotProducesLiveHealthContext() throws {
+  let dictionary: [String: Any] = [
+    kIOPSTypeKey as String: kIOPSInternalBatteryType as String,
+    kIOPSCurrentCapacityKey as String: 80,
+    kIOPSMaxCapacityKey as String: 100,
+    kIOPSPowerSourceStateKey as String: kIOPSBatteryPowerValue as String,
+    kIOPSIsChargingKey as String: false
+  ]
+
+  let battery = BatteryDiagnosticsCollector(
+    powerSources: { [BatteryPowerSourceDescription(dictionary: dictionary)] },
+    registrySnapshot: {
+      BatteryRegistrySnapshot(cycleCount: 120, maxCapacity: 4500, designCapacity: 5000, condition: "Good")
+    }
+  ).currentBattery(now: Date())
+
+  let cycles = try #require(battery.metrics.first { $0.title == "Cycle Count" })
+  let capacity = try #require(battery.metrics.first { $0.title == "Maximum Capacity" })
+  let condition = try #require(battery.metrics.first { $0.title == "Condition" })
+
+  #expect(cycles.dataMode == .live)
+  #expect(cycles.value == "120")
+  #expect(capacity.dataMode == .live)
+  #expect(capacity.value == "90")
+  #expect(condition.dataMode == .live)
+  #expect(condition.value == "Good")
+}
+
+@Test func missingBatteryRegistryKeysRemainUnavailable() throws {
+  let dictionary: [String: Any] = [
+    kIOPSTypeKey as String: kIOPSInternalBatteryType as String,
+    kIOPSCurrentCapacityKey as String: 80,
+    kIOPSMaxCapacityKey as String: 100
+  ]
+
+  let battery = BatteryDiagnosticsCollector(
+    powerSources: { [BatteryPowerSourceDescription(dictionary: dictionary)] },
+    registrySnapshot: { BatteryRegistrySnapshot() }
+  ).currentBattery(now: Date())
+
+  #expect(battery.metrics.first { $0.title == "Cycle Count" }?.dataMode == .unavailable)
+  #expect(battery.metrics.first { $0.title == "Maximum Capacity" }?.dataMode == .unavailable)
+  #expect(battery.metrics.first { $0.title == "Condition" }?.dataMode == .unavailable)
+}
+
 @Test func batteryDictionaryProducesLiveChargeSourceAndChargingState() throws {
   let dictionary: [String: Any] = [
     kIOPSTypeKey as String: kIOPSInternalBatteryType as String,

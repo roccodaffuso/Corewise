@@ -12,6 +12,8 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - No network dependency.
 - Live performance sampling stays on-device.
 - Current process data is used for display and grouping, not upload.
+- Storage details are read only after the user chooses a folder.
+- Crash report metadata is read only after the user chooses a reports folder.
 
 ## Runtime Data
 
@@ -26,6 +28,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Keep storage scanning read-only.
 - Prefer opening Finder, System Settings, or vendor-owned tools for user action.
 - Ask for permissions only when a feature clearly needs them and can explain why.
+- Omit unreadable files and reports instead of estimating them.
 
 ## Avoided
 
@@ -33,6 +36,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Private APIs for consumer-facing claims.
 - Automatic file deletion.
 - Silent background scanning of personal folders.
+- Silent background scanning of diagnostic report folders.
 - Reading document contents for diagnostics.
 - Uploading process, file, crash, or device data.
 - Claiming certainty when macOS only exposes a partial signal.

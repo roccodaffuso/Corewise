@@ -1,11 +1,20 @@
 import Darwin.Mach
 import Foundation
 
+struct MemoryPressureEstimate {
+  var label: String
+  var status: FindingSeverity
+  var severityScore: Int
+  var explanation: String
+}
+
 struct InstantSystemMetrics {
   var cpuPercent: Double?
   var usedMemoryGB: Double
   var totalMemoryGB: Double
   var memoryPercent: Double
+  var swapUsedGB: Double?
+  var memoryPressure: MemoryPressureEstimate
   var topCPUProcesses: [ProcessSample]
   var topMemoryProcesses: [ProcessSample]
   var systemWatts: Double?
@@ -17,12 +26,16 @@ enum SystemMetricsSampler {
     async let cpu = sampleCPUPercent()
     async let processes = sampleProcesses()
     let memory = sampleMemory()
+    let swapUsedGB = sampleSwapUsedGB()
+    let pressure = memoryPressureEstimate(memoryPercent: memory.percent, swapUsedGB: swapUsedGB)
 
     return await InstantSystemMetrics(
       cpuPercent: cpu,
       usedMemoryGB: memory.usedGB,
       totalMemoryGB: memory.totalGB,
       memoryPercent: memory.percent,
+      swapUsedGB: swapUsedGB,
+      memoryPressure: pressure,
       topCPUProcesses: processes.cpu,
       topMemoryProcesses: processes.memory,
       systemWatts: nil,
@@ -104,6 +117,47 @@ enum SystemMetricsSampler {
     return (usedGB, totalGB, percent)
   }
 
+  static func memoryPressureEstimate(memoryPercent: Double, swapUsedGB: Double?) -> MemoryPressureEstimate {
+    let swap = swapUsedGB ?? 0
+
+    if memoryPercent >= 92 || swap >= 8 {
+      return MemoryPressureEstimate(
+        label: "High",
+        status: .warning,
+        severityScore: 72,
+        explanation: "Corewise estimates high pressure from memory use and live swap usage. This is not Activity Monitor parity."
+      )
+    }
+
+    if memoryPercent >= 80 || swap >= 2 {
+      return MemoryPressureEstimate(
+        label: "Medium",
+        status: .info,
+        severityScore: 42,
+        explanation: "Corewise estimates moderate pressure from memory use and live swap usage. Confirm with Activity Monitor if needed."
+      )
+    }
+
+    return MemoryPressureEstimate(
+      label: "Low",
+      status: .good,
+      severityScore: 10,
+      explanation: "Corewise estimates low pressure from memory use and live swap usage."
+    )
+  }
+
+  private static func sampleSwapUsedGB() -> Double? {
+    var usage = xsw_usage()
+    var size = MemoryLayout<xsw_usage>.stride
+    let result = sysctlbyname("vm.swapusage", &usage, &size, nil, 0)
+
+    guard result == 0 else {
+      return nil
+    }
+
+    return Double(usage.xsu_used) / bytesPerGB
+  }
+
   private static func sampleProcesses() async -> (cpu: [ProcessSample], memory: [ProcessSample]) {
     let first = processStats()
     let start = Date()
@@ -131,7 +185,7 @@ enum SystemMetricsSampler {
         : 0
       let cpuPercent = Double(deltaNanoseconds) / 1_000_000_000 / elapsed * 100
 
-      guard cpuPercent >= 0.05 else {
+      guard cpuPercent >= 0.1 else {
         continue
       }
 
@@ -165,6 +219,9 @@ enum SystemMetricsSampler {
       }
 
       let memoryGB = Double(stat.residentBytes) / bytesPerGB
+      guard memoryGB >= 0.05 else {
+        continue
+      }
       memoryByProcess[displayName, default: ProcessAggregate(name: displayName, value: 0)].value += memoryGB
     }
 
@@ -179,7 +236,7 @@ enum SystemMetricsSampler {
           dataMode: .live,
           status: memoryProcessStatus(aggregate.value),
           severityScore: severity(aggregate.value * 20),
-          explanation: "Resident memory currently held by this process group.",
+          explanation: "Resident memory currently held by this app or process group.",
           source: "proc_pidinfo PROC_PIDTASKINFO",
           confidence: "Live / medium",
           recommendedAction: "Use this with memory pressure; high RAM alone is not automatically bad.",

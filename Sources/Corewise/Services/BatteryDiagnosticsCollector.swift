@@ -1,11 +1,17 @@
 import Foundation
+import IOKit
 import IOKit.ps
 
 struct BatteryDiagnosticsCollector {
   private var powerSources: () -> [BatteryPowerSourceDescription]
+  private var registrySnapshot: () -> BatteryRegistrySnapshot?
 
-  init(powerSources: @escaping () -> [BatteryPowerSourceDescription] = BatteryDiagnosticsCollector.readPowerSources) {
+  init(
+    powerSources: @escaping () -> [BatteryPowerSourceDescription] = BatteryDiagnosticsCollector.readPowerSources,
+    registrySnapshot: @escaping () -> BatteryRegistrySnapshot? = BatteryDiagnosticsCollector.readRegistrySnapshot
+  ) {
     self.powerSources = powerSources
+    self.registrySnapshot = registrySnapshot
   }
 
   func currentBattery(now: Date) -> BatteryHealth {
@@ -13,12 +19,13 @@ struct BatteryDiagnosticsCollector {
       return noBattery(now: now)
     }
 
+    let registry = registrySnapshot()
     let charge = chargeMetric(battery, now: now)
     let metrics = [
       charge,
-      metric("Cycle Count", "Unavailable", "cycles", .unavailable, .info, 0, "Cycle count is not collected in this build through the safe power-source API.", "IOKit power source snapshot", "Unavailable / high", "Use macOS battery settings for service guidance.", now),
-      metric("Maximum Capacity", "Unavailable", "%", .unavailable, .info, 0, "Maximum capacity is not collected in this build through the safe power-source API.", "IOKit power source snapshot", "Unavailable / high", "Do not infer battery health without a documented source.", now),
-      metric("Condition", "Unavailable", "", .unavailable, .info, 0, "Battery condition is not collected in this build through the safe power-source API.", "IOKit power source snapshot", "Unavailable / high", "Use macOS battery settings for service status.", now),
+      cycleCountMetric(registry, now: now),
+      maximumCapacityMetric(registry, now: now),
+      conditionMetric(registry, now: now),
       powerSourceMetric(battery, now: now),
       chargingStateMetric(battery, now: now),
       metric("Recent Energy Impact", "Planned", "", .planned, .info, 0, "Recent energy impact needs a separate safe process-energy source before it can be trusted.", "Energy impact collector", "Planned / medium", "Use Activity Monitor's Energy tab for now.", now),
@@ -52,6 +59,39 @@ struct BatteryDiagnosticsCollector {
       }
       return BatteryPowerSourceDescription(dictionary: description)
     }
+  }
+
+  private static func readRegistrySnapshot() -> BatteryRegistrySnapshot? {
+    let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSmartBattery"))
+    guard service != 0 else {
+      return nil
+    }
+    defer { IOObjectRelease(service) }
+
+    return BatteryRegistrySnapshot(
+      cycleCount: intProperty("CycleCount", service: service),
+      maxCapacity: intProperty("MaxCapacity", service: service),
+      designCapacity: intProperty("DesignCapacity", service: service),
+      condition: stringProperty("BatteryHealth", service: service) ?? stringProperty("BatteryHealthCondition", service: service)
+    )
+  }
+
+  private static func intProperty(_ key: String, service: io_registry_entry_t) -> Int? {
+    guard let value = IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() else {
+      return nil
+    }
+
+    if let intValue = value as? Int {
+      return intValue
+    }
+    if let number = value as? NSNumber {
+      return number.intValue
+    }
+    return nil
+  }
+
+  private static func stringProperty(_ key: String, service: io_registry_entry_t) -> String? {
+    IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() as? String
   }
 
   private func noBattery(now: Date) -> BatteryHealth {
@@ -95,6 +135,31 @@ struct BatteryDiagnosticsCollector {
     }
 
     return metric("Power Source", displayPowerSource(state), "", .live, state == "Battery Power" ? .info : .good, state == "Battery Power" ? 18 : 4, "Current power source reported by macOS.", "IOKit power source snapshot", "Live / high", "Connect power before long heavy work if running on battery.", now)
+  }
+
+  private func cycleCountMetric(_ registry: BatteryRegistrySnapshot?, now: Date) -> DiagnosticMetric {
+    guard let cycleCount = registry?.cycleCount else {
+      return metric("Cycle Count", "Unavailable", "cycles", .unavailable, .info, 0, "Cycle count was not present in the safe battery registry snapshot.", "IOKit battery registry", "Unavailable / medium", "Use macOS battery settings for service guidance.", now)
+    }
+
+    return metric("Cycle Count", "\(cycleCount)", "cycles", .live, cycleCount >= 900 ? .warning : .good, min(cycleCount / 10, 100), "Cycle count found in read-only battery registry data.", "IOKit battery registry", "Live / medium", "Use this as context; service decisions should still follow macOS guidance.", now)
+  }
+
+  private func maximumCapacityMetric(_ registry: BatteryRegistrySnapshot?, now: Date) -> DiagnosticMetric {
+    guard let percent = registry?.maximumCapacityPercent else {
+      return metric("Maximum Capacity", "Unavailable", "%", .unavailable, .info, 0, "Maximum capacity could not be derived from safe battery registry keys.", "IOKit battery registry", "Unavailable / medium", "Do not infer battery health without a documented value.", now)
+    }
+
+    return metric("Maximum Capacity", number(percent), "%", .live, percent < 80 ? .warning : .good, min(max(Int((100 - percent).rounded()), 0), 100), "Maximum capacity derived from read-only registry capacity keys.", "IOKit battery registry", "Live / medium", "Confirm service status in macOS before making battery decisions.", now)
+  }
+
+  private func conditionMetric(_ registry: BatteryRegistrySnapshot?, now: Date) -> DiagnosticMetric {
+    guard let condition = registry?.condition, !condition.isEmpty else {
+      return metric("Condition", "Unavailable", "", .unavailable, .info, 0, "Battery condition was not present in the safe battery registry snapshot.", "IOKit battery registry", "Unavailable / medium", "Use macOS battery settings for service status.", now)
+    }
+
+    let normalized = condition.localizedCaseInsensitiveContains("good") ? .good : FindingSeverity.info
+    return metric("Condition", condition, "", .live, normalized, normalized == .good ? 6 : 28, "Battery condition string found in read-only registry data.", "IOKit battery registry", "Live / medium", "Treat this as context unless macOS explicitly recommends service.", now)
   }
 
   private func chargingStateMetric(_ battery: BatteryPowerSourceDescription, now: Date) -> DiagnosticMetric {
@@ -206,5 +271,20 @@ struct BatteryPowerSourceDescription {
     }
 
     return min(max(Double(currentCapacity) / Double(maxCapacity) * 100, 0), 100)
+  }
+}
+
+struct BatteryRegistrySnapshot {
+  var cycleCount: Int? = nil
+  var maxCapacity: Int? = nil
+  var designCapacity: Int? = nil
+  var condition: String? = nil
+
+  var maximumCapacityPercent: Double? {
+    guard let maxCapacity, let designCapacity, designCapacity > 0 else {
+      return nil
+    }
+
+    return min(max(Double(maxCapacity) / Double(designCapacity) * 100, 0), 100)
   }
 }

@@ -93,7 +93,7 @@ struct ContentView: View {
     } detail: {
       Group {
         if let snapshot = store.snapshot {
-          DetailRouter(section: selectedSection, snapshot: snapshot)
+          DetailRouter(section: selectedSection, snapshot: snapshot, store: store)
         } else {
           ProgressView("Checking your Mac...")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -119,6 +119,7 @@ struct ContentView: View {
 private struct DetailRouter: View {
   var section: DashboardSection
   var snapshot: HealthSnapshot
+  @ObservedObject var store: HealthDashboardStore
 
   var body: some View {
     ScrollView {
@@ -129,7 +130,13 @@ private struct DetailRouter: View {
         case .battery:
           BatteryView(battery: snapshot.battery)
         case .storage:
-          StorageView(storage: snapshot.storage)
+          StorageView(
+            storage: snapshot.storage,
+            isScanning: store.isScanningStorage,
+            scanFolder: { Task { await store.scanStorageFolder() } },
+            scanDownloads: { Task { await store.scanDownloadsFolder() } },
+            scanDeveloperData: { Task { await store.scanDeveloperFolder() } }
+          )
         case .performance:
           PerformanceView(performance: snapshot.performance)
         case .startup:
@@ -137,7 +144,11 @@ private struct DetailRouter: View {
         case .thermal:
           ThermalView(thermal: snapshot.thermal)
         case .issues:
-          IssuesView(appIssues: snapshot.appIssues)
+          IssuesView(
+            appIssues: snapshot.appIssues,
+            isScanningReports: store.isScanningReports,
+            scanReports: { Task { await store.scanCrashReportsFolder() } }
+          )
         }
       }
       .padding(26)

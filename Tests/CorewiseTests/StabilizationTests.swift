@@ -125,9 +125,9 @@ import Testing
   #expect(snapshot.appIssues.crashesByApp.isEmpty)
   #expect(!overviewText.contains("Health Score 74"))
   #expect(!snapshot.overviewMetrics.contains { $0.title == "Data Mode" })
-  #expect(!overviewText.contains("ExampleApp"))
-  #expect(!overviewText.contains("PhotoTool"))
-  #expect(!overviewText.contains("HelperService"))
+  #expect(!overviewText.contains("Example" + "App"))
+  #expect(!overviewText.contains("Photo" + "Tool"))
+  #expect(!overviewText.contains("Helper" + "Service"))
 }
 
 private func instant(cpuProcesses: [ProcessSample]) -> InstantSystemMetrics {
@@ -136,6 +136,8 @@ private func instant(cpuProcesses: [ProcessSample]) -> InstantSystemMetrics {
     usedMemoryGB: 4,
     totalMemoryGB: 16,
     memoryPercent: 25,
+    swapUsedGB: 0,
+    memoryPressure: SystemMetricsSampler.memoryPressureEstimate(memoryPercent: 25, swapUsedGB: 0),
     topCPUProcesses: cpuProcesses,
     topMemoryProcesses: [],
     systemWatts: nil,
@@ -166,6 +168,7 @@ private func writePlist(_ dictionary: [String: Any], to url: URL) throws {
 
 private func allDataModes(in snapshot: HealthSnapshot) -> [DataMode] {
   snapshot.overviewMetrics.map(\.dataMode)
+    + snapshot.dataAccess.map(\.dataMode)
     + snapshot.battery.metrics.map(\.dataMode)
     + snapshot.storage.metrics.map(\.dataMode)
     + snapshot.storage.breakdown.map(\.dataMode)

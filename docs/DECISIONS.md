@@ -83,3 +83,21 @@ Reason: Plist metadata is useful context, but Corewise should not imply complete
 Decision: Corewise runtime diagnostics must not use synthetic values, synthetic apps, or invented counts. Missing features must be `Planned`, `Unavailable`, or `Avoided`.
 
 Reason: A serious Mac diagnostic utility earns trust by showing fewer real values rather than filling pages with plausible but false data.
+
+## 2026-07-08: User-Selected Scans Only For Personal Data
+
+Decision: Detailed storage folders and crash reports are read only after the user chooses a folder with a picker. Automatic refresh must not scan personal folders or diagnostic report folders.
+
+Reason: A surprising privacy prompt or silent scan would break Corewise's trust model.
+
+## 2026-07-08: Battery Health Is Opportunistic
+
+Decision: Cycle count, maximum capacity, and condition may be shown only when safe IOKit registry keys are present. Missing keys remain unavailable.
+
+Reason: Battery health should not be inferred from partial data or presented as service guidance without macOS-backed context.
+
+## 2026-07-08: Score Is Gated By Real Coverage
+
+Decision: Corewise keeps the global score off until enough real live signals exist and the scoring model ignores planned, unavailable, and avoided values.
+
+Reason: A premature score would look authoritative while still depending on incomplete coverage.

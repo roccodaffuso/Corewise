@@ -8,32 +8,37 @@ The current build is a trust-first product prototype. Runtime values are either 
 
 Implemented live signals:
 
+- Data Access overview for live, user-selected, planned, unavailable, and avoided data paths.
 - System CPU load from macOS CPU ticks.
 - System RAM estimate from VM statistics.
 - Top CPU process groups from public process information.
 - Top RAM process groups from public process information.
 - Process path lookup for grouping helpers under their owning `.app` bundle when available.
 - Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
+- Battery cycle count, maximum capacity, and condition when safe battery registry keys are present.
 - Startup volume total, used, available, and available percent.
 - Startup volume breakdown as used vs available space.
+- User-selected storage folder scan for largest folders/files, item count, unreadable count, and scan size.
 - Short local performance history for sustained CPU interpretation.
+- Live swap usage and a Corewise memory-pressure estimate. This is not Activity Monitor parity.
 - Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
+- User-selected crash report folder parsing for app crash counts and repeated-crash patterns.
 
 Planned or unavailable areas:
 
 - Overall health score and cross-section prioritization.
-- Detailed battery health: cycles, maximum capacity, condition, energy impact, and risk scoring.
-- Detailed storage folder scans, large files, caches, Trash, and personal folder offenders.
+- Battery energy impact and risk scoring.
+- Automatic detailed storage folder scans, caches, Trash, and personal folder offenders.
 - Modern login items, background items, privileged helpers, and startup code signing checks.
-- Memory pressure, swap, and WindowServer interpretation.
+- WindowServer interpretation.
 - Thermal contributors beyond high-level public thermal state.
-- Crash/app issue counts and repeated-crash patterns.
 
 Unavailable by design in the MVP:
 
 - Whole-system wattage through private sensors, sudo-only tools, or unsupported APIs.
 - Automatic Downloads or personal-folder scans during refresh.
+- Automatic diagnostic report scans during refresh.
 - Automatic deletion, forced app quitting, or destructive optimization.
 
 ## Build And Run

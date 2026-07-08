@@ -20,6 +20,7 @@ Statuses:
 | RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Estimate based on active, wired, and compressed pages. |
 | System power watts | Unavailable | Safe public API check | High | No reliable whole-system wattage through safe public APIs in this MVP. |
 | Main attention area | Unavailable | Corewise scoring model | High | Cross-section prioritization is not implemented. |
+| Data access capabilities | Implemented | Static capability matrix plus scan state | High | Explains access state; it is not a device-health signal. |
 
 ## Battery
 
@@ -29,9 +30,9 @@ Statuses:
 | Charge | Implemented | IOKit power source APIs | High | Live only when current/max capacity are present in the power-source snapshot. |
 | Power source | Implemented | IOKit power source APIs | High | Live only when power source state is present in the snapshot. |
 | Charging state | Implemented | IOKit power source APIs | High | Live only when charging state is present in the snapshot. |
-| Cycle count | Unavailable | Documented battery health surface if available later | High | Not collected through the current safe power-source API path. |
-| Maximum capacity | Unavailable | Documented battery health surface if available later | High | Not collected through the current safe power-source API path. |
-| Condition | Unavailable | macOS battery condition if safely/documentedly accessible later | High | Not collected through the current safe power-source API path. |
+| Cycle count | Implemented when present | IOKit battery registry | Medium | Shown only when safe registry keys are present; otherwise unavailable. |
+| Maximum capacity | Implemented when present | IOKit battery registry | Medium | Derived only when max/design capacity keys are present; otherwise unavailable. |
+| Condition | Implemented when present | IOKit battery registry | Medium | Shown only when a condition string is present; Corewise does not infer service state. |
 | Recent energy impact | Planned | Energy/process correlation if public and safe | Low | Not all Energy tab data is exposed as public API. |
 | Battery risk | Planned | Corewise scoring model | Medium | Not scored until health and trend signals are available. |
 
@@ -41,8 +42,9 @@ Statuses:
 | --- | --- | --- | --- | --- |
 | Total, used, available | Implemented | `FileManager` volume resource values | High | Startup volume only. |
 | Available percent | Implemented | Derived from real volume values | High | Startup volume only. |
-| Large folders | Unavailable | Explicit targeted scan later | High | Not scanned automatically to avoid privacy prompts. |
-| Large files | Unavailable | Explicit targeted scan later | High | Downloads is not scanned during refresh. |
+| User-selected folder scan | Implemented | `NSOpenPanel` folder choice plus read-only size scan | Medium | Runs only after user action; no bookmark is persisted in this version. |
+| Large folders | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
+| Large files | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
 | Developer caches | Planned | Explicit targeted scan later | Medium | Not scanned automatically because these live under user Library. |
 | Browser caches | Planned | Browser-owned settings or explicit targeted scan | Low | Browser cache folders are not scanned during refresh. |
 | Downloads | Unavailable | Explicit targeted scan later | High | Corewise does not request Downloads access at launch/refresh. |
@@ -59,8 +61,8 @@ Statuses:
 | Top CPU processes | Implemented | `proc_listallpids`, `proc_pidinfo(PROC_PIDTASKINFO)` | Medium | Short sample window; inaccessible processes may be omitted. |
 | Top RAM processes | Implemented | `proc_pidinfo(PROC_PIDTASKINFO)` resident size | Medium | Resident memory alone is not necessarily bad. |
 | App grouping | Implemented | `proc_pidpath` path parsing for `.app` bundles | Medium | Falls back to process names when path is not readable. |
-| Memory pressure | Unavailable | Public VM pressure signal or safe approximation | Medium | Not displayed until a safe source is implemented. |
-| Swap used | Planned | VM statistics if exposed safely | Medium | Not displayed until a safe source is implemented. |
+| Memory pressure estimate | Implemented | VM memory estimate plus swap usage | Low | Corewise estimate; not Activity Monitor parity. |
+| Swap used | Implemented | `sysctl vm.swapusage` | Medium | Available when macOS returns swap usage. |
 | Uptime | Implemented | `ProcessInfo.systemUptime` | High | Local process uptime signal; not a performance diagnosis by itself. |
 | Sustained high CPU | Implemented | In-memory recent process history | Medium | Unavailable until enough samples are collected; not persisted. |
 | WindowServer impact | Planned | Process sample plus explanation | Low | Needs careful wording because high usage can be normal. |
@@ -90,12 +92,12 @@ Statuses:
 
 | Metric | Status | Planned source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Diagnostic permission state | Unavailable | Permission/access check | Medium | Not implemented; must disclose incomplete access. |
-| Crashes last 7 days | Unavailable | Permitted diagnostic reports | Medium | Access may be limited; Corewise does not invent counts. |
-| Crashes last 30 days | Unavailable | Permitted diagnostic reports | Medium | Access may be limited; Corewise does not invent counts. |
-| Last crash date | Unavailable | Diagnostic report metadata | Medium | Must avoid reading unnecessary content. |
-| Bundle ID and version | Unavailable | Diagnostic report metadata or app bundle metadata | Medium | May be unavailable for some reports. |
-| Repeated crash flag | Planned | Derived from real crash counts | Medium | Should only highlight repeated patterns from real reports. |
+| Diagnostic permission state | Implemented after selection | User-selected report folder | Medium | Corewise does not scan reports automatically. |
+| Crashes last 7 days | Implemented after selection | Crash report metadata | Medium | Counts only readable reports in the chosen folder. |
+| Crashes last 30 days | Implemented after selection | Crash report metadata | Medium | Counts only readable reports in the chosen folder. |
+| Last crash date | Implemented after selection | Crash report metadata or file date fallback | Medium | Stack traces are not shown in the first version. |
+| Bundle ID and version | Implemented when present | Crash report metadata | Medium | Missing fields are shown as unavailable. |
+| Repeated crash flag | Implemented after selection | Derived from real crash counts | Medium | Highlights repeated patterns from selected reports only. |
 
 ## Privacy Notes
 
@@ -103,3 +105,4 @@ Statuses:
 - Corewise should not read document contents to size files.
 - Corewise should not store process histories beyond what is needed for local explanation.
 - Corewise should display source and confidence next to every diagnostic claim.
+- Storage folders and crash reports are read only after user-selected folder scans.
