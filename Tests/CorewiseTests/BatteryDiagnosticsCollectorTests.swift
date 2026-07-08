@@ -79,6 +79,32 @@ import Testing
   #expect(capacity.value == "Unavailable")
 }
 
+@Test func batteryCapacityUsesRawCapacityWhenMaxCapacityIsPercentScale() throws {
+  let dictionary: [String: Any] = [
+    kIOPSTypeKey as String: kIOPSInternalBatteryType as String,
+    kIOPSCurrentCapacityKey as String: 70,
+    kIOPSMaxCapacityKey as String: 100
+  ]
+
+  let battery = BatteryDiagnosticsCollector(
+    powerSources: { [BatteryPowerSourceDescription(dictionary: dictionary)] },
+    registrySnapshot: {
+      BatteryRegistrySnapshot(
+        cycleCount: 274,
+        maxCapacity: 100,
+        rawMaxCapacity: 3832,
+        designCapacity: 4563,
+        condition: "Good"
+      )
+    }
+  ).currentBattery(now: Date())
+
+  let capacity = try #require(battery.metrics.first { $0.title == "Maximum Capacity" })
+
+  #expect(capacity.dataMode == .live)
+  #expect(capacity.value == "84")
+}
+
 @Test func batteryDictionaryProducesLiveChargeSourceAndChargingState() throws {
   let dictionary: [String: Any] = [
     kIOPSTypeKey as String: kIOPSInternalBatteryType as String,

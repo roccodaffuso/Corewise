@@ -71,6 +71,8 @@ struct BatteryDiagnosticsCollector {
     return BatteryRegistrySnapshot(
       cycleCount: intProperty("CycleCount", service: service),
       maxCapacity: intProperty("MaxCapacity", service: service),
+      rawMaxCapacity: intProperty("AppleRawMaxCapacity", service: service),
+      nominalChargeCapacity: intProperty("NominalChargeCapacity", service: service),
       designCapacity: intProperty("DesignCapacity", service: service),
       condition: stringProperty("BatteryHealth", service: service) ?? stringProperty("BatteryHealthCondition", service: service)
     )
@@ -150,7 +152,7 @@ struct BatteryDiagnosticsCollector {
       return metric("Maximum Capacity", "Unavailable", "%", .unavailable, .info, 0, "Maximum capacity could not be derived from safe battery registry keys.", "IOKit battery registry", "Unavailable / medium", "Do not infer battery health without a documented value.", now)
     }
 
-    return metric("Maximum Capacity", number(percent), "%", .live, percent < 80 ? .warning : .good, min(max(Int((100 - percent).rounded()), 0), 100), "Maximum capacity derived from read-only registry capacity keys.", "IOKit battery registry", "Live / medium", "Confirm service status in macOS before making battery decisions.", now)
+    return metric("Maximum Capacity", number(percent.rounded()), "%", .live, percent < 80 ? .warning : .good, min(max(Int((100 - percent).rounded()), 0), 100), "Maximum capacity derived from read-only registry capacity keys.", "IOKit battery registry", "Live / medium", "Confirm service status in macOS before making battery decisions.", now)
   }
 
   private func conditionMetric(_ registry: BatteryRegistrySnapshot?, now: Date) -> DiagnosticMetric {
@@ -277,15 +279,22 @@ struct BatteryPowerSourceDescription {
 struct BatteryRegistrySnapshot {
   var cycleCount: Int? = nil
   var maxCapacity: Int? = nil
+  var rawMaxCapacity: Int? = nil
+  var nominalChargeCapacity: Int? = nil
   var designCapacity: Int? = nil
   var condition: String? = nil
 
   var maximumCapacityPercent: Double? {
-    guard let maxCapacity, let designCapacity, designCapacity > 0 else {
+    guard let designCapacity, designCapacity > 0 else {
       return nil
     }
 
-    let percent = Double(maxCapacity) / Double(designCapacity) * 100
+    let capacity = rawMaxCapacity ?? nominalChargeCapacity ?? maxCapacity
+    guard let capacity else {
+      return nil
+    }
+
+    let percent = Double(capacity) / Double(designCapacity) * 100
     guard percent >= 50, percent <= 120 else {
       return nil
     }

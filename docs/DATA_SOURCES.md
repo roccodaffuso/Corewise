@@ -32,7 +32,7 @@ Statuses:
 | Power source | Implemented | IOKit power source APIs | High | Live only when power source state is present in the snapshot. |
 | Charging state | Implemented | IOKit power source APIs | High | Live only when charging state is present in the snapshot. |
 | Cycle count | Implemented when present | IOKit battery registry | Medium | Shown only when safe registry keys are present; otherwise unavailable. |
-| Maximum capacity | Implemented when present | IOKit battery registry | Medium | Derived only when max/design capacity keys are present in a plausible matching scale; otherwise unavailable. |
+| Maximum capacity | Implemented when present | IOKit battery registry `AppleRawMaxCapacity` or `NominalChargeCapacity` over `DesignCapacity` | Medium | `MaxCapacity` can be a 0-100 power-source scale and is not divided by `DesignCapacity` unless the ratio is plausible. |
 | Condition | Implemented when present | IOKit battery registry | Medium | Shown only when a condition string is present; Corewise does not infer service state. |
 | Recent energy impact | Planned | Energy/process correlation if public and safe | Low | Not all Energy tab data is exposed as public API. |
 | Battery risk | Planned | Corewise scoring model | Medium | Not scored until health and trend signals are available. |
