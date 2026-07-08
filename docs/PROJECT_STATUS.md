@@ -18,7 +18,7 @@ Current state: real-data acquisition started; Performance parity is partially im
 - SwiftPM macOS app target named `Corewise`.
 - SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, and Settings.
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
-- Live sampler for system CPU split, system VM memory fields, process rows, app groups, observed process memory, resident memory, and physical footprint when macOS returns it.
+- Live sampler for system CPU split, system VM memory fields, process rows, app groups, observed process memory, resident memory, and physical footprint when macOS returns it. Process enumeration now uses `sysctl KERN_PROC_ALL` first so renderer/helper processes are less likely to be missed.
 - Short in-memory performance history for sustained high CPU interpretation.
 - Live uptime from `ProcessInfo.systemUptime`.
 - App-bundle grouping for process helpers when a `.app` path is readable.

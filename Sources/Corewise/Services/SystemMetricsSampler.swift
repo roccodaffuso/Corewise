@@ -283,20 +283,13 @@ enum SystemMetricsSampler {
   }
 
   private static func processStats() -> [Int32: ProcessStat] {
-    let pidCount = proc_listallpids(nil, 0)
-    guard pidCount > 0 else {
+    let pids = allProcessIDs()
+    guard !pids.isEmpty else {
       return [:]
     }
-
-    var pids = Array(repeating: pid_t(0), count: Int(pidCount))
-    let bytes = pids.count * MemoryLayout<pid_t>.stride
-    let actualBytes = pids.withUnsafeMutableBytes { buffer in
-      proc_listallpids(buffer.baseAddress, Int32(bytes))
-    }
-    let actualCount = max(0, Int(actualBytes) / MemoryLayout<pid_t>.stride)
     var stats: [Int32: ProcessStat] = [:]
 
-    for pid in pids.prefix(actualCount) where pid >= 0 {
+    for pid in pids where pid > 0 {
       guard let taskInfo = taskInfo(pid: pid) else {
         continue
       }
@@ -319,6 +312,63 @@ enum SystemMetricsSampler {
     }
 
     return stats
+  }
+
+  private static func allProcessIDs() -> [pid_t] {
+    let sysctlPIDs = sysctlProcessIDs()
+    if !sysctlPIDs.isEmpty {
+      return sysctlPIDs
+    }
+
+    return listAllProcessIDs()
+  }
+
+  private static func sysctlProcessIDs() -> [pid_t] {
+    var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
+    var size = 0
+
+    guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else {
+      return []
+    }
+
+    var processes = Array(repeating: kinfo_proc(), count: size / MemoryLayout<kinfo_proc>.stride)
+    guard sysctl(&mib, u_int(mib.count), &processes, &size, nil, 0) == 0 else {
+      return []
+    }
+
+    let count = min(size / MemoryLayout<kinfo_proc>.stride, processes.count)
+    return Array(Set(processes.prefix(count).map(\.kp_proc.p_pid).filter { $0 > 0 }))
+  }
+
+  private static func listAllProcessIDs() -> [pid_t] {
+    let estimatedCount = Int(proc_listallpids(nil, 0))
+    guard estimatedCount > 0 else {
+      return []
+    }
+
+    var capacity = max(estimatedCount * 4, 4096)
+    let stride = MemoryLayout<pid_t>.stride
+
+    for _ in 0..<4 {
+      var pids = Array(repeating: pid_t(0), count: capacity)
+      let bufferBytes = pids.count * stride
+      let actualBytes = pids.withUnsafeMutableBytes { buffer in
+        proc_listallpids(buffer.baseAddress, Int32(bufferBytes))
+      }
+
+      guard actualBytes > 0 else {
+        return []
+      }
+
+      let actualCount = min(Int(actualBytes) / stride, pids.count)
+      if Int(actualBytes) < bufferBytes {
+        return Array(pids.prefix(actualCount)).filter { $0 > 0 }
+      }
+
+      capacity *= 2
+    }
+
+    return []
   }
 
   private static func taskInfo(pid: pid_t) -> proc_taskinfo? {
