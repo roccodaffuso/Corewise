@@ -9,6 +9,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Use native SwiftUI controls, system materials, soft transparency, and SF Symbols.
 - The app window background should be a real macOS material surface through a narrow AppKit bridge, with only a transparent color wash above it.
 - The app chrome should follow macOS source-list conventions: a restrained sidebar, compact row icons, icon-only toolbar actions, and no oversized navigation treatments.
+- All diagnostic pages should share the same layout rail: one content max width, one page padding, one page spacing value, one panel grid, and one metric grid. Avoid local adaptive widths such as `185`, `210`, `250`, or `300` in first-viewport content because they create visible stepping when switching sections.
 - Prefer natural, muted system-adaptive colors: teal/blue for information, moss green for live/good, amber for attention, red only for critical or used storage.
 - The app detail background should feel layered and translucent, not flat black or generic dashboard gray.
 - Panels should use material plus a subtle adaptive tint and hairline, with no heavy shadows or decorative gradients.
@@ -20,6 +21,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Put operational live diagnostics before explanatory access panels in the first viewport.
 - Overview should show immediately useful values before provenance education: CPU, memory, top processes, storage free space, battery, and thermal state.
 - Do not use placeholder score states as the primary hero. The Overview hero must show a verifiable fact: live signals, coverage, and update time.
+- Section heroes, first metric rows, and first two-column diagnostic panels should align to `CorewiseLayout` constants so navigation between pages feels stable rather than stepped.
 - Coverage numbers must count diagnostic signal families, not table rows such as individual processes or launch plist entries.
 - Data provenance badges must stay single-line. If a panel is narrow, wrap the surrounding layout rather than compressing badge text vertically.
 - Storage breakdown uses red for used space and green for available space. This is a storage-capacity convention, not a destructive-action cue.

@@ -158,7 +158,7 @@ private struct DetailRouter: View {
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 18) {
+      VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
         switch section {
         case .overview:
           OverviewView(snapshot: snapshot)
@@ -191,8 +191,8 @@ private struct DetailRouter: View {
           ReportView(snapshot: snapshot)
         }
       }
-      .padding(28)
-      .frame(maxWidth: 1160, alignment: .leading)
+      .padding(CorewiseLayout.contentPadding)
+      .frame(maxWidth: CorewiseLayout.contentMaxWidth, alignment: .leading)
     }
     .navigationTitle(section.title)
   }

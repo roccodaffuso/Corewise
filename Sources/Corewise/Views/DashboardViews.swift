@@ -6,13 +6,13 @@ struct OverviewView: View {
   var snapshot: HealthSnapshot
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
       CommandCenterHeader(snapshot: snapshot)
 
       OverviewSignalGrid(snapshot: snapshot)
       LiveLoadPanel(performance: snapshot.performance)
 
-      HStack(alignment: .top, spacing: 14) {
+      LazyVGrid(columns: CorewiseLayout.panelGrid, alignment: .leading, spacing: CorewiseLayout.panelSpacing) {
         PriorityPanel(
           title: "What Corewise can see",
           subtitle: "Live signals first. Missing data is explicit.",
@@ -77,7 +77,7 @@ struct StorageView: View {
   var scanParent: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
       SectionHero(
         title: "Storage",
         subtitle: "\(gb(storage.availableGB)) free of \(gb(storage.totalGB)). Personal folders are not scanned automatically.",
@@ -85,7 +85,7 @@ struct StorageView: View {
         metric: storage.summary
       )
 
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14)], spacing: 14) {
+      LazyVGrid(columns: CorewiseLayout.panelGrid, alignment: .leading, spacing: CorewiseLayout.panelSpacing) {
         PremiumPanel(title: "Breakdown", subtitle: "GB by category", systemImage: "chart.pie") {
           StorageBreakdownChart(data: storage.breakdown)
         }
@@ -132,7 +132,7 @@ struct PerformanceView: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
       SectionHero(
         title: "Performance",
         subtitle: "What is slowing your Mac right now, using live local process samples.",
@@ -192,7 +192,7 @@ struct StartupView: View {
   var startup: StartupHealth
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
       SectionHero(
         title: "Startup",
         subtitle: "Login items, agents, daemons, background services, and privileged helpers.",
@@ -235,7 +235,7 @@ struct IssuesView: View {
   var scanReports: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
       SectionHero(
         title: "App Issues",
         subtitle: "Repeated crashes, bundle IDs, versions, and diagnostic access.",
@@ -297,7 +297,7 @@ struct ReportView: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
       SectionHero(
         title: "Report",
         subtitle: "A local read-only diagnostic summary you can copy and review.",
@@ -397,7 +397,7 @@ private struct DiagnosticPage: View {
   var sourceNote: String
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
       SectionHero(title: title, subtitle: subtitle, systemImage: systemImage, metric: summary)
       MetricBoard(metrics: metrics)
       PriorityPanel(title: "Findings", subtitle: "Plain-language interpretation.", findings: findings)
@@ -492,7 +492,7 @@ private struct LiveLoadPanel: View {
   var performance: PerformanceHealth
 
   var body: some View {
-    HStack(alignment: .top, spacing: 14) {
+    LazyVGrid(columns: CorewiseLayout.panelGrid, alignment: .leading, spacing: CorewiseLayout.panelSpacing) {
       ProcessChartPanel(
         title: "CPU now",
         subtitle: "Top individual processes from a live 1 second sample.",
@@ -524,7 +524,7 @@ private struct OverviewSignalGrid: View {
   }
 
   var body: some View {
-    LazyVGrid(columns: [GridItem(.adaptive(minimum: 185), spacing: 10)], spacing: 10) {
+    LazyVGrid(columns: CorewiseLayout.metricGrid, alignment: .leading, spacing: CorewiseLayout.tileSpacing) {
       CompactStat(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), detail: cpuDetail)
       CompactStat(title: "Memory", value: bytes(snapshot.performance.memory.usedBytes), detail: "swap \(snapshot.performance.memory.swapUsedBytes.map(bytes) ?? "N/A")")
       CompactStat(title: "Top CPU", value: topCPU.map { "\(number($0.cpuPercent))%" } ?? "N/A", detail: topCPU?.displayName ?? "No readable process")
@@ -546,7 +546,7 @@ private struct DataAccessPanel: View {
 
   var body: some View {
     PremiumPanel(title: "Data access", subtitle: "What Corewise reads, asks for, or avoids.", systemImage: "lock.shield") {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
+      LazyVGrid(columns: CorewiseLayout.accessGrid, alignment: .leading, spacing: CorewiseLayout.tileSpacing) {
         ForEach(capabilities) { capability in
           VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -697,7 +697,7 @@ private struct MetricBoard: View {
   var metrics: [DiagnosticMetric]
 
   var body: some View {
-    LazyVGrid(columns: [GridItem(.adaptive(minimum: 210), spacing: 10)], spacing: 10) {
+    LazyVGrid(columns: CorewiseLayout.metricGrid, alignment: .leading, spacing: CorewiseLayout.tileSpacing) {
       ForEach(metrics) { metric in
         MetricTile(metric: metric)
       }
@@ -960,7 +960,7 @@ private struct PerformanceSystemStrip: View {
   var performance: PerformanceHealth
 
   var body: some View {
-    LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 10)], spacing: 10) {
+    LazyVGrid(columns: CorewiseLayout.metricGrid, alignment: .leading, spacing: CorewiseLayout.tileSpacing) {
       CompactStat(title: "CPU Total", value: percent(performance.cpu.totalPercent), detail: "user \(percent(performance.cpu.userPercent))")
       CompactStat(title: "CPU System", value: percent(performance.cpu.systemPercent), detail: "idle \(percent(performance.cpu.idlePercent))")
       CompactStat(title: "Memory", value: bytes(performance.memory.usedBytes), detail: "used")
@@ -1788,7 +1788,7 @@ private struct CrashAccessPanel: View {
           dataMode: .unavailable
         )
       } else {
-        HStack(alignment: .top, spacing: 14) {
+        LazyVGrid(columns: CorewiseLayout.metricGrid, alignment: .leading, spacing: CorewiseLayout.tileSpacing) {
           CompactStat(title: "Apps", value: "\(appIssues.crashes.count)", detail: "with readable reports")
           CompactStat(title: "Repeated", value: "\(repeatedCount)", detail: "apps with 2+ reports")
           CompactStat(title: "Last Crash", value: appIssues.crashes.map(\.lastCrashDate).max()?.formatted(date: .abbreviated, time: .omitted) ?? "Unavailable", detail: "selected reports")
