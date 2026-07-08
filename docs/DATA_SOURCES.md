@@ -90,6 +90,7 @@ Statuses:
 | Privileged helpers | Planned | Read-only helper path inventory | Low | Never suggest direct removal. |
 | Signed/unsigned | Implemented when path readable | Security framework static code check | Medium | Rows remain `Not checked` when the executable path is missing or unreadable. |
 | Recently added | Implemented | Plist modification date | Low | Metadata can be misleading and is only a clue. |
+| Startup table | Implemented | Existing plist inventory rows | Medium | UI grouping only; it does not read new folders or modify plist files. |
 
 ## Thermal
 
@@ -110,6 +111,7 @@ Statuses:
 | Last crash date | Implemented after selection | Crash report metadata or file date fallback | Medium | Stack traces are not shown in the first version. |
 | Bundle ID and version | Implemented when present | Crash report metadata | Medium | Missing fields are shown as unavailable. |
 | Repeated crash flag | Implemented after selection | Derived from real crash counts | Medium | Highlights repeated patterns from selected reports only. |
+| Crash access empty state | Implemented | Diagnostic permission state from app state | High | Shows no app rows or counts before the user selects reports. |
 
 ## Diagnostic Report
 

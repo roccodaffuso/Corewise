@@ -180,6 +180,12 @@ Decision: Diagnostic Report should expose both a short Summary and a fuller Mark
 
 Reason: Users need a fast readable diagnostic view and a more complete EtreCheck-like text artifact, but both must stay traceable to already-visible local data.
 
+## 2026-07-08: Startup And App Issues Are Review Workflows
+
+Decision: Startup should present launch plist rows as a compact read-only inventory, and App Issues should stay empty until the user selects diagnostic reports.
+
+Reason: These areas can look scary if over-interpreted. Corewise should help the user review provenance and patterns without implying that plist files or one-off crashes are automatically problems.
+
 ## 2026-07-08: Process Insights Are Explanatory, Not Causal
 
 Decision: Corewise may explain common live process patterns such as helpers, renderers, WindowServer, Spotlight indexing, file provider sync, and Corewise itself, but it must not present those explanations as proof of root cause.

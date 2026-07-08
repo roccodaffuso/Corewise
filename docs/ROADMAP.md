@@ -51,6 +51,7 @@
 ## Phase 5: Startup Inventory
 
 - Implemented: read-only inventory for accessible LaunchAgents and LaunchDaemons plist metadata.
+- Implemented: compact startup inventory table with label, kind, executable, impact, trust state, recent marker, and Finder reveal.
 - Implemented when path is readable: best-effort startup executable signing state.
 - Keep login items, background items, and privileged helpers planned/unavailable until safe collectors exist.
 - Avoid raw deletion suggestions; route actions through System Settings, app settings, package managers, or uninstallers.
@@ -60,6 +61,7 @@
 - Implemented: use `ProcessInfo.thermalState` for safe high-level thermal state.
 - Avoid private temperature sensors.
 - Implemented: read crash report metadata only after the user selects a reports folder.
+- Implemented: strong empty state before report selection and compact summary after selection.
 - Show diagnostic access state clearly.
 
 ## Release Gate

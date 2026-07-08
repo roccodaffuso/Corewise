@@ -31,10 +31,10 @@ Remaining last30days work started: Corewise is now moving from realignment found
 - Structured `DataMode` provenance for visible diagnostic values.
 - Read-only live storage collector for startup volume capacity only; personal folders are not scanned automatically.
 - User-selected read-only storage folder scan with session-only folder explorer, breadcrumbs, drilldown into largest folders, parent navigation, largest files, total scanned size, item count, unreadable count, and scan duration.
-- Read-only startup plist inventory for accessible LaunchAgents and LaunchDaemons metadata.
+- Read-only startup plist inventory for accessible LaunchAgents and LaunchDaemons metadata, shown as a compact table with label, kind, executable, startup impact, trust state, and Finder reveal.
 - Live swap usage. Memory pressure is unavailable until a reliable public parity source is selected.
 - Live high-level thermal state from `ProcessInfo.thermalState`.
-- User-selected crash report metadata parsing for crash counts and repeated app patterns.
+- User-selected crash report metadata parsing for crash counts and repeated app patterns, with a strong empty state before reports are selected.
 - Local Diagnostic Report page with `Summary / Markdown` views, notable findings, manual next steps, source/confidence notes, and clipboard-only copy without stack traces, uploads, file contents, or cleanup actions.
 - Read-only, manual-action product stance.
 

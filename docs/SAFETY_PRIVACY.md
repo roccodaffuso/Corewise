@@ -15,6 +15,8 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Storage details are read only after the user chooses a folder.
 - Crash report metadata is read only after the user chooses a reports folder.
 - Diagnostic Report Summary and Markdown copy are generated locally from the current snapshot.
+- Startup plist rows can be revealed in Finder, but Corewise does not edit, disable, delete, or unload them.
+- App Issues remains empty until a report folder is selected; it does not infer crash counts from other sources.
 
 ## Runtime Data
 

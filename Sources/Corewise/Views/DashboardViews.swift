@@ -201,9 +201,8 @@ struct StartupView: View {
       )
 
       MetricBoard(metrics: startup.metrics)
+      StartupInventoryTable(items: startup.launchAgents + startup.launchDaemons)
       StartupItemGroup(title: "Login Items", items: startup.loginItems)
-      StartupItemGroup(title: "Launch Agents", items: startup.launchAgents)
-      StartupItemGroup(title: "Launch Daemons", items: startup.launchDaemons)
       StartupItemGroup(title: "Background Items", items: startup.backgroundItems)
       StartupItemGroup(title: "Privileged Helpers", items: startup.privilegedHelpers)
       PriorityPanel(title: "Findings", subtitle: "Startup load without scare tactics.", findings: startup.findings)
@@ -245,6 +244,7 @@ struct IssuesView: View {
       )
 
       MetricBoard(metrics: appIssues.metrics)
+      CrashAccessPanel(appIssues: appIssues)
 
       ManualScanPanel(
         title: "Crash report scan",
@@ -1642,6 +1642,121 @@ private struct StartupItemGroup: View {
   }
 }
 
+private struct StartupInventoryTable: View {
+  var items: [StartupItem]
+
+  var body: some View {
+    DataGroup(title: "Launch plist inventory", subtitle: "Readable LaunchAgents and LaunchDaemons. Presence alone is not a problem.", systemImage: "list.bullet.rectangle") {
+      if items.isEmpty {
+        EmptyDiagnosticState(
+          title: "No readable launch plist rows",
+          message: "Corewise did not find accessible LaunchAgents or LaunchDaemons plist metadata.",
+          dataMode: .unavailable
+        )
+      } else {
+        VStack(alignment: .leading, spacing: 0) {
+          Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
+            GridRow {
+              Text("Label")
+              Text("Kind")
+              Text("Executable")
+              Text("Run")
+              Text("Trust")
+              Text("")
+            }
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.secondary)
+
+            ForEach(items) { item in
+              StartupInventoryRow(item: item)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+private struct StartupInventoryRow: View {
+  var item: StartupItem
+
+  var body: some View {
+    GridRow {
+      VStack(alignment: .leading, spacing: 3) {
+        HStack(spacing: 6) {
+          Text(item.title)
+            .font(.caption.weight(.semibold))
+            .lineLimit(1)
+          if item.recentlyAdded {
+            Text("Recent")
+              .font(.caption2.weight(.bold))
+              .foregroundStyle(color(for: FindingSeverity.info))
+          }
+        }
+        Text(item.path)
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+      }
+
+      Text(item.kind)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+
+      Text(startupProgram(from: item.explanation))
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+
+      Text(item.startupImpact)
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(color(for: item.status))
+
+      Text(item.signedState)
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(color(for: signedSeverity(item.signedState)))
+        .lineLimit(1)
+
+      Button {
+        revealInFinder(path: item.path)
+      } label: {
+        Label("Reveal", systemImage: "magnifyingglass")
+      }
+      .labelStyle(.iconOnly)
+      .buttonStyle(.borderless)
+      .help("Reveal plist in Finder")
+    }
+    .font(.caption)
+  }
+}
+
+private struct CrashAccessPanel: View {
+  var appIssues: AppIssuesHealth
+
+  private var repeatedCount: Int {
+    appIssues.crashes.filter(\.repeatedCrash).count
+  }
+
+  var body: some View {
+    DataGroup(title: "Crash report access", subtitle: "Sensitive metadata is read only after folder selection.", systemImage: "lock.doc") {
+      if appIssues.crashes.isEmpty {
+        EmptyDiagnosticState(
+          title: "Choose reports to unlock crash patterns",
+          message: "Corewise does not scan DiagnosticReports automatically. After selection, it reads app name, date, bundle ID, version, and counts only.",
+          dataMode: .unavailable
+        )
+      } else {
+        HStack(alignment: .top, spacing: 14) {
+          CompactStat(title: "Apps", value: "\(appIssues.crashes.count)", detail: "with readable reports")
+          CompactStat(title: "Repeated", value: "\(repeatedCount)", detail: "apps with 2+ reports")
+          CompactStat(title: "Last Crash", value: appIssues.crashes.map(\.lastCrashDate).max()?.formatted(date: .abbreviated, time: .omitted) ?? "Unavailable", detail: "selected reports")
+        }
+      }
+    }
+  }
+}
+
 private struct EmptyDiagnosticState: View {
   var title: String
   var message: String
@@ -1933,6 +2048,32 @@ private func fileURL(for path: String) -> URL {
       .appendingPathComponent(String(path.dropFirst(2)))
   }
   return URL(fileURLWithPath: path)
+}
+
+private func startupProgram(from explanation: String) -> String {
+  guard let programRange = explanation.range(of: "Program: ") else {
+    return "Not specified"
+  }
+
+  let afterProgram = explanation[programRange.upperBound...]
+  guard let runRange = afterProgram.range(of: ". RunAtLoad:") else {
+    return String(afterProgram)
+  }
+
+  return String(afterProgram[..<runRange.lowerBound])
+}
+
+private func signedSeverity(_ value: String) -> FindingSeverity {
+  let lowercased = value.lowercased()
+  if lowercased.contains("signed") && !lowercased.contains("unsigned") {
+    return .good
+  }
+
+  if lowercased.contains("unsigned") {
+    return .warning
+  }
+
+  return .info
 }
 
 private func color(for status: OverallStatus) -> Color {
