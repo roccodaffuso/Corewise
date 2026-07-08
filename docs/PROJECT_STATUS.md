@@ -4,7 +4,7 @@ Last updated: 2026-07-08
 
 ## Summary
 
-Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, Overview Live Signals header, live CPU/RAM process sampling, process table, observed process memory, physical-footprint reads when available, safe battery basics, opportunistic battery health keys, startup volume storage, manual storage folder scans, manual crash report parsing, launch plist inventory, and a local Markdown diagnostic report exist locally. Runtime diagnostics no longer use synthetic values.
+Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, Overview Live Signals header, live CPU/RAM process sampling, process table, observed process memory, physical-footprint reads when available, safe battery basics, opportunistic battery health keys, startup volume storage, manual storage folder scans, manual crash report parsing, launch plist inventory, local Summary/Markdown diagnostic report, and lightweight menu bar monitor exist locally. Runtime diagnostics no longer use synthetic values.
 
 The immediate priority is product trust: Corewise should feel like a diagnostic workflow, not a complete but shallow dashboard. The main workflow direction is Performance first, manual Storage Scan second, and local Diagnostic Report third.
 
@@ -13,7 +13,7 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 Real-data acquisition baseline pushed: `db21865` (`Add real data acquisition flows`).
 Current state: real-data acquisition started; Performance parity is partially implemented through live process rows, observed memory, RSS, and footprint, but Corewise still does not claim exact Activity Monitor parity.
 Product realignment: after last30days research, Corewise is positioned as local diagnostics and explanation, not automatic cleanup or Activity Monitor exact parity.
-Remaining last30days work started: Corewise is now moving from realignment foundation into deeper workflow polish for Performance explanations, Storage exploration, Report quality, Startup/App Issues readability, and a light menu bar monitor.
+Remaining last30days work batch completed locally through `fa4e241`: Performance explanations, Storage exploration, Report quality, Startup/App Issues readability, and a light menu bar monitor are implemented. Score remains gated.
 
 ## Implemented
 

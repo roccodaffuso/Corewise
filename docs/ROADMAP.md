@@ -68,8 +68,11 @@
 
 Before calling the MVP trustworthy, Corewise must show provenance for every metric and must not present synthetic values as device state.
 
-## Later Ideas
+## Phase 7: Menu Bar Monitor
 
 - Implemented: lightweight menu bar monitor for at-a-glance CPU, memory, swap, top CPU process, top memory process, and Open Corewise.
 - Planned: refine menu bar behavior after manual QA.
+
+## Later Ideas
+
 - Health score only after real data coverage and a documented formula are stable.
