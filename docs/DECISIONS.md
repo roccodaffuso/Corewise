@@ -155,3 +155,21 @@ Reason: A first-viewport score placeholder makes the product look unfinished or 
 Decision: Overview coverage counts diagnostic signal families, not every process, chart point, launch plist, or crash row.
 
 Reason: Row-level coverage can produce confusing scales such as hundreds of live values. A small family-level count is easier to trust and does not imply device health.
+
+## 2026-07-08: Corewise Follows Diagnostic Workflows
+
+Decision: Corewise should prioritize Performance, manual Storage Scan, and local Diagnostic Report workflows over filling every section with equal visual weight.
+
+Reason: last30days research and product review showed that trust comes from answering concrete questions with real local data, not from looking like a complete but shallow dashboard.
+
+## 2026-07-08: Dense Tables Use Table-Level Provenance
+
+Decision: Dense process tables should use a source note for live provenance instead of repeating `Live` badges on every row.
+
+Reason: Repeated badges make operational data harder to scan. Provenance remains visible without overwhelming the primary numbers.
+
+## 2026-07-08: Report Export Is Local Clipboard Markdown
+
+Decision: Diagnostic Report exports a local Markdown summary to the clipboard only. It must not upload, persist, include stack traces, include raw crash report bodies, or include document contents.
+
+Reason: The report should be useful like a diagnostic summary while staying inside Corewise's local-first and non-destructive trust model.

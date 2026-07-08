@@ -1,4 +1,5 @@
 import Charts
+import AppKit
 import SwiftUI
 
 struct OverviewView: View {
@@ -8,6 +9,7 @@ struct OverviewView: View {
     VStack(alignment: .leading, spacing: 20) {
       CommandCenterHeader(snapshot: snapshot)
 
+      OverviewSignalGrid(snapshot: snapshot)
       LiveLoadPanel(performance: snapshot.performance)
 
       HStack(alignment: .top, spacing: 14) {
@@ -25,7 +27,7 @@ struct OverviewView: View {
 
       MetricBoard(metrics: snapshot.overviewMetrics)
       DataAccessPanel(capabilities: snapshot.dataAccess)
-      SourceNote(text: "Overview combines live signals with planned and unavailable coverage. Corewise shows missing data honestly and keeps every action manual.")
+      SourceNote(text: "Overview leads with real local signals. Data Access below explains planned, unavailable, avoided, and user-selected paths without turning them into device health claims.")
     }
   }
 
@@ -85,7 +87,7 @@ struct StorageView: View {
           StorageBreakdownChart(data: storage.breakdown)
         }
 
-        PremiumPanel(title: "Largest offenders", subtitle: "Review targets, not cleanup commands", systemImage: "chart.bar.xaxis") {
+        PremiumPanel(title: "Largest items from selected scan", subtitle: "Manual scan results, not cleanup commands", systemImage: "chart.bar.xaxis") {
           HorizontalBarChart(data: storage.spaceOffenders, unit: "GB")
         }
       }
@@ -139,7 +141,7 @@ struct PerformanceView: View {
     VStack(alignment: .leading, spacing: 20) {
       SectionHero(
         title: "Performance",
-        subtitle: "Live CPU and memory pressure from local process samples.",
+        subtitle: "What is slowing your Mac right now, using live local process samples.",
         systemImage: "cpu",
         metric: performance.summary
       )
@@ -167,6 +169,7 @@ struct PerformanceView: View {
         processes: sortedProcesses
       )
 
+      SourceNote(text: "Process rows are live. Corewise shows observed memory, RSS, CPU, PID, and process ownership from public macOS APIs; row-level badges are intentionally omitted to keep the table readable.", dataMode: .live)
       MetricBoard(metrics: performance.metrics)
 
       PriorityPanel(title: "Findings", subtitle: "Signals that deserve interpretation.", findings: performance.findings)
@@ -265,6 +268,71 @@ struct IssuesView: View {
       PriorityPanel(title: "Findings", subtitle: "Crash patterns Corewise can explain safely.", findings: appIssues.findings)
       SafeActionPanel(title: "Safe actions", actions: appIssues.actions)
       SourceNote(text: appIssues.sourceNote, dataMode: appIssues.summary.dataMode)
+    }
+  }
+}
+
+struct ReportView: View {
+  var snapshot: HealthSnapshot
+  @State private var didCopyReport = false
+
+  private var reportText: String {
+    DiagnosticReportBuilder().markdown(for: snapshot)
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 20) {
+      SectionHero(
+        title: "Report",
+        subtitle: "A local read-only diagnostic summary you can copy and review.",
+        systemImage: "doc.text.magnifyingglass",
+        metric: DiagnosticMetric(
+          title: "Diagnostic Report",
+          value: "Ready",
+          unit: "",
+          dataMode: .live,
+          status: .good,
+          severityScore: 0,
+          explanation: "Generated from the current local snapshot without stack traces, uploads, cleanup, or file contents.",
+          source: "Current Corewise snapshot",
+          confidence: "Live / high",
+          recommendedAction: "Copy the report when you want a plain-text summary.",
+          lastUpdated: snapshot.generatedAt
+        )
+      )
+
+      PremiumPanel(title: "Copy report", subtitle: "Markdown snapshot. Local clipboard only.", systemImage: "doc.on.clipboard") {
+        HStack(spacing: 10) {
+          Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(reportText, forType: .string)
+            didCopyReport = true
+          } label: {
+            Label("Copy Markdown", systemImage: "doc.on.doc")
+          }
+          .buttonStyle(.borderedProminent)
+
+          if didCopyReport {
+            Text("Copied")
+              .font(.caption.weight(.semibold))
+              .foregroundStyle(color(for: FindingSeverity.good))
+          }
+
+          Spacer(minLength: 0)
+        }
+      }
+
+      PremiumPanel(title: "Preview", subtitle: "Safe summary only. No stack traces or file contents.", systemImage: "text.page") {
+        ScrollView {
+          Text(reportText)
+            .font(.system(.caption, design: .monospaced))
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(minHeight: 360)
+      }
+
+      SourceNote(text: "Report export is local clipboard text. Corewise does not upload reports, include crash stack traces, or modify files.", dataMode: .live)
     }
   }
 }
@@ -403,6 +471,34 @@ private struct LiveLoadPanel: View {
         mode: .memory
       )
     }
+  }
+}
+
+private struct OverviewSignalGrid: View {
+  var snapshot: HealthSnapshot
+
+  private var topCPU: ProcessObservation? {
+    snapshot.performance.processes.max { $0.cpuPercent < $1.cpuPercent }
+  }
+
+  private var topMemory: ProcessObservation? {
+    snapshot.performance.processes.max { $0.observedMemoryBytes < $1.observedMemoryBytes }
+  }
+
+  var body: some View {
+    LazyVGrid(columns: [GridItem(.adaptive(minimum: 185), spacing: 10)], spacing: 10) {
+      CompactStat(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), detail: cpuDetail)
+      CompactStat(title: "Memory", value: bytes(snapshot.performance.memory.usedBytes), detail: "swap \(snapshot.performance.memory.swapUsedBytes.map(bytes) ?? "N/A")")
+      CompactStat(title: "Top CPU", value: topCPU.map { "\(number($0.cpuPercent))%" } ?? "N/A", detail: topCPU?.displayName ?? "No readable process")
+      CompactStat(title: "Top Memory", value: topMemory.map { bytes($0.observedMemoryBytes) } ?? "N/A", detail: topMemory?.displayName ?? "No readable process")
+      CompactStat(title: "Storage Free", value: gb(snapshot.storage.availableGB), detail: "\(number(snapshot.storage.availablePercent))% available")
+      CompactStat(title: "Battery", value: displayValue(snapshot.battery.summary), detail: snapshot.battery.summary.dataMode.rawValue)
+      CompactStat(title: "Thermal", value: displayValue(snapshot.thermal.summary), detail: snapshot.thermal.summary.dataMode.rawValue)
+    }
+  }
+
+  private var cpuDetail: String {
+    "user \(percent(snapshot.performance.cpu.userPercent)) · system \(percent(snapshot.performance.cpu.systemPercent))"
   }
 }
 
@@ -809,7 +905,8 @@ private struct PerformanceSystemStrip: View {
 
   var body: some View {
     LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 10)], spacing: 10) {
-      CompactStat(title: "CPU", value: percent(performance.cpu.totalPercent), detail: "total")
+      CompactStat(title: "CPU Total", value: percent(performance.cpu.totalPercent), detail: "user \(percent(performance.cpu.userPercent))")
+      CompactStat(title: "CPU System", value: percent(performance.cpu.systemPercent), detail: "idle \(percent(performance.cpu.idlePercent))")
       CompactStat(title: "Memory", value: bytes(performance.memory.usedBytes), detail: "used")
       CompactStat(title: "Swap", value: performance.memory.swapUsedBytes.map(bytes) ?? "N/A", detail: "used")
       CompactStat(title: "Processes", value: "\(performance.processes.count)", detail: "sampled")
@@ -935,7 +1032,6 @@ private struct AppGroupUsageRow: View {
           .foregroundStyle(color(for: group.status))
           .layoutPriority(1)
 
-        DataModeBadge(dataMode: group.dataMode)
       }
 
       GeometryReader { proxy in
@@ -1030,7 +1126,6 @@ private struct ProcessUsageRow: View {
           .foregroundStyle(color(for: process.status))
           .layoutPriority(1)
 
-        DataModeBadge(dataMode: process.dataMode)
       }
 
       GeometryReader { proxy in
@@ -1195,19 +1290,69 @@ private struct StorageItemGroup: View {
         )
       } else {
         ForEach(items) { item in
-          DetailRow(
-            title: item.title,
-            subtitle: item.path,
-            value: gb(item.sizeGB),
-            status: item.status,
-            severityScore: item.severityScore,
-            explanation: item.explanation,
-            action: item.recommendedAction,
-            source: "\(item.source) · \(item.confidence)",
-            dataMode: item.dataMode
-          )
+          StorageItemRow(item: item)
         }
       }
+    }
+  }
+}
+
+private struct StorageItemRow: View {
+  var item: StorageItem
+
+  var body: some View {
+    Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
+      GridRow {
+        HStack(spacing: 8) {
+          StatusDot(status: item.status)
+          VStack(alignment: .leading, spacing: 2) {
+            Text(item.title)
+              .font(.callout.weight(.semibold))
+            Text(item.path)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+              .truncationMode(.middle)
+          }
+        }
+
+        Text(gb(item.sizeGB))
+          .font(.callout.weight(.semibold))
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
+
+      GridRow {
+        Text(item.explanation)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+
+        Button {
+          revealInFinder(path: item.path)
+        } label: {
+          Label("Reveal in Finder", systemImage: "arrow.up.forward.app")
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+      }
+
+      GridRow {
+        Text(item.recommendedAction)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+
+        Text("\(item.source) · \(item.confidence)")
+          .font(.caption2)
+          .foregroundStyle(.tertiary)
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
+    }
+    .padding(.vertical, 7)
+    .overlay(alignment: .bottom) {
+      Rectangle()
+        .fill(.quaternary.opacity(0.55))
+        .frame(height: 1)
     }
   }
 }
@@ -1550,6 +1695,19 @@ private func number(_ value: Double) -> String {
     return String(Int(value))
   }
   return String(format: "%.1f", value)
+}
+
+private func revealInFinder(path: String) {
+  let expandedPath: String
+  if path.hasPrefix("~/") {
+    expandedPath = FileManager.default.homeDirectoryForCurrentUser
+      .appendingPathComponent(String(path.dropFirst(2)))
+      .path
+  } else {
+    expandedPath = path
+  }
+
+  NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: expandedPath)])
 }
 
 private func color(for status: OverallStatus) -> Color {

@@ -8,11 +8,12 @@ The current build is a trust-first product prototype. Runtime values are either 
 
 Implemented live signals:
 
-- Overview `Live Signals` header with signal-family coverage instead of a placeholder health score. Coverage counts diagnostic families, not individual process rows.
-- Data Access overview for live, user-selected, planned, unavailable, and avoided data paths.
+- Overview `Live Signals` header plus a first-viewport signal grid for CPU, memory, swap, top CPU process, top memory process, storage free space, battery, and thermal state.
+- Data Access overview for live, user-selected, planned, unavailable, and avoided data paths. This supports trust but is not the primary first-viewport content.
 - System CPU load and user/system/idle split from macOS CPU ticks.
 - System RAM fields from VM statistics: used, app memory, cached files, wired, compressed, and swap.
 - Live process table with PID, user, thread count, CPU %, observed memory, RSS, and physical footprint when macOS returns it.
+- Performance page optimized around the question "what is slowing my Mac right now", with compact top pressure rows and a dense process table.
 - App grouping derived from real process rows, kept separate from individual process rows.
 - Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
 - Battery cycle count, maximum capacity, and condition when safe battery registry keys are present.
@@ -24,6 +25,7 @@ Implemented live signals:
 - Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report folder parsing for app crash counts and repeated-crash patterns.
+- Local Diagnostic Report page that copies a Markdown snapshot without uploads, stack traces, file contents, cleanup, or persistence.
 
 Planned or unavailable areas:
 
@@ -53,6 +55,14 @@ The app target is defined in `Package.swift` and requires macOS 14 or newer.
 ## Performance Semantics
 
 Corewise uses public macOS APIs, not private `sysmond` internals. Process rows are real, but they are not promised to match Monitoraggio Attività bit-for-bit. The primary memory value is `observed memory`: the larger public value between physical footprint and resident memory, with RSS still shown separately. System memory used is derived from app memory, wired memory, and compressed memory; cached files are shown separately because macOS can reclaim much of that memory.
+
+## Product Workflows
+
+Corewise is organized around three trustworthy workflows:
+
+- Performance: understand CPU, memory, swap, and which live process rows are active.
+- Storage Scan: choose a folder, inspect the largest real files and folders, and reveal items in Finder manually.
+- Diagnostic Report: copy a local Markdown summary for review without collecting stack traces or file contents.
 
 ## Project Docs
 

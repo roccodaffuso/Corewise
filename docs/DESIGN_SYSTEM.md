@@ -13,11 +13,13 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Keep typography compact and readable in narrow macOS windows.
 - Prefer calm density over marketing-style hero composition.
 - Put operational live diagnostics before explanatory access panels in the first viewport.
+- Overview should show immediately useful values before provenance education: CPU, memory, top processes, storage free space, battery, and thermal state.
 - Do not use placeholder score states as the primary hero. The Overview hero must show a verifiable fact: live signals, coverage, and update time.
 - Coverage numbers must count diagnostic signal families, not table rows such as individual processes or launch plist entries.
 - Data provenance badges must stay single-line. If a panel is narrow, wrap the surrounding layout rather than compressing badge text vertically.
 - Storage breakdown uses red for used space and green for available space. This is a storage-capacity convention, not a destructive-action cue.
 - Performance pages should lead with summary pressure and a compact top list. Full process rows should hide long filesystem paths behind short context labels unless the user asks for raw detail.
+- Dense process rows should not repeat `Live` badges on every row when the whole table has a source note.
 
 ## Status Language
 
@@ -45,6 +47,7 @@ Every diagnostic page should include:
 - Safe actions.
 - Data source note.
 - Manual scan controls only where the user explicitly grants scope.
+- Report/export surfaces must summarize the current snapshot without raw crash contents, stack traces, uploads, or file writes.
 
 ## Permission Controls
 
@@ -52,12 +55,14 @@ Every diagnostic page should include:
 - Explain the scope before the picker opens.
 - Do not present manual scans as required, urgent, or automatic.
 - After a scan, keep `Live` badges tied to the selected folder/report source.
+- `Reveal in Finder` is allowed for scanned storage items because it opens user-visible context without changing files.
 
 ## Chart Rules
 
 - Charts should answer one question quickly.
 - Use tables for process diagnostics; use horizontal bars only for compact app-group summaries and storage offenders.
 - Use compact breakdown charts for storage.
+- Label storage scan charts as selected-folder results, not whole-disk offenders.
 - Keep unit labels visible.
 - Avoid random colors; use status colors.
 - In narrow windows, prioritize readable labels over dense plotting.

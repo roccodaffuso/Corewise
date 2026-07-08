@@ -14,6 +14,7 @@ Statuses:
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
 | Live Signals header | Implemented | DataMode signal-family coverage plus live section signals | High | Shows coverage and real local signals; it is not a health score and does not count individual process rows. |
+| First-viewport signal grid | Implemented | Current `HealthSnapshot` CPU, memory, process, storage, battery, and thermal signals | Medium | Summarizes live signals; it does not replace section-level detail. |
 | Health score | Planned | Corewise scoring model | High | Not calculated until scoring has enough live inputs. |
 | Score confidence | Implemented | DataMode signal-family coverage count | High | Describes coverage, not device health or row count. |
 | Overall status | Planned | Corewise scoring model | High | Overview leads with coverage and live signals until real scoring exists. |
@@ -46,6 +47,7 @@ Statuses:
 | User-selected folder scan | Implemented | `NSOpenPanel` folder choice plus read-only size scan | Medium | Runs only after user action; no bookmark is persisted in this version. |
 | Large folders | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
 | Large files | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
+| Reveal in Finder | Implemented after selection | Finder reveal for a scanned item path | High | Opens Finder only; it does not delete, move, or modify files. |
 | Developer caches | Planned | Explicit targeted scan later | Medium | Not scanned automatically because these live under user Library. |
 | Browser caches | Planned | Browser-owned settings or explicit targeted scan | Low | Browser cache folders are not scanned during refresh. |
 | Downloads | Unavailable | Explicit targeted scan later | High | Corewise does not request Downloads access at launch/refresh. |
@@ -71,6 +73,7 @@ Statuses:
 | Uptime | Implemented | `ProcessInfo.systemUptime` | High | Local process uptime signal; not a performance diagnosis by itself. |
 | Sustained high CPU | Implemented | In-memory recent process history | Medium | Unavailable until enough samples are collected; not persisted. |
 | WindowServer impact | Planned | Process sample plus explanation | Low | Needs careful wording because high usage can be normal. |
+| Process-row provenance | Implemented | Table-level live source note | High | Row-level `Live` badges are intentionally omitted in dense tables to preserve readability. |
 
 ## Startup
 
@@ -104,6 +107,16 @@ Statuses:
 | Bundle ID and version | Implemented when present | Crash report metadata | Medium | Missing fields are shown as unavailable. |
 | Repeated crash flag | Implemented after selection | Derived from real crash counts | Medium | Highlights repeated patterns from selected reports only. |
 
+## Diagnostic Report
+
+| Metric | Status | Source | Confidence | Limit |
+| --- | --- | --- | --- | --- |
+| Markdown report | Implemented | Current `HealthSnapshot` through `DiagnosticReportBuilder` | High | Local clipboard export only; not persisted or uploaded. |
+| Top CPU and memory rows | Implemented | Live process rows already present in the snapshot | Medium | Uses the same public API semantics as Performance. |
+| Storage scan summary | Implemented after selection | User-selected folder scan results | Medium | Empty when no manual scan exists. |
+| Crash summary | Implemented after selection | User-selected report folder metadata | Medium | Counts only; no stack traces or raw report contents. |
+| Global score in report | Planned | Corewise scoring model | High | Report states that global scoring is planned, not calculated. |
+
 ## Privacy Notes
 
 - Corewise should not upload diagnostic data.
@@ -111,3 +124,4 @@ Statuses:
 - Corewise should not store process histories beyond what is needed for local explanation.
 - Corewise should display source and confidence next to every diagnostic claim.
 - Storage folders and crash reports are read only after user-selected folder scans.
+- Diagnostic reports copied from Corewise are local Markdown summaries and should not include stack traces or file contents.

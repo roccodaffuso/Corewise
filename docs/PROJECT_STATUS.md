@@ -4,21 +4,22 @@ Last updated: 2026-07-08
 
 ## Summary
 
-Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, Overview Live Signals header, live CPU/RAM process sampling, process table, observed process memory, physical-footprint reads when available, safe battery basics, opportunistic battery health keys, startup volume storage, manual storage folder scans, manual crash report parsing, and launch plist inventory exist locally. Runtime diagnostics no longer use synthetic values.
+Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, Overview Live Signals header, live CPU/RAM process sampling, process table, observed process memory, physical-footprint reads when available, safe battery basics, opportunistic battery health keys, startup volume storage, manual storage folder scans, manual crash report parsing, launch plist inventory, and a local Markdown diagnostic report exist locally. Runtime diagnostics no longer use synthetic values.
 
-The immediate priority is trust: the UI and docs must make it obvious which values are live, planned, unavailable, or avoided by design.
+The immediate priority is product trust: Corewise should feel like a diagnostic workflow, not a complete but shallow dashboard. The main workflow direction is Performance first, manual Storage Scan second, and local Diagnostic Report third.
 
 Baseline checkpoint: `34315cf` (`Checkpoint Corewise diagnostic MVP`).
 MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 Real-data acquisition baseline pushed: `db21865` (`Add real data acquisition flows`).
 Current state: real-data acquisition started; Performance parity is partially implemented through live process rows, observed memory, RSS, and footprint, but Corewise still does not claim exact Activity Monitor parity.
+Product realignment: after last30days research, Corewise is positioned as local diagnostics and explanation, not automatic cleanup or Activity Monitor exact parity.
 
 ## Implemented
 
 - SwiftPM macOS app target named `Corewise`.
-- SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, and Settings.
+- SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, Report, and Settings.
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
-- Overview leads with `Live Signals` and signal-family coverage instead of a placeholder health score. Coverage intentionally does not count every process or table row.
+- Overview leads with `Live Signals`, concrete first-viewport system signals, and signal-family coverage instead of a placeholder health score. Coverage intentionally does not count every process or table row.
 - Live sampler for system CPU split, system VM memory fields, process rows, app groups, observed process memory, resident memory, and physical footprint when macOS returns it. Process enumeration now uses `sysctl KERN_PROC_ALL` first so renderer/helper processes are less likely to be missed.
 - Short in-memory performance history for sustained high CPU interpretation.
 - Live uptime from `ProcessInfo.systemUptime`.
@@ -32,6 +33,7 @@ Current state: real-data acquisition started; Performance parity is partially im
 - Live swap usage. Memory pressure is unavailable until a reliable public parity source is selected.
 - Live high-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report metadata parsing for crash counts and repeated app patterns.
+- Local Diagnostic Report page that copies a Markdown summary of the current snapshot without stack traces, uploads, file contents, or cleanup actions.
 - Read-only, manual-action product stance.
 
 ## Planned
@@ -42,6 +44,7 @@ Current state: real-data acquisition started; Performance parity is partially im
 - Broaden startup beyond plist inventory only where macOS exposes safe public visibility.
 - Add WindowServer interpretation and thermal contributor attribution only through safe sources.
 - Keep unavailable wattage clearly marked unless a safe, user-approved source exists.
+- Menu bar monitor is a roadmap idea only; it is not part of this batch.
 
 ## Unavailable
 
@@ -64,4 +67,4 @@ Current state: real-data acquisition started; Performance parity is partially im
 - Storage details depend on a user-selected folder and should not be mistaken for full-disk analysis.
 - Crash report details depend on a user-selected folder and may miss reports outside that folder.
 - Health score is not calculated yet and must not be presented as a final diagnostic score; Overview should continue emphasizing live signals and coverage.
-- The current branch now has a checkpoint baseline plus additional stabilization changes in progress.
+- Report copy is a current-snapshot summary, not a full support bundle or persistent diagnostic archive.

@@ -186,6 +186,19 @@ import Testing
   #expect(!overviewText.contains("Helper" + "Service"))
 }
 
+@Test func diagnosticReportUsesSafeSnapshotSummary() async throws {
+  let snapshot = try await SystemHealthCollector().currentSnapshot()
+  let report = DiagnosticReportBuilder().markdown(for: snapshot)
+
+  #expect(report.contains("Corewise Diagnostic Report"))
+  #expect(report.contains("Top CPU Processes"))
+  #expect(report.contains("Top Memory Processes"))
+  #expect(report.contains("Storage Scan"))
+  #expect(report.contains("Global health score is planned"))
+  #expect(!report.localizedCaseInsensitiveContains("Thread 0 Crashed"))
+  #expect(!report.localizedCaseInsensitiveContains("Binary Images"))
+}
+
 private func instant(processes: [ProcessObservation]) -> InstantSystemMetrics {
   let now = Date()
   return InstantSystemMetrics(

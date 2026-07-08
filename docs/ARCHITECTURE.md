@@ -17,6 +17,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Manual crash helper: `CrashReportDiagnosticsCollector` parses metadata only from a user-selected reports folder.
 - Storage helper: `StorageDiagnosticsCollector` provides read-only live startup-volume capacity only during automatic refresh.
 - Startup helper: `StartupDiagnosticsCollector` provides read-only LaunchAgents and LaunchDaemons plist metadata.
+- Report helper: `DiagnosticReportBuilder` renders a read-only Markdown snapshot from the current `HealthSnapshot`.
 - UI: `ContentView` hosts navigation; `DashboardViews` renders section pages, cards, charts, findings, actions, and source notes.
 
 ## Data Flow
@@ -28,6 +29,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 5. SwiftUI renders the snapshot into section pages.
 6. The store refreshes live data periodically.
 7. User-selected storage or crash scans are owned by `HealthDashboardStore` and reapplied to later snapshots. Automatic refresh never starts personal-folder or report scans.
+8. The Report page formats the current snapshot locally and can copy Markdown to the clipboard. It does not write files, upload data, or include crash stack traces.
 
 ## Collector Boundaries
 
@@ -62,6 +64,12 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Parse app name, bundle ID, version, date, and repeated counts when present.
 - Avoid showing stack traces or report contents in the first version.
 
+`DiagnosticReportBuilder` should stay safe:
+
+- Summarize current snapshot values only.
+- Include top process names, metrics, storage scan summary, startup counts, and crash counts.
+- Exclude stack traces, raw report bodies, document contents, and automatic remediation.
+
 `StartupDiagnosticsCollector` should stay read-only:
 
 - Read plist metadata from accessible LaunchAgents and LaunchDaemons folders.
@@ -81,6 +89,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Keep `DataMode` on every visible diagnostic value so UI badges do not depend on parsing source text.
 - Add per-section collector errors and permission states.
 - Add tests around data-mode labeling and non-destructive behavior.
+- Consider a menu bar monitor only after the main diagnostic workflows are trustworthy.
 
 ## Avoided
 

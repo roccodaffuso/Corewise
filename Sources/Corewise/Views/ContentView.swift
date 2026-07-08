@@ -8,6 +8,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
   case startup
   case thermal
   case issues
+  case report
 
   var id: String { rawValue }
 
@@ -20,6 +21,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
     case .startup: "Startup"
     case .thermal: "Thermal"
     case .issues: "App Issues"
+    case .report: "Report"
     }
   }
 
@@ -32,6 +34,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
     case .startup: "Login items"
     case .thermal: "Safe signals"
     case .issues: "Crash patterns"
+    case .report: "Read-only summary"
     }
   }
 
@@ -44,6 +47,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
     case .startup: "power"
     case .thermal: "thermometer.medium"
     case .issues: "app.badge"
+    case .report: "doc.text.magnifyingglass"
     }
   }
 }
@@ -149,6 +153,8 @@ private struct DetailRouter: View {
             isScanningReports: store.isScanningReports,
             scanReports: { Task { await store.scanCrashReportsFolder() } }
           )
+        case .report:
+          ReportView(snapshot: snapshot)
         }
       }
       .padding(26)

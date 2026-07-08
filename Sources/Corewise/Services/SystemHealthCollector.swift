@@ -251,6 +251,39 @@ struct SystemHealthCollector: SystemHealthCollecting {
       )
     }
 
+    if processes.contains(where: { $0.displayName.localizedCaseInsensitiveContains("Helper") }) {
+      findings.append(
+        DiagnosticFinding(
+          title: "Helper processes are normal",
+          detail: "Browsers and Electron apps often split work across renderer, service, and helper rows. Use the app owner shown under each row before blaming a single process.",
+          status: .info,
+          severityScore: 12
+        )
+      )
+    }
+
+    if processes.contains(where: { ($0.path ?? "").hasPrefix("/System/") || ($0.path ?? "").hasPrefix("/usr/") }) {
+      findings.append(
+        DiagnosticFinding(
+          title: "System processes are labeled separately",
+          detail: "Rows such as WindowServer, fileproviderd, Spotlight, and media services can be normal macOS work. Corewise shows them as context, not automatic issues.",
+          status: .info,
+          severityScore: 10
+        )
+      )
+    }
+
+    if processes.contains(where: { $0.processName == "Corewise" }) {
+      findings.append(
+        DiagnosticFinding(
+          title: "Corewise is included in its own sample",
+          detail: "This keeps the table honest when the app itself is spending CPU or memory during refresh.",
+          status: .good,
+          severityScore: 0
+        )
+      )
+    }
+
     return findings
   }
 
