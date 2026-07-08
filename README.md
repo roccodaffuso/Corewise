@@ -15,21 +15,25 @@ Implemented live signals:
 - Process path lookup for grouping helpers under their owning `.app` bundle when available.
 - Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
 - Startup volume total, used, available, and available percent.
-- Read-only sizes for selected known folders and large files where readable.
+- Startup volume breakdown as used vs available space.
+- Short local performance history for sustained CPU interpretation.
+- Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
 
 Mock or scaffolded areas:
 
 - Overall health score.
 - Detailed battery health: cycles, maximum capacity, condition, energy impact, and risk scoring.
-- Startup, login, agent, daemon, background item, and helper lists.
-- Memory pressure, swap, sustained CPU history, and WindowServer interpretation.
+- Detailed storage folder scans, large files, caches, Trash, and personal folder offenders.
+- Modern login items, background items, privileged helpers, and startup code signing checks.
+- Memory pressure, swap, and WindowServer interpretation.
 - Thermal contributors beyond high-level public thermal state.
 - Crash/app issue counts and repeated-crash patterns.
 
 Unavailable by design in the MVP:
 
 - Whole-system wattage through private sensors, sudo-only tools, or unsupported APIs.
+- Automatic Downloads or personal-folder scans during refresh.
 - Automatic deletion, forced app quitting, or destructive optimization.
 
 ## Build And Run

@@ -59,3 +59,21 @@ Reason: It is safer to show fewer real values than to fill the UI with plausible
 Decision: Battery reads charge, power source, and charging state from IOKit power-source APIs. Cycle count, maximum capacity, and condition stay unavailable until Corewise has a safe documented source.
 
 Reason: Battery trust depends on not inventing health details or implying service status without macOS-backed evidence.
+
+## 2026-07-08: Storage Does Not Scan Personal Folders Automatically
+
+Decision: Storage automatic refresh reads startup volume capacity only. Downloads, Trash, user Library folders, browser caches, and developer folders remain unavailable or planned until Corewise has an explicit targeted scan flow.
+
+Reason: macOS privacy prompts for personal folders are appropriate, but surprising prompts damage trust. Corewise should ask only when the user chooses a scoped review.
+
+## 2026-07-08: Performance History Is Volatile And Local
+
+Decision: Sustained CPU uses a short in-memory history window and is unavailable until enough samples exist. The history is not persisted.
+
+Reason: Repeated load is more useful than a single spike, but local-first trust does not require storing process histories beyond the current session.
+
+## 2026-07-08: Startup Inventory Reads Plist Metadata Only
+
+Decision: Startup reads accessible LaunchAgents and LaunchDaemons plist metadata in read-only mode. Login items, background items, privileged helpers, and signing checks stay unavailable or planned.
+
+Reason: Plist metadata is useful context, but Corewise should not imply complete startup visibility or suggest raw file removal.

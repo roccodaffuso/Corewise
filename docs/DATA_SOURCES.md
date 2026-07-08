@@ -42,12 +42,12 @@ Statuses:
 | --- | --- | --- | --- | --- |
 | Total, used, available | Implemented | `FileManager` volume resource values | High | Startup volume only. |
 | Available percent | Implemented | Derived from real volume values | High | Startup volume only. |
-| Large folders | Implemented | Read-only known-path scan | Medium | Only existing readable known paths are shown. |
-| Large files | Implemented | Read-only Downloads scan | Medium | Restricted to Downloads in the current MVP. |
-| Developer caches | Implemented | Read-only known-path review | Medium | Only paths that exist and are readable are shown. |
-| Browser caches | Implemented | Read-only known-path review | Low | Browser-owned cleanup should point to browser settings. |
-| Downloads | Implemented | Read-only folder size | Medium | User must decide what to keep. |
-| Trash | Implemented | Read-only folder size | Medium | Corewise must not empty Trash. |
+| Large folders | Unavailable | Explicit targeted scan later | High | Not scanned automatically to avoid privacy prompts. |
+| Large files | Unavailable | Explicit targeted scan later | High | Downloads is not scanned during refresh. |
+| Developer caches | Planned | Explicit targeted scan later | Medium | Not scanned automatically because these live under user Library. |
+| Browser caches | Planned | Browser-owned settings or explicit targeted scan | Low | Browser cache folders are not scanned during refresh. |
+| Downloads | Unavailable | Explicit targeted scan later | High | Corewise does not request Downloads access at launch/refresh. |
+| Trash | Unavailable | Explicit targeted scan later | High | Corewise must not inspect or empty Trash automatically. |
 | iOS backups | Planned | Read-only known-path review | Medium | Prefer Finder/device settings for action. |
 | Container data | Planned | Read-only known-path review | Low | Must be generic unless a specific installed tool is detected. |
 
@@ -62,21 +62,21 @@ Statuses:
 | App grouping | Implemented | `proc_pidpath` path parsing for `.app` bundles | Medium | Falls back to process names when path is not readable. |
 | Memory pressure | Mock | Public VM pressure signal or safe approximation | Medium | Current value is placeholder and labeled mock. |
 | Swap used | Mock | VM statistics if exposed safely | Medium | Current value is placeholder. |
-| Uptime | Mock | `ProcessInfo.systemUptime` | High | Easy planned live conversion. |
-| Sustained high CPU | Mock | Repeated samples over time | Medium | Requires in-app history. |
+| Uptime | Implemented | `ProcessInfo.systemUptime` | High | Local process uptime signal; not a performance diagnosis by itself. |
+| Sustained high CPU | Implemented | In-memory recent process history | Medium | Unavailable until enough samples are collected; not persisted. |
 | WindowServer impact | Mock | Process sample plus explanation | Low | Needs careful wording because high usage can be normal. |
 
 ## Startup
 
 | Metric | Status | Planned source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Login items | Mock | System Settings visible items where accessible | Medium | APIs and visibility vary by macOS version. |
-| Launch agents | Mock | Read-only plist inventory | Medium | Do not delete plist files. |
-| Launch daemons | Mock | Read-only plist inventory | Low | System-wide items require careful explanation. |
-| Background items | Mock | Public visibility if available | Low | Some items are intentionally abstracted by macOS. |
-| Privileged helpers | Mock | Read-only helper path inventory | Low | Never suggest direct removal. |
-| Signed/unsigned | Mock | Code signing checks | Medium | Signed does not mean lightweight. |
-| Recently added | Mock | File metadata | Low | Metadata can be misleading. |
+| Login items | Unavailable | System Settings visible items where accessible | Medium | Not collected by the plist inventory. |
+| Launch agents | Implemented | Read-only plist inventory | Medium | Reads accessible `~/Library/LaunchAgents` and `/Library/LaunchAgents` metadata only. |
+| Launch daemons | Implemented | Read-only plist inventory | Medium | Reads accessible `/Library/LaunchDaemons` metadata only. |
+| Background items | Planned | Public visibility if available | Low | Some items are intentionally abstracted by macOS. |
+| Privileged helpers | Planned | Read-only helper path inventory | Low | Never suggest direct removal. |
+| Signed/unsigned | Planned | Code signing checks | Medium | Current rows show `Not checked`. |
+| Recently added | Implemented | Plist modification date | Low | Metadata can be misleading and is only a clue. |
 
 ## Thermal
 

@@ -69,7 +69,7 @@ struct StorageView: View {
     VStack(alignment: .leading, spacing: 20) {
       SectionHero(
         title: "Storage",
-        subtitle: "\(gb(storage.availableGB)) free of \(gb(storage.totalGB)). Developer files and caches are the most useful first review targets.",
+        subtitle: "\(gb(storage.availableGB)) free of \(gb(storage.totalGB)). Personal folders are not scanned automatically.",
         systemImage: "internaldrive",
         metric: storage.summary
       )
@@ -569,24 +569,33 @@ private struct HorizontalBarChart: View {
   var unit: String
 
   var body: some View {
-    Chart(data) { item in
-      BarMark(
-        x: .value(unit, item.value),
-        y: .value("Item", item.title)
+    if data.isEmpty {
+      EmptyDiagnosticState(
+        title: "Not scanned automatically",
+        message: "Corewise does not inspect personal folders during automatic refresh.",
+        dataMode: .unavailable
       )
-      .foregroundStyle(color(for: item.status))
-      .annotation(position: .trailing) {
-        HStack(spacing: 5) {
-          DataModeBadge(dataMode: item.dataMode)
-          Text("\(number(item.value)) \(item.unit)")
-            .font(.caption2.weight(.medium))
-            .foregroundStyle(.secondary)
+      .frame(minHeight: 120)
+    } else {
+      Chart(data) { item in
+        BarMark(
+          x: .value(unit, item.value),
+          y: .value("Item", item.title)
+        )
+        .foregroundStyle(color(for: item.status))
+        .annotation(position: .trailing) {
+          HStack(spacing: 5) {
+            DataModeBadge(dataMode: item.dataMode)
+            Text("\(number(item.value)) \(item.unit)")
+              .font(.caption2.weight(.medium))
+              .foregroundStyle(.secondary)
+          }
         }
       }
+      .chartXAxisLabel(unit)
+      .chartLegend(.hidden)
+      .frame(minHeight: CGFloat(max(data.count, 3)) * 32)
     }
-    .chartXAxisLabel(unit)
-    .chartLegend(.hidden)
-    .frame(minHeight: CGFloat(max(data.count, 3)) * 32)
   }
 }
 
@@ -663,18 +672,26 @@ private struct StorageItemGroup: View {
 
   var body: some View {
     DataGroup(title: title, subtitle: "Size and safe interpretation", systemImage: "folder") {
-      ForEach(items) { item in
-        DetailRow(
-          title: item.title,
-          subtitle: item.path,
-          value: gb(item.sizeGB),
-          status: item.status,
-          severityScore: item.severityScore,
-          explanation: item.explanation,
-          action: item.recommendedAction,
-          source: "\(item.source) · \(item.confidence)",
-          dataMode: item.dataMode
+      if items.isEmpty {
+        EmptyDiagnosticState(
+          title: "Not scanned automatically",
+          message: "This category needs an explicit targeted scan before Corewise can show real values.",
+          dataMode: .unavailable
         )
+      } else {
+        ForEach(items) { item in
+          DetailRow(
+            title: item.title,
+            subtitle: item.path,
+            value: gb(item.sizeGB),
+            status: item.status,
+            severityScore: item.severityScore,
+            explanation: item.explanation,
+            action: item.recommendedAction,
+            source: "\(item.source) · \(item.confidence)",
+            dataMode: item.dataMode
+          )
+        }
       }
     }
   }
@@ -710,20 +727,51 @@ private struct StartupItemGroup: View {
 
   var body: some View {
     DataGroup(title: title, subtitle: "Startup impact and trust context", systemImage: "power") {
-      ForEach(items) { item in
-        DetailRow(
-          title: item.title,
-          subtitle: "\(item.kind) · \(item.signedState) · \(item.recentlyAdded ? "recent" : "existing")",
-          value: item.startupImpact,
-          status: item.status,
-          severityScore: item.severityScore,
-          explanation: item.path,
-          action: item.recommendedAction,
-          source: "\(item.source) · \(item.confidence)",
-          dataMode: item.dataMode
+      if items.isEmpty {
+        EmptyDiagnosticState(
+          title: "No live rows available",
+          message: "This category is empty, permission-limited, or planned for a later collector.",
+          dataMode: .unavailable
         )
+      } else {
+        ForEach(items) { item in
+          DetailRow(
+            title: item.title,
+            subtitle: "\(item.kind) · \(item.signedState) · \(item.recentlyAdded ? "recent" : "existing")",
+            value: item.startupImpact,
+            status: item.status,
+            severityScore: item.severityScore,
+            explanation: item.path,
+            action: item.recommendedAction,
+            source: "\(item.source) · \(item.confidence)",
+            dataMode: item.dataMode
+          )
+        }
       }
     }
+  }
+}
+
+private struct EmptyDiagnosticState: View {
+  var title: String
+  var message: String
+  var dataMode: DataMode
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 8) {
+        DataModeBadge(dataMode: dataMode)
+        Text(title)
+          .font(.callout.weight(.semibold))
+      }
+      Text(message)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .padding(12)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
   }
 }
 

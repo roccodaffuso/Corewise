@@ -3,22 +3,6 @@ import Foundation
 struct StorageDiagnosticsCollector {
   func currentStorage(now: Date) -> StorageHealth {
     let volume = volumeStats()
-    let knownGroups = scanKnownGroups(now: now)
-    let allItems = knownGroups.largeFolders + knownGroups.largeFiles + knownGroups.developerCaches + knownGroups.browserCaches
-    let offenders = allItems
-      .sorted { $0.sizeGB > $1.sizeGB }
-      .prefix(8)
-      .map { item in
-        ChartDatum(
-          title: item.title,
-          value: item.sizeGB,
-          unit: "GB",
-          dataMode: item.dataMode,
-          status: item.status,
-          detail: item.path
-        )
-      }
-
     let availablePercent = volume.totalGB > 0 ? volume.availableGB / volume.totalGB * 100 : 0
     let storageStatus = statusForAvailablePercent(availablePercent)
     let storageSeverity = severityForAvailablePercent(availablePercent)
@@ -45,145 +29,18 @@ struct StorageDiagnosticsCollector {
         ChartDatum(title: "Used", value: volume.usedGB, unit: "GB", dataMode: .live, status: storageStatus, detail: "Startup volume used space"),
         ChartDatum(title: "Available", value: volume.availableGB, unit: "GB", dataMode: .live, status: .good, detail: "Startup volume free space")
       ],
-      largeFolders: knownGroups.largeFolders,
-      largeFiles: knownGroups.largeFiles,
-      developerCaches: knownGroups.developerCaches,
-      browserCaches: knownGroups.browserCaches,
-      spaceOffenders: Array(offenders),
-      findings: findings(availablePercent: availablePercent, offenders: allItems),
+      largeFolders: [],
+      largeFiles: [],
+      developerCaches: [],
+      browserCaches: [],
+      spaceOffenders: [],
+      findings: findings(availablePercent: availablePercent),
       actions: [
-        SafeAction(title: "Review readable folders", body: "Open large folders and decide manually what you recognize.", systemImage: "folder", status: .good),
-        SafeAction(title: "Use app-owned cleanup", body: "Use Xcode or browser settings for app caches when possible.", systemImage: "wrench.and.screwdriver", status: .info)
+        SafeAction(title: "Review Downloads manually", body: "Open Downloads in Finder only when you choose to review personal files.", systemImage: "folder", status: .good),
+        SafeAction(title: "Enable targeted scan later", body: "Future storage scans should be explicit, scoped, and permission-aware.", systemImage: "hand.raised", status: .info)
       ],
-      sourceNote: "Live storage data. Corewise reads volume capacity and selected known paths without modifying files. Missing or unreadable folders are omitted instead of estimated."
+      sourceNote: "Live storage data. Corewise reads startup volume capacity only during automatic refresh. Personal folders such as Downloads are not scanned automatically."
     )
-  }
-
-  private func scanKnownGroups(now: Date) -> KnownStorageGroups {
-    let home = FileManager.default.homeDirectoryForCurrentUser
-
-    let largeFolders = [
-      storageItemIfReadable("Downloads", url: home.appendingPathComponent("Downloads"), now: now),
-      storageItemIfReadable("Trash", url: home.appendingPathComponent(".Trash"), now: now)
-    ].compactMap { $0 }
-
-    let developerCaches = [
-      storageItemIfReadable("Xcode DerivedData", url: home.appendingPathComponent("Library/Developer/Xcode/DerivedData"), now: now),
-      storageItemIfReadable("Simulators", url: home.appendingPathComponent("Library/Developer/CoreSimulator"), now: now),
-      storageItemIfReadable("Archives", url: home.appendingPathComponent("Library/Developer/Xcode/Archives"), now: now)
-    ].compactMap { $0 }
-
-    let browserCaches = [
-      storageItemIfReadable("Safari Cache", url: home.appendingPathComponent("Library/Caches/com.apple.Safari"), now: now),
-      storageItemIfReadable("Chrome Cache", url: home.appendingPathComponent("Library/Caches/Google/Chrome"), now: now)
-    ].compactMap { $0 }
-
-    let largeFiles = largestFiles(in: home.appendingPathComponent("Downloads"), now: now)
-
-    return KnownStorageGroups(
-      largeFolders: largeFolders,
-      largeFiles: largeFiles,
-      developerCaches: developerCaches,
-      browserCaches: browserCaches
-    )
-  }
-
-  private func storageItemIfReadable(_ title: String, url: URL, now: Date) -> StorageItem? {
-    guard FileManager.default.fileExists(atPath: url.path) else {
-      return nil
-    }
-
-    let size = folderSize(url)
-    guard size > 0 else {
-      return nil
-    }
-
-    let sizeGB = Double(size) / bytesPerGB
-    return StorageItem(
-      title: title,
-      path: displayPath(url),
-      sizeGB: sizeGB,
-      dataMode: .live,
-      status: storageItemStatus(sizeGB),
-      severityScore: min(max(Int((sizeGB * 2).rounded()), 0), 100),
-      explanation: "Readable folder size from a local read-only scan.",
-      source: "FileManager read-only size scan",
-      confidence: "Live / medium",
-      recommendedAction: "Open and review manually; Corewise will not remove files.",
-      lastUpdated: now
-    )
-  }
-
-  private func largestFiles(in url: URL, now: Date) -> [StorageItem] {
-    guard FileManager.default.fileExists(atPath: url.path) else {
-      return []
-    }
-
-    let keys: [URLResourceKey] = [.isRegularFileKey, .fileAllocatedSizeKey, .totalFileAllocatedSizeKey]
-    guard let enumerator = FileManager.default.enumerator(
-      at: url,
-      includingPropertiesForKeys: keys,
-      options: [.skipsHiddenFiles, .skipsPackageDescendants]
-    ) else {
-      return []
-    }
-
-    var files: [StorageItem] = []
-
-    for case let fileURL as URL in enumerator {
-      guard let values = try? fileURL.resourceValues(forKeys: Set(keys)),
-            values.isRegularFile == true else {
-        continue
-      }
-
-      let bytes = UInt64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
-      let sizeGB = Double(bytes) / bytesPerGB
-      guard sizeGB >= 0.5 else {
-        continue
-      }
-
-      files.append(
-        StorageItem(
-          title: fileURL.lastPathComponent,
-          path: displayPath(fileURL),
-          sizeGB: sizeGB,
-          dataMode: .live,
-          status: storageItemStatus(sizeGB),
-          severityScore: min(max(Int((sizeGB * 4).rounded()), 0), 100),
-          explanation: "Large readable file found in Downloads.",
-          source: "FileManager read-only file scan",
-          confidence: "Live / medium",
-          recommendedAction: "Open in Finder and decide whether you still need it.",
-          lastUpdated: now
-        )
-      )
-    }
-
-    return Array(files.sorted { $0.sizeGB > $1.sizeGB }.prefix(8))
-  }
-
-  private func folderSize(_ url: URL) -> UInt64 {
-    let keys: [URLResourceKey] = [.isRegularFileKey, .fileAllocatedSizeKey, .totalFileAllocatedSizeKey]
-    guard let enumerator = FileManager.default.enumerator(
-      at: url,
-      includingPropertiesForKeys: keys,
-      options: [.skipsHiddenFiles]
-    ) else {
-      return 0
-    }
-
-    var total: UInt64 = 0
-
-    for case let fileURL as URL in enumerator {
-      guard let values = try? fileURL.resourceValues(forKeys: Set(keys)),
-            values.isRegularFile == true else {
-        continue
-      }
-
-      total += UInt64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
-    }
-
-    return total
   }
 
   private func volumeStats() -> (totalGB: Double, availableGB: Double, usedGB: Double) {
@@ -197,10 +54,9 @@ struct StorageDiagnosticsCollector {
     return (totalBytes / bytesPerGB, availableBytes / bytesPerGB, usedBytes / bytesPerGB)
   }
 
-  private func findings(availablePercent: Double, offenders: [StorageItem]) -> [DiagnosticFinding] {
+  private func findings(availablePercent: Double) -> [DiagnosticFinding] {
     let status = statusForAvailablePercent(availablePercent)
     let severity = severityForAvailablePercent(availablePercent)
-    let largest = offenders.sorted { $0.sizeGB > $1.sizeGB }.first
 
     return [
       DiagnosticFinding(
@@ -210,10 +66,10 @@ struct StorageDiagnosticsCollector {
         severityScore: severity
       ),
       DiagnosticFinding(
-        title: largest == nil ? "No large readable offender yet" : "\(largest!.title) is the largest readable item",
-        detail: largest == nil ? "Known folders were absent, unreadable, or below the display threshold." : "\(largest!.path) is currently the largest item Corewise scanned.",
-        status: largest == nil ? .info : largest!.status,
-        severityScore: largest == nil ? 0 : largest!.severityScore
+        title: "Personal folders are not scanned automatically",
+        detail: "Downloads, caches, Trash, and developer folders stay unscanned until Corewise has an explicit targeted review flow.",
+        status: .info,
+        severityScore: 0
       )
     ]
   }
@@ -263,24 +119,6 @@ struct StorageDiagnosticsCollector {
     min(max(Int((100 - percent).rounded()), 0), 100)
   }
 
-  private func storageItemStatus(_ sizeGB: Double) -> FindingSeverity {
-    if sizeGB >= 30 {
-      return .warning
-    }
-    if sizeGB >= 8 {
-      return .info
-    }
-    return .good
-  }
-
-  private func displayPath(_ url: URL) -> String {
-    let home = FileManager.default.homeDirectoryForCurrentUser.path
-    if url.path.hasPrefix(home) {
-      return "~" + url.path.dropFirst(home.count)
-    }
-    return url.path
-  }
-
   private func number(_ value: Double) -> String {
     if value.rounded() == value {
       return String(Int(value))
@@ -289,11 +127,4 @@ struct StorageDiagnosticsCollector {
   }
 
   private let bytesPerGB = 1024.0 * 1024.0 * 1024.0
-}
-
-private struct KnownStorageGroups {
-  var largeFolders: [StorageItem]
-  var largeFiles: [StorageItem]
-  var developerCaches: [StorageItem]
-  var browserCaches: [StorageItem]
 }

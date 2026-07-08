@@ -10,8 +10,9 @@
 ## Phase 2: Storage Read-Only Collector
 
 - Implemented: real total, used, available, and available-percent values.
-- Implemented: read-only folder/file sizing for selected safe paths.
-- Explain unreadable paths and permissions.
+- Implemented: automatic refresh reads startup volume capacity only.
+- Implemented: Downloads, Trash, caches, and user Library folders are not scanned automatically.
+- Planned: explicit targeted scans with clear permission copy.
 - Never delete, move, or modify files.
 
 ## Phase 3: Battery Collector
@@ -24,14 +25,14 @@
 ## Phase 4: Performance History
 
 - Keep live CPU/RAM sampling.
-- Add short local history for sustained CPU and repeated high process usage.
-- Add uptime from `ProcessInfo.systemUptime`.
+- Implemented: short local in-memory history for sustained CPU and repeated high process usage.
+- Implemented: uptime from `ProcessInfo.systemUptime`.
 - Add memory pressure and swap only through safe public signals or mark unavailable.
 
 ## Phase 5: Startup Inventory
 
-- Add read-only login item and startup-related inventories where safe.
-- Separate user login items, agents, daemons, background items, and privileged helpers.
+- Implemented: read-only inventory for accessible LaunchAgents and LaunchDaemons plist metadata.
+- Keep login items, background items, privileged helpers, and code signing planned/unavailable until safe collectors exist.
 - Avoid raw deletion suggestions; route actions through System Settings, app settings, package managers, or uninstallers.
 
 ## Phase 6: Thermal And App Issues

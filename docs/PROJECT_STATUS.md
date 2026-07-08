@@ -4,7 +4,7 @@ Last updated: 2026-07-08
 
 ## Summary
 
-Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, and live CPU/RAM process sampling exist locally. Most non-performance diagnostics still use realistic mock data.
+Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, live CPU/RAM process sampling, safe battery basics, startup volume storage, and launch plist inventory exist locally. Several diagnostic areas still use realistic mock data.
 
 The immediate priority is trust: the UI and docs must make it obvious which values are live, which are mock, which are planned, and which are unavailable by design.
 
@@ -17,10 +17,13 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 - SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, and Settings.
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
 - Live sampler for system CPU, system RAM, top CPU process groups, and top RAM process groups.
+- Short in-memory performance history for sustained high CPU interpretation.
+- Live uptime from `ProcessInfo.systemUptime`.
 - App-bundle grouping for process helpers when a `.app` path is readable.
 - Live battery basics from IOKit power-source APIs: charge, power source, and charging state when an internal battery exists.
 - Structured `DataMode` provenance for visible diagnostic values.
-- Read-only live storage collector for startup volume capacity and selected known paths.
+- Read-only live storage collector for startup volume capacity only; personal folders are not scanned automatically.
+- Read-only startup plist inventory for accessible LaunchAgents and LaunchDaemons metadata.
 - Live high-level thermal state from `ProcessInfo.thermalState`.
 - Read-only, manual-action product stance.
 
@@ -28,18 +31,18 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 
 - Health score and overall status.
 - Battery cycle count, maximum capacity, condition, recent energy impact, and risk scoring.
-- Startup/login/background/privileged helper inventory.
-- Memory pressure, swap, uptime, sustained CPU history, and WindowServer interpretation.
-- Storage categories that require broad or permission-limited scans remain omitted rather than estimated.
+- Modern login items, background items, privileged helpers, and startup code signing checks.
+- Memory pressure, swap, and WindowServer interpretation.
+- Detailed storage categories that require broad or permission-limited scans remain unavailable or planned rather than estimated.
 - Thermal contributor attribution.
 - Crash counts, bundle IDs, app versions, repeated crash flags, and diagnostic permission state.
 
 ## Planned
 
 - Expand visible provenance coverage as new row types are added.
-- Broaden storage scanning only where it stays read-only and clearly permission-limited.
+- Add explicit targeted storage scans only after a user action and clear permission copy.
 - Expand battery only where documented safe public data is available; do not infer health details.
-- Replace startup mocks with read-only inventory and clear permission limits.
+- Broaden startup beyond plist inventory only where macOS exposes safe public visibility.
 - Replace crash mocks with permitted diagnostic report reading.
 - Keep unavailable wattage clearly marked unless a safe, user-approved source exists.
 
@@ -54,6 +57,6 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 ## Current Risks
 
 - Some mock or unavailable section content remains in Battery health details, Startup, Performance secondary metrics, and App Issues.
-- Read-only folder sizing may be slow on large known directories and needs UX tuning before release.
+- Storage details are intentionally sparse until a permission-aware targeted scan exists.
 - Health score currently mixes live and mock signals, so it must not be presented as a final diagnostic score.
 - The current branch now has a checkpoint baseline plus additional stabilization changes in progress.
