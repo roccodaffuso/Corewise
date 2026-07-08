@@ -67,7 +67,8 @@ struct ContentView: View {
           ForEach(DashboardSection.allCases) { section in
             HStack(spacing: 10) {
               Image(systemName: section.systemImage)
-                .foregroundStyle(.secondary)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(section.rawValue == selectedSectionID ? CorewiseVisual.accent : .secondary)
                 .frame(width: 18)
 
               VStack(alignment: .leading, spacing: 2) {
@@ -93,14 +94,21 @@ struct ContentView: View {
         }
       }
       .listStyle(.sidebar)
+      .tint(CorewiseVisual.accent)
       .navigationSplitViewColumnWidth(min: 230, ideal: 260)
     } detail: {
-      Group {
-        if let snapshot = store.snapshot {
-          DetailRouter(section: selectedSection, snapshot: snapshot, store: store)
-        } else {
-          ProgressView("Checking your Mac...")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+      ZStack {
+        Rectangle()
+          .fill(CorewiseVisual.appBackground)
+          .ignoresSafeArea()
+
+        Group {
+          if let snapshot = store.snapshot {
+            DetailRouter(section: selectedSection, snapshot: snapshot, store: store)
+          } else {
+            ProgressView("Checking your Mac...")
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+          }
         }
       }
       .toolbar {
@@ -160,7 +168,7 @@ private struct DetailRouter: View {
           ReportView(snapshot: snapshot)
         }
       }
-      .padding(26)
+      .padding(28)
       .frame(maxWidth: 1160, alignment: .leading)
     }
     .navigationTitle(section.title)

@@ -542,6 +542,7 @@ private struct OverviewSignalGrid: View {
 
 private struct DataAccessPanel: View {
   var capabilities: [DataAccessCapability]
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     PremiumPanel(title: "Data access", subtitle: "What Corewise reads, asks for, or avoids.", systemImage: "lock.shield") {
@@ -577,7 +578,11 @@ private struct DataAccessPanel: View {
           }
           .padding(10)
           .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
-          .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+          .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+          .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+              .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
+          }
         }
       }
     }
@@ -702,6 +707,7 @@ private struct MetricBoard: View {
 
 private struct MetricTile: View {
   var metric: DiagnosticMetric
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     VStack(alignment: .leading, spacing: 9) {
@@ -737,7 +743,11 @@ private struct MetricTile: View {
     }
     .padding(12)
     .frame(maxWidth: .infinity, minHeight: 142, alignment: .topLeading)
-    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
+    }
   }
 }
 
@@ -746,6 +756,7 @@ private struct PremiumPanel<Content: View>: View {
   private var subtitle: String?
   private var systemImage: String?
   private var content: Content
+  @Environment(\.colorScheme) private var colorScheme
 
   init(@ViewBuilder content: () -> Content) {
     self.title = nil
@@ -784,10 +795,17 @@ private struct PremiumPanel<Content: View>: View {
     }
     .padding(16)
     .frame(maxWidth: .infinity, alignment: .topLeading)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+    .background {
+      RoundedRectangle(cornerRadius: 12, style: .continuous)
+        .fill(.regularMaterial)
+        .overlay {
+          RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(CorewiseVisual.panelFill(colorScheme: colorScheme))
+        }
+    }
     .overlay {
-      RoundedRectangle(cornerRadius: 10)
-        .stroke(.quaternary, lineWidth: 1)
+      RoundedRectangle(cornerRadius: 12, style: .continuous)
+        .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
     }
   }
 }
@@ -956,6 +974,7 @@ private struct CompactStat: View {
   var title: String
   var value: String
   var detail: String
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
@@ -971,9 +990,13 @@ private struct CompactStat: View {
         .font(.caption2)
         .foregroundStyle(.tertiary)
     }
-    .padding(10)
+    .padding(11)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
+    }
   }
 }
 
@@ -1907,7 +1930,14 @@ private struct IconPlate: View {
       .font(.title2.weight(.semibold))
       .foregroundStyle(color(for: status))
       .frame(width: 46, height: 46)
-      .background(color(for: status).opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+      .background(
+        LinearGradient(
+          colors: [color(for: status).opacity(0.18), CorewiseVisual.accentSoft.opacity(0.08)],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        ),
+        in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+      )
   }
 }
 
@@ -1943,7 +1973,7 @@ private struct StatusPill: View {
       .foregroundStyle(color(for: status))
       .padding(.horizontal, 9)
       .padding(.vertical, 4)
-      .background(color(for: status).opacity(0.12), in: Capsule())
+      .background(color(for: status).opacity(0.14), in: Capsule())
   }
 }
 
@@ -1957,7 +1987,7 @@ private struct StatusBadge: View {
       .foregroundStyle(color(for: status))
       .padding(.horizontal, 9)
       .padding(.vertical, 4)
-      .background(color(for: status).opacity(0.12), in: Capsule())
+      .background(color(for: status).opacity(0.14), in: Capsule())
   }
 }
 
@@ -1972,7 +2002,7 @@ private struct DataModeBadge: View {
       .fixedSize(horizontal: true, vertical: false)
       .padding(.horizontal, 7)
       .padding(.vertical, 3)
-      .background(color(for: dataMode).opacity(0.12), in: Capsule())
+      .background(color(for: dataMode).opacity(0.14), in: Capsule())
       .accessibilityLabel("Data mode \(dataMode.rawValue)")
   }
 }
@@ -1990,6 +2020,7 @@ private struct StatusDot: View {
 private struct SourceNote: View {
   var text: String
   var dataMode: DataMode? = nil
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -2002,7 +2033,11 @@ private struct SourceNote: View {
     }
     .padding(12)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
+    }
   }
 }
 
@@ -2079,11 +2114,11 @@ private func signedSeverity(_ value: String) -> FindingSeverity {
 private func color(for status: OverallStatus) -> Color {
   switch status {
   case .notScored:
-    Color(nsColor: .systemBlue)
+    CorewiseVisual.accent
   case .good:
-    Color(nsColor: .systemGreen)
+    CorewiseVisual.moss
   case .needsAttention:
-    Color(nsColor: .systemOrange)
+    CorewiseVisual.amber
   case .critical:
     Color(nsColor: .systemRed)
   }
@@ -2092,11 +2127,11 @@ private func color(for status: OverallStatus) -> Color {
 private func color(for severity: FindingSeverity) -> Color {
   switch severity {
   case .good:
-    Color(nsColor: .systemGreen)
+    CorewiseVisual.moss
   case .info:
-    Color(nsColor: .systemBlue)
+    CorewiseVisual.accent
   case .warning:
-    Color(nsColor: .systemOrange)
+    CorewiseVisual.amber
   case .critical:
     Color(nsColor: .systemRed)
   }
@@ -2105,9 +2140,9 @@ private func color(for severity: FindingSeverity) -> Color {
 private func color(for dataMode: DataMode) -> Color {
   switch dataMode {
   case .live:
-    Color(nsColor: .systemGreen)
+    CorewiseVisual.moss
   case .planned:
-    Color(nsColor: .systemBlue)
+    CorewiseVisual.accent
   case .unavailable:
     Color(nsColor: .tertiaryLabelColor)
   case .avoided:
@@ -2118,7 +2153,7 @@ private func color(for dataMode: DataMode) -> Color {
 private func storageBreakdownColor(for item: ChartDatum) -> Color {
   switch item.title {
   case "Available":
-    Color(nsColor: .systemGreen)
+    CorewiseVisual.moss
   case "Used":
     Color(nsColor: .systemRed)
   default:

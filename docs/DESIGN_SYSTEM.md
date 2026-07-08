@@ -2,13 +2,16 @@
 
 ## Summary
 
-Corewise should feel like a serious Apple-native diagnostic utility: calm, precise, dense enough to be useful, and never alarmist.
+Corewise should feel like a serious Apple-native diagnostic utility: calm, precise, softly premium, dense enough to be useful, and never alarmist.
 
 ## Visual Principles
 
-- Use native SwiftUI controls, system materials, system colors, and SF Symbols.
+- Use native SwiftUI controls, system materials, soft transparency, and SF Symbols.
+- Prefer natural, muted system-adaptive colors: teal/blue for information, moss green for live/good, amber for attention, red only for critical or used storage.
+- The app detail background should feel layered and translucent, not flat black or generic dashboard gray.
+- Panels should use material plus a subtle adaptive tint and hairline, with no heavy shadows or decorative gradients.
 - Keep cards purposeful: summary cards, metric cards, findings, actions, and data notes.
-- Use semantic colors only for state: green good, blue info, amber warning, red critical.
+- Use semantic colors only for state: moss good/live, teal info/planned, amber warning, red critical.
 - Pair color with labels and icons; never rely on color alone.
 - Keep typography compact and readable in narrow macOS windows.
 - Prefer calm density over marketing-style hero composition.

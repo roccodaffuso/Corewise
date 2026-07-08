@@ -50,9 +50,9 @@ private struct MenuBarMonitorView: View {
       HStack(alignment: .center, spacing: 10) {
         Image(systemName: "waveform.path.ecg")
           .font(.system(size: 17, weight: .semibold))
-          .foregroundStyle(.green)
+          .foregroundStyle(CorewiseVisual.moss)
           .frame(width: 30, height: 30)
-          .background(.green.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+          .background(CorewiseVisual.moss.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
         VStack(alignment: .leading, spacing: 1) {
           Text("Corewise")
@@ -67,9 +67,9 @@ private struct MenuBarMonitorView: View {
 
       if let snapshot {
         HStack(spacing: 8) {
-          MenuMetricCard(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), tint: .blue)
-          MenuMetricCard(title: "Memory", value: menuBytes(snapshot.performance.memory.usedBytes), tint: .green)
-          MenuMetricCard(title: "Swap", value: snapshot.performance.memory.swapUsedBytes.map(menuBytes) ?? "N/A", tint: .orange)
+          MenuMetricCard(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), tint: CorewiseVisual.accent)
+          MenuMetricCard(title: "Memory", value: menuBytes(snapshot.performance.memory.usedBytes), tint: CorewiseVisual.moss)
+          MenuMetricCard(title: "Swap", value: snapshot.performance.memory.swapUsedBytes.map(menuBytes) ?? "N/A", tint: CorewiseVisual.amber)
         }
 
         VStack(spacing: 8) {
