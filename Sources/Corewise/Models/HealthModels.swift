@@ -195,6 +195,8 @@ struct SystemMemoryReading {
   var physicalBytes: UInt64
   var usedBytes: UInt64
   var freeBytes: UInt64
+  var appMemoryBytes: UInt64
+  var cachedFilesBytes: UInt64
   var wiredBytes: UInt64
   var compressedBytes: UInt64
   var swapUsedBytes: UInt64?
@@ -227,6 +229,12 @@ struct ProcessObservation: Identifiable {
   var lastUpdated: Date
 }
 
+extension ProcessObservation {
+  var observedMemoryBytes: UInt64 {
+    max(physicalFootprintBytes ?? 0, residentMemoryBytes)
+  }
+}
+
 struct AppProcessGroup: Identifiable {
   var id: String { name }
   var name: String
@@ -240,6 +248,12 @@ struct AppProcessGroup: Identifiable {
   var source: String
   var confidence: String
   var lastUpdated: Date
+}
+
+extension AppProcessGroup {
+  var observedMemoryBytes: UInt64 {
+    max(physicalFootprintBytes ?? 0, residentMemoryBytes)
+  }
 }
 
 struct StartupHealth {

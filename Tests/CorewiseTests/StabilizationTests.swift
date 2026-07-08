@@ -48,6 +48,30 @@ import Testing
   #expect(summary.repeatedHighCPUProcesses.isEmpty)
 }
 
+@Test func processObservedMemoryDoesNotUnderreportResidentMemory() {
+  let observation = process("Renderer", cpu: 1, residentMB: 800, footprintMB: 120)
+
+  #expect(observation.observedMemoryBytes == 800 * 1024 * 1024)
+}
+
+@Test func appGroupObservedMemoryDoesNotUnderreportResidentMemory() {
+  let group = AppProcessGroup(
+    name: "Codex",
+    processCount: 2,
+    cpuPercent: 2,
+    residentMemoryBytes: 1_200 * 1024 * 1024,
+    physicalFootprintBytes: 300 * 1024 * 1024,
+    dataMode: .live,
+    status: .info,
+    severityScore: 20,
+    source: "Unit test",
+    confidence: "Live / medium",
+    lastUpdated: Date()
+  )
+
+  #expect(group.observedMemoryBytes == 1_200 * 1024 * 1024)
+}
+
 @Test func scoreConfidenceStaysLowWhenCoverageIsSparse() {
   let metric = ScoreConfidenceCalculator.metric(modes: [.live, .planned, .unavailable, .avoided], now: Date())
 
@@ -148,6 +172,8 @@ private func instant(processes: [ProcessObservation]) -> InstantSystemMetrics {
       physicalBytes: 16 * 1024 * 1024 * 1024,
       usedBytes: 4 * 1024 * 1024 * 1024,
       freeBytes: 12 * 1024 * 1024 * 1024,
+      appMemoryBytes: 2 * 1024 * 1024 * 1024,
+      cachedFilesBytes: 1 * 1024 * 1024 * 1024,
       wiredBytes: 1 * 1024 * 1024 * 1024,
       compressedBytes: 512 * 1024 * 1024,
       swapUsedBytes: 0,
@@ -163,7 +189,7 @@ private func instant(processes: [ProcessObservation]) -> InstantSystemMetrics {
   )
 }
 
-private func process(_ name: String, cpu: Double) -> ProcessObservation {
+private func process(_ name: String, cpu: Double, residentMB: UInt64 = 128, footprintMB: UInt64 = 160) -> ProcessObservation {
   ProcessObservation(
     pid: Int32(abs(name.hashValue % 30_000) + 100),
     processName: name,
@@ -174,8 +200,8 @@ private func process(_ name: String, cpu: Double) -> ProcessObservation {
     cpuPercent: cpu,
     cpuTimeSeconds: 10,
     threadCount: 4,
-    residentMemoryBytes: 128 * 1024 * 1024,
-    physicalFootprintBytes: 160 * 1024 * 1024,
+    residentMemoryBytes: residentMB * 1024 * 1024,
+    physicalFootprintBytes: footprintMB * 1024 * 1024,
     dataMode: .live,
     status: .info,
     severityScore: Int(cpu),

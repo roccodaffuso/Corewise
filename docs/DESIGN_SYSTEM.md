@@ -62,5 +62,5 @@ Every diagnostic page should include:
 - Explain behavior in plain language.
 - Prefer "review", "inspect", "check", and "open" over action-heavy wording.
 - Do not imply a value is real unless it is marked `Live`.
-- Do not claim Activity Monitor exact parity; describe CPU, footprint, RSS, VM memory, and swap by their actual sources.
+- Do not claim Activity Monitor exact parity; describe CPU, observed memory, footprint, RSS, VM memory, and swap by their actual sources.
 - Do not make unsupported claims about performance, battery service, thermal sensors, or system power.

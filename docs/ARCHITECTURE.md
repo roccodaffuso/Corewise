@@ -10,7 +10,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Store: `HealthDashboardStore` requests snapshots from `SystemHealthCollecting`.
 - Collector protocol: `SystemHealthCollecting.currentSnapshot()` returns a complete `HealthSnapshot`.
 - Current collector: `SystemHealthCollector` builds the full product-shaped snapshot without synthetic runtime diagnostics.
-- Live helper: `SystemMetricsSampler` provides live CPU split, VM memory fields, process rows, physical footprint when available, and app groups to the collector.
+- Live helper: `SystemMetricsSampler` provides live CPU split, VM memory fields, process rows, observed memory, physical footprint when available, RSS, and app groups to the collector.
 - History helper: `PerformanceHistoryTracker` keeps a short in-memory window for sustained CPU interpretation.
 - Battery helper: `BatteryDiagnosticsCollector` provides live safe power-source basics and unavailable/planned health details.
 - Manual storage helper: `StorageTargetedScanCollector` scans only a user-selected folder and returns largest real items.
@@ -34,9 +34,10 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 `SystemMetricsSampler` should stay narrow:
 
 - Read public macOS CPU ticks over a 1 second window.
-- Read public VM statistics for used, wired, compressed, free, and swap context.
+- Read public VM statistics for used, app memory, cached files, wired, compressed, free, and swap context.
 - Read public process task information for PID, CPU time, thread count, resident memory, path, and user.
 - Read `ri_phys_footprint` through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns it.
+- Use observed process memory as the larger public value between footprint and RSS so low footprint values do not hide real process memory.
 - Keep individual process rows separate from app-bundle groups.
 - Return `nil` or `Unavailable` for unsupported values instead of inventing readings.
 

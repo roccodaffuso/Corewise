@@ -17,7 +17,7 @@ Statuses:
 | Score confidence | Implemented | DataMode coverage count | High | Describes coverage, not device health. |
 | Overall status | Planned | Corewise scoring model | High | UI shows Not Scored Yet until real scoring exists. |
 | CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | 1 second sample; not a sysmond clone. |
-| RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Corewise VM view based on active, wired, and compressed pages. |
+| RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Corewise VM view based on app memory, wired memory, and compressed pages; not a private Activity Monitor clone. |
 | System power watts | Unavailable | Safe public API check | High | No reliable whole-system wattage through safe public APIs in this MVP. |
 | Main attention area | Unavailable | Corewise scoring model | High | Cross-section prioritization is not implemented. |
 | Data access capabilities | Implemented | Static capability matrix plus scan state | High | Explains access state; it is not a device-health signal. |
@@ -57,10 +57,11 @@ Statuses:
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
 | System CPU now | Implemented | `host_statistics` CPU ticks | Medium | 1 second sample with user/system/idle split. |
-| System RAM now | Implemented | `host_statistics64` VM stats | Medium | Shows Corewise VM view, wired, compressed, and swap. |
+| System RAM now | Implemented | `host_statistics64` VM stats | Medium | Shows Corewise VM view: app memory, cached files, wired, compressed, and swap. |
 | Process table | Implemented | `proc_listallpids`, `proc_pidinfo(PROC_PIDTASKINFO)` | Medium | Inaccessible processes may be omitted. |
 | Process CPU | Implemented | Delta of `pti_total_user + pti_total_system` | Medium | 1 second sample; values may differ slightly from Monitoraggio Attività. |
-| Process memory footprint | Implemented when present | `proc_pid_rusage(RUSAGE_INFO_V4)` / `ri_phys_footprint` | High | Falls back to resident memory when footprint is unavailable. |
+| Process observed memory | Implemented | Derived from public process memory fields | Medium | Primary UI value is the larger public value between physical footprint and resident memory to avoid under-reporting. |
+| Process memory footprint | Implemented when present | `proc_pid_rusage(RUSAGE_INFO_V4)` / `ri_phys_footprint` | Medium | Public footprint can be lower than resident memory and does not promise exact Monitoraggio Attività parity. |
 | Process resident memory | Implemented | `proc_pidinfo(PROC_PIDTASKINFO)` resident size | Medium | Kept separate from footprint. |
 | Process identity | Implemented | `proc_pidpath`, `proc_name`, short BSD info | Medium | Provides path, app bundle, PID, user, and thread count where readable. |
 | App grouping | Implemented | Derived from live process rows and `.app` bundle paths | Medium | Separate from individual process rows so helper aggregation is explicit. |

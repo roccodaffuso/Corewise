@@ -48,21 +48,21 @@ enum SystemMetricsSampler {
     )
   }
 
-  static func processStatus(cpuPercent: Double, footprintBytes: UInt64?) -> FindingSeverity {
+  static func processStatus(cpuPercent: Double, memoryBytes: UInt64) -> FindingSeverity {
     if cpuPercent >= 200 {
       return .critical
     }
-    if cpuPercent >= 75 || (footprintBytes ?? 0) >= 8 * bytesPerGBInt {
+    if cpuPercent >= 75 || memoryBytes >= 8 * bytesPerGBInt {
       return .warning
     }
-    if cpuPercent >= 25 || (footprintBytes ?? 0) >= 1 * bytesPerGBInt {
+    if cpuPercent >= 25 || memoryBytes >= 1 * bytesPerGBInt {
       return .info
     }
     return .good
   }
 
-  static func processSeverity(cpuPercent: Double, footprintBytes: UInt64?) -> Int {
-    let memoryGB = Double(footprintBytes ?? 0) / bytesPerGB
+  static func processSeverity(cpuPercent: Double, memoryBytes: UInt64) -> Int {
+    let memoryGB = Double(memoryBytes) / bytesPerGB
     return min(max(Int(max(cpuPercent, memoryGB * 18).rounded()), 0), 100)
   }
 
@@ -162,6 +162,8 @@ enum SystemMetricsSampler {
         physicalBytes: physicalBytes,
         usedBytes: 0,
         freeBytes: 0,
+        appMemoryBytes: 0,
+        cachedFilesBytes: 0,
         wiredBytes: 0,
         compressedBytes: 0,
         swapUsedBytes: sampleSwapUsedBytes(),
@@ -175,13 +177,16 @@ enum SystemMetricsSampler {
     let freeBytes = UInt64(stats.free_count) * pageSize
     let wiredBytes = UInt64(stats.wire_count) * pageSize
     let compressedBytes = UInt64(stats.compressor_page_count) * pageSize
-    let activeBytes = UInt64(stats.active_count) * pageSize
-    let usedBytes = min(activeBytes + wiredBytes + compressedBytes, physicalBytes)
+    let appMemoryBytes = UInt64(stats.internal_page_count) * pageSize
+    let cachedFilesBytes = UInt64(stats.external_page_count) * pageSize
+    let usedBytes = min(appMemoryBytes + wiredBytes + compressedBytes, physicalBytes)
 
     return SystemMemoryReading(
       physicalBytes: physicalBytes,
       usedBytes: usedBytes,
       freeBytes: freeBytes,
+      appMemoryBytes: appMemoryBytes,
+      cachedFilesBytes: cachedFilesBytes,
       wiredBytes: wiredBytes,
       compressedBytes: compressedBytes,
       swapUsedBytes: sampleSwapUsedBytes(),
@@ -224,8 +229,9 @@ enum SystemMetricsSampler {
         : 0
       let cpuPercent = Double(deltaNanoseconds) / 1_000_000_000 / elapsed * 100
       let footprint = current.physicalFootprintBytes
-      let status = processStatus(cpuPercent: cpuPercent, footprintBytes: footprint)
-      let severity = processSeverity(cpuPercent: cpuPercent, footprintBytes: footprint)
+      let observedMemory = max(footprint ?? 0, current.residentBytes)
+      let status = processStatus(cpuPercent: cpuPercent, memoryBytes: observedMemory)
+      let severity = processSeverity(cpuPercent: cpuPercent, memoryBytes: observedMemory)
       let appName = appBundleName(from: current.path)
 
       return ProcessObservation(
@@ -246,19 +252,19 @@ enum SystemMetricsSampler {
         explanation: "Live process row sampled from public process APIs over a 1 second window.",
         source: footprint == nil ? "proc_pidinfo PROC_PIDTASKINFO" : "proc_pidinfo + proc_pid_rusage RUSAGE_INFO_V4",
         confidence: footprint == nil ? "Live / medium" : "Live / high",
-        recommendedAction: "Use repeated CPU, footprint, and process identity before deciding whether to quit anything.",
+        recommendedAction: "Use repeated CPU, observed memory, and process identity before deciding whether to quit anything.",
         lastUpdated: now
       )
     }
 
     let readable = observations
-      .filter { $0.cpuPercent >= 0.05 || ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) >= 20 * 1024 * 1024 }
+      .filter { $0.cpuPercent >= 0.05 || $0.observedMemoryBytes >= 20 * 1024 * 1024 }
 
     let topCPU = readable
       .sorted { $0.cpuPercent > $1.cpuPercent }
       .prefix(80)
     let topMemory = readable
-      .sorted { ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) > ($1.physicalFootprintBytes ?? $1.residentMemoryBytes) }
+      .sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }
       .prefix(80)
 
     var merged: [Int32: ProcessObservation] = [:]
@@ -270,9 +276,7 @@ enum SystemMetricsSampler {
     }
 
     let sorted = merged.values.sorted {
-      let leftMemory = $0.physicalFootprintBytes ?? $0.residentMemoryBytes
-      let rightMemory = $1.physicalFootprintBytes ?? $1.residentMemoryBytes
-      return ($0.cpuPercent, leftMemory) > ($1.cpuPercent, rightMemory)
+      ($0.cpuPercent, $0.observedMemoryBytes) > ($1.cpuPercent, $1.observedMemoryBytes)
     }
 
     return (Array(sorted), now)
@@ -427,7 +431,8 @@ enum SystemMetricsSampler {
       let resident = rows.reduce(UInt64(0)) { $0 + $1.residentMemoryBytes }
       let footprints = rows.compactMap(\.physicalFootprintBytes)
       let footprint = footprints.isEmpty ? nil : footprints.reduce(UInt64(0), +)
-      let status = processStatus(cpuPercent: cpu, footprintBytes: footprint)
+      let observedMemory = max(footprint ?? 0, resident)
+      let status = processStatus(cpuPercent: cpu, memoryBytes: observedMemory)
 
       return AppProcessGroup(
         name: name,
@@ -437,16 +442,14 @@ enum SystemMetricsSampler {
         physicalFootprintBytes: footprint,
         dataMode: .live,
         status: status,
-        severityScore: processSeverity(cpuPercent: cpu, footprintBytes: footprint),
+        severityScore: processSeverity(cpuPercent: cpu, memoryBytes: observedMemory),
         source: "Derived from live process rows",
         confidence: footprint == nil ? "Live / medium" : "Live / high",
         lastUpdated: now
       )
     }
     .sorted {
-      let leftMemory = $0.physicalFootprintBytes ?? $0.residentMemoryBytes
-      let rightMemory = $1.physicalFootprintBytes ?? $1.residentMemoryBytes
-      return ($0.cpuPercent, leftMemory) > ($1.cpuPercent, rightMemory)
+      ($0.cpuPercent, $0.observedMemoryBytes) > ($1.cpuPercent, $1.observedMemoryBytes)
     }
   }
 

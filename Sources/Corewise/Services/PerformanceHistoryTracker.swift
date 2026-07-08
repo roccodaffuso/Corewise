@@ -108,6 +108,14 @@ extension SystemMemoryReading {
     Double(freeBytes) / SystemMetricsSampler.bytesPerGB
   }
 
+  var appMemoryGB: Double {
+    Double(appMemoryBytes) / SystemMetricsSampler.bytesPerGB
+  }
+
+  var cachedFilesGB: Double {
+    Double(cachedFilesBytes) / SystemMetricsSampler.bytesPerGB
+  }
+
   var wiredGB: Double {
     Double(wiredBytes) / SystemMetricsSampler.bytesPerGB
   }

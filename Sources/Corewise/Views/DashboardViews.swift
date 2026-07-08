@@ -121,7 +121,7 @@ struct PerformanceView: View {
     VStack(alignment: .leading, spacing: 20) {
       SectionHero(
         title: "Performance",
-        subtitle: "Live process rows with CPU, memory footprint, resident memory, threads, PID, and user.",
+        subtitle: "Live process rows with CPU, observed memory, RSS, threads, PID, and user.",
         systemImage: "cpu",
         metric: performance.summary
       )
@@ -140,9 +140,7 @@ struct PerformanceView: View {
         mode: selectedMode,
         processes: selectedMode == .cpu
           ? performance.processes.sorted { $0.cpuPercent > $1.cpuPercent }
-          : performance.processes.sorted {
-            ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) > ($1.physicalFootprintBytes ?? $1.residentMemoryBytes)
-          }
+          : performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }
       )
 
       MetricBoard(metrics: performance.metrics)
@@ -360,21 +358,19 @@ private struct LiveLoadPanel: View {
 
   var body: some View {
     HStack(alignment: .top, spacing: 14) {
-      AppGroupChartPanel(
+      ProcessChartPanel(
         title: "CPU now",
-        subtitle: "Top app groups derived from live process rows.",
+        subtitle: "Top individual processes from a live 1 second sample.",
         systemImage: "cpu",
-        groups: performance.appGroups.sorted { $0.cpuPercent > $1.cpuPercent },
+        processes: performance.processes.sorted { $0.cpuPercent > $1.cpuPercent },
         mode: .cpu
       )
 
-      AppGroupChartPanel(
+      ProcessChartPanel(
         title: "Memory now",
-        subtitle: "Footprint when available, resident memory otherwise.",
+        subtitle: "Top individual processes by observed memory.",
         systemImage: "memorychip",
-        groups: performance.appGroups.sorted {
-          ($0.physicalFootprintBytes ?? $0.residentMemoryBytes) > ($1.physicalFootprintBytes ?? $1.residentMemoryBytes)
-        },
+        processes: performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes },
         mode: .memory
       )
     }
@@ -476,6 +472,20 @@ private struct AppGroupChartPanel: View {
   var body: some View {
     PremiumPanel(title: title, subtitle: subtitle, systemImage: systemImage) {
       AppGroupBarChart(groups: Array(groups.prefix(8)), mode: mode)
+    }
+  }
+}
+
+private struct ProcessChartPanel: View {
+  var title: String
+  var subtitle: String
+  var systemImage: String
+  var processes: [ProcessObservation]
+  var mode: PerformanceMode
+
+  var body: some View {
+    PremiumPanel(title: title, subtitle: subtitle, systemImage: systemImage) {
+      ProcessBarChart(processes: Array(processes.prefix(8)), mode: mode)
     }
   }
 }
@@ -759,8 +769,10 @@ private struct PerformanceSystemStrip: View {
       CompactStat(title: "User", value: percent(performance.cpu.userPercent), detail: "CPU")
       CompactStat(title: "System", value: percent(performance.cpu.systemPercent), detail: "CPU")
       CompactStat(title: "Memory", value: bytes(performance.memory.usedBytes), detail: "used")
+      CompactStat(title: "App Mem", value: bytes(performance.memory.appMemoryBytes), detail: "VM")
       CompactStat(title: "Wired", value: bytes(performance.memory.wiredBytes), detail: "memory")
       CompactStat(title: "Compressed", value: bytes(performance.memory.compressedBytes), detail: "memory")
+      CompactStat(title: "Cached", value: bytes(performance.memory.cachedFilesBytes), detail: "files")
       CompactStat(title: "Swap", value: performance.memory.swapUsedBytes.map(bytes) ?? "N/A", detail: "used")
       CompactStat(title: "Processes", value: "\(performance.processes.count)", detail: "visible")
     }
@@ -821,7 +833,7 @@ private struct AppGroupBarChart: View {
     case .cpu:
       group.cpuPercent
     case .memory:
-      Double(group.physicalFootprintBytes ?? group.residentMemoryBytes) / SystemMetricsSampler.bytesPerGB
+      Double(group.observedMemoryBytes) / SystemMetricsSampler.bytesPerGB
     }
   }
 }
@@ -836,7 +848,7 @@ private struct AppGroupUsageRow: View {
     case .cpu:
       group.cpuPercent
     case .memory:
-      Double(group.physicalFootprintBytes ?? group.residentMemoryBytes) / SystemMetricsSampler.bytesPerGB
+      Double(group.observedMemoryBytes) / SystemMetricsSampler.bytesPerGB
     }
   }
 
@@ -849,7 +861,7 @@ private struct AppGroupUsageRow: View {
     case .cpu:
       "\(number(group.cpuPercent)) %"
     case .memory:
-      bytes(group.physicalFootprintBytes ?? group.residentMemoryBytes)
+      bytes(group.observedMemoryBytes)
     }
   }
 
@@ -879,6 +891,101 @@ private struct AppGroupUsageRow: View {
             .fill(.quaternary)
           RoundedRectangle(cornerRadius: 4)
             .fill(color(for: group.status))
+            .frame(width: max(proxy.size.width * fraction, currentValue > 0 ? 4 : 0))
+        }
+      }
+      .frame(height: 9)
+    }
+  }
+}
+
+private struct ProcessBarChart: View {
+  var processes: [ProcessObservation]
+  var mode: PerformanceMode
+
+  private var maxValue: Double {
+    max(processes.map(value).max() ?? 1, 1)
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      if processes.isEmpty {
+        Text("No process crossed the current display threshold")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, minHeight: 72, alignment: .center)
+      } else {
+        ForEach(processes) { process in
+          ProcessUsageRow(process: process, mode: mode, maxValue: maxValue)
+        }
+      }
+    }
+    .frame(minHeight: processes.isEmpty ? 72 : CGFloat(max(processes.count, 3)) * 42)
+  }
+
+  private func value(_ process: ProcessObservation) -> Double {
+    switch mode {
+    case .cpu:
+      process.cpuPercent
+    case .memory:
+      Double(process.observedMemoryBytes) / SystemMetricsSampler.bytesPerGB
+    }
+  }
+}
+
+private struct ProcessUsageRow: View {
+  var process: ProcessObservation
+  var mode: PerformanceMode
+  var maxValue: Double
+
+  private var currentValue: Double {
+    switch mode {
+    case .cpu:
+      process.cpuPercent
+    case .memory:
+      Double(process.observedMemoryBytes) / SystemMetricsSampler.bytesPerGB
+    }
+  }
+
+  private var fraction: Double {
+    min(max(currentValue / maxValue, 0), 1)
+  }
+
+  private var valueText: String {
+    switch mode {
+    case .cpu:
+      "\(number(process.cpuPercent)) %"
+    case .memory:
+      bytes(process.observedMemoryBytes)
+    }
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 5) {
+      HStack(alignment: .firstTextBaseline, spacing: 10) {
+        Text(process.displayName)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.primary)
+          .lineLimit(1)
+          .truncationMode(.tail)
+
+        Spacer(minLength: 10)
+
+        Text(valueText)
+          .font(.caption.weight(.semibold))
+          .monospacedDigit()
+          .foregroundStyle(color(for: process.status))
+          .layoutPriority(1)
+
+        DataModeBadge(dataMode: process.dataMode)
+      }
+
+      GeometryReader { proxy in
+        ZStack(alignment: .leading) {
+          RoundedRectangle(cornerRadius: 4)
+            .fill(.quaternary)
+          RoundedRectangle(cornerRadius: 4)
+            .fill(color(for: process.status))
             .frame(width: max(proxy.size.width * fraction, currentValue > 0 ? 4 : 0))
         }
       }
@@ -920,7 +1027,7 @@ private struct ProcessTableHeader: View {
     Grid(horizontalSpacing: 12, verticalSpacing: 0) {
       GridRow {
         header("Name").gridColumnAlignment(.leading)
-        header(mode == .cpu ? "% CPU" : "Footprint").gridColumnAlignment(.trailing)
+        header(mode == .cpu ? "% CPU" : "Memory").gridColumnAlignment(.trailing)
         header("RSS").gridColumnAlignment(.trailing)
         header("Threads").gridColumnAlignment(.trailing)
         header("PID").gridColumnAlignment(.trailing)
@@ -1002,7 +1109,7 @@ private struct ProcessTableRow: View {
     case .cpu:
       "\(number(process.cpuPercent)) %"
     case .memory:
-      process.physicalFootprintBytes.map(bytes) ?? "N/A"
+      bytes(process.observedMemoryBytes)
     }
   }
 }

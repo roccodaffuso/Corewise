@@ -26,7 +26,7 @@ Reason: Performance is the first useful real diagnostic surface and can be colle
 
 ## 2026-07-08: Performance Shows Process Rows Before Interpretation
 
-Decision: Corewise shows individual process rows with PID, user, CPU, thread count, resident memory, and footprint when available. App grouping is a derived view, not the primary source of truth.
+Decision: Corewise shows individual process rows with PID, user, CPU, thread count, observed memory, RSS, and footprint when available. App grouping is a derived view, not the primary source of truth.
 
 Reason: Monitoraggio Attività sets the user expectation; hiding process rows behind app groups makes real data look absent.
 
@@ -34,7 +34,19 @@ Reason: Monitoraggio Attività sets the user expectation; hiding process rows be
 
 Decision: Process memory footprint comes from `proc_pid_rusage(RUSAGE_INFO_V4)` when available, while resident memory remains a separate RSS-style value from `PROC_PIDTASKINFO`.
 
-Reason: Footprint is closer to the memory number users compare with Monitoraggio Attività, while RSS is still useful context.
+Reason: Footprint is useful context, but audit probes showed it is not always the highest or most user-comparable public memory value. RSS must stay visible instead of being hidden behind footprint.
+
+## 2026-07-08: Primary Process Memory Uses Observed Memory
+
+Decision: Corewise's primary process memory value is `observed memory`, the larger public value between physical footprint and resident memory. RSS remains visible as its own column.
+
+Reason: Audit probes showed public footprint can under-report compared with resident memory for real processes. Using the larger public value keeps Corewise from hiding active processes while still avoiding private APIs, shell collection, or invented values.
+
+## 2026-07-08: Activity Monitor Is A Plausibility Benchmark, Not A Parity Claim
+
+Decision: Corewise should compare against Monitoraggio Attività during QA, but docs and UI must not claim exact parity with Apple's private internals.
+
+Reason: Public APIs can expose different memory semantics than Activity Monitor's `sysmond`-backed presentation. Corewise should be honest about its sources and still be practically useful.
 
 ## 2026-07-08: No Estimated Memory Pressure
 

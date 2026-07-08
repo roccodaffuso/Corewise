@@ -28,6 +28,7 @@
 
 - Implemented: live CPU split, VM memory fields, and dense process rows.
 - Implemented: process physical footprint through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns it.
+- Implemented: observed process memory uses the larger public value between footprint and RSS, with RSS still visible.
 - Implemented: app groups are derived from process rows and kept separate from the process table.
 - Implemented: short local in-memory history for sustained CPU and repeated high process usage.
 - Implemented: uptime from `ProcessInfo.systemUptime`.

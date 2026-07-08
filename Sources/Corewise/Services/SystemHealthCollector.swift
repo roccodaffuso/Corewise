@@ -28,7 +28,9 @@ struct SystemHealthCollector: SystemHealthCollecting {
       metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU load sampled over a 1 second window from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Watch sustained high CPU, not a single short spike.", now, dataMode: instant.cpu.dataMode),
       metric("CPU User", instant.cpu.userPercent.map { number($0) } ?? "Unavailable", "%", .info, cpuSeverity(instant.cpu.userPercent), "User CPU share from the same live CPU tick window.", instant.cpu.source, instant.cpu.confidence, "Use with system CPU to understand where load comes from.", now, dataMode: instant.cpu.dataMode),
       metric("CPU System", instant.cpu.systemPercent.map { number($0) } ?? "Unavailable", "%", .info, cpuSeverity(instant.cpu.systemPercent), "System CPU share from the same live CPU tick window.", instant.cpu.source, instant.cpu.confidence, "High system CPU can be normal during indexing, I/O, or monitoring.", now, dataMode: instant.cpu.dataMode),
-      metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is active, wired, or compressed in Corewise's VM view.", instant.memory.source, instant.memory.confidence, "Use footprint, wired, compressed, and swap together before blaming an app.", now, dataMode: instant.memory.dataMode),
+      metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is app memory, wired memory, or compressed memory in Corewise's public VM view.", instant.memory.source, instant.memory.confidence, "Use process memory, wired, compressed, cached files, and swap together before blaming an app.", now, dataMode: instant.memory.dataMode),
+      metric("App Memory", number(instant.memory.appMemoryGB), "GB", .info, 0, "Anonymous/internal pages from macOS VM statistics; this is the closest public component to Activity Monitor's App Memory.", instant.memory.source, instant.memory.confidence, "Use it as a system component, not a per-app blame signal.", now, dataMode: instant.memory.dataMode),
+      metric("Cached Files", number(instant.memory.cachedFilesGB), "GB", .info, 0, "File-backed pages from macOS VM statistics. macOS can reclaim much of this when needed.", instant.memory.source, instant.memory.confidence, "Cached files are normal and are not a cleanup target.", now, dataMode: instant.memory.dataMode),
       metric("Wired Memory", number(instant.memory.wiredGB), "GB", .info, 0, "Wired memory reported by macOS VM statistics.", instant.memory.source, instant.memory.confidence, "Wired memory is managed by macOS and is not a cleanup target.", now, dataMode: instant.memory.dataMode),
       metric("Compressed Memory", number(instant.memory.compressedGB), "GB", .info, 0, "Compressed memory reported by macOS VM statistics.", instant.memory.source, instant.memory.confidence, "Compression is normal; interpret it together with swap and symptoms.", now, dataMode: instant.memory.dataMode),
       metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Use wattage later only if Corewise can obtain it through a safe, user-approved path.", now, dataMode: .unavailable),
@@ -73,7 +75,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
       overviewMetrics: [
         metric("Health Score", "Not Scored Yet", "", .info, 0, "Corewise does not calculate a global health score until enough section data is live.", "Corewise scoring model", "Planned / high", "Use section-level Live badges instead of a global score for now.", now, dataMode: .planned),
         metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU usage sampled from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Refresh or wait a few seconds to see whether this is sustained.", now, dataMode: instant.cpu.dataMode),
-        metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryPercentValue)% of physical memory is active, wired, or compressed in Corewise's VM view.", instant.memory.source, instant.memory.confidence, "Check footprint and swap before blaming a single app.", now, dataMode: instant.memory.dataMode),
+        metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryPercentValue)% of physical memory is app memory, wired memory, or compressed memory in Corewise's VM view.", instant.memory.source, instant.memory.confidence, "Check process memory and swap before blaming a single app.", now, dataMode: instant.memory.dataMode),
         metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Do not show unsupported or elevated-tool wattage readings in the MVP.", now, dataMode: .unavailable),
         metric("Main Attention Area", "Unavailable", "", .info, 0, "Corewise has not implemented real cross-section prioritization yet.", "Corewise scoring model", "Unavailable / high", "Review section-level live data instead of a generated priority.", now, dataMode: .unavailable),
         scoreConfidence,
@@ -94,7 +96,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
           SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
-        sourceNote: "Live data. CPU split, process rows, thread count, resident memory, footprint when macOS returns it, system VM memory, uptime, swap, and sustained CPU history are read locally. Memory pressure and WindowServer interpretation remain unavailable/planned until a reliable public source is selected."
+        sourceNote: "Live data. CPU split, process rows, thread count, resident memory, physical footprint when macOS returns it, observed memory, system VM memory, uptime, swap, and sustained CPU history are read locally. Observed memory is the larger public value between footprint and resident memory to avoid under-reporting. Memory pressure and WindowServer interpretation remain unavailable/planned until a reliable public source is selected."
       ),
       startup: startupHealth,
       thermal: ThermalHealth(
@@ -216,7 +218,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
 
   private func performanceFindings(_ summary: PerformanceHistorySummary, processes: [ProcessObservation]) -> [DiagnosticFinding] {
     var findings = [
-      DiagnosticFinding(title: "Live process table is available", detail: "Process rows include PID, user, thread count, CPU, resident memory, and footprint when macOS returns it.", status: .info, severityScore: 24)
+      DiagnosticFinding(title: "Live process table is available", detail: "Process rows include PID, user, thread count, CPU, observed memory, RSS, and footprint when macOS returns it.", status: .info, severityScore: 24)
     ]
 
     if !summary.hasEnoughSamples {

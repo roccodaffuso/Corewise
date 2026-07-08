@@ -10,8 +10,8 @@ Implemented live signals:
 
 - Data Access overview for live, user-selected, planned, unavailable, and avoided data paths.
 - System CPU load and user/system/idle split from macOS CPU ticks.
-- System RAM fields from VM statistics: used, wired, compressed, and swap.
-- Live process table with PID, user, thread count, CPU %, resident memory, and physical footprint when macOS returns it.
+- System RAM fields from VM statistics: used, app memory, cached files, wired, compressed, and swap.
+- Live process table with PID, user, thread count, CPU %, observed memory, RSS, and physical footprint when macOS returns it.
 - App grouping derived from real process rows, kept separate from individual process rows.
 - Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
 - Battery cycle count, maximum capacity, and condition when safe battery registry keys are present.
@@ -48,6 +48,10 @@ script/build_and_run.sh
 ```
 
 The app target is defined in `Package.swift` and requires macOS 14 or newer.
+
+## Performance Semantics
+
+Corewise uses public macOS APIs, not private `sysmond` internals. Process rows are real, but they are not promised to match Monitoraggio Attività bit-for-bit. The primary memory value is `observed memory`: the larger public value between physical footprint and resident memory, with RSS still shown separately. System memory used is derived from app memory, wired memory, and compressed memory; cached files are shown separately because macOS can reclaim much of that memory.
 
 ## Project Docs
 
