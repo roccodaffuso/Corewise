@@ -37,6 +37,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Read public VM statistics for used, app memory, cached files, wired, compressed, free, and swap context.
 - Enumerate processes through `sysctl KERN_PROC_ALL`, with `proc_listallpids` as fallback.
 - Read public process task information for PID, CPU time, thread count, resident memory, path, and user.
+- Convert process CPU task ticks with `mach_timebase_info` before computing the 1 second CPU delta.
 - Read `ri_phys_footprint` through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns it.
 - Use observed process memory as the larger public value between footprint and RSS so low footprint values do not hide real process memory.
 - Keep individual process rows separate from app-bundle groups.

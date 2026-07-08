@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Testing
 @testable import Corewise
@@ -70,6 +71,14 @@ import Testing
   )
 
   #expect(group.observedMemoryBytes == 1_200 * 1024 * 1024)
+}
+
+@Test func processCPUTicksAreConvertedWithMachTimebase() {
+  var timebase = mach_timebase_info_data_t()
+  let result = mach_timebase_info(&timebase)
+
+  #expect(result == KERN_SUCCESS)
+  #expect(SystemMetricsSampler.machTicksToNanoseconds(UInt64(timebase.denom) * 1_000_000) == UInt64(timebase.numer) * 1_000_000)
 }
 
 @Test func scoreConfidenceStaysLowWhenCoverageIsSparse() {

@@ -297,7 +297,7 @@ enum SystemMetricsSampler {
       let name = processName(pid: pid)
       let path = processPath(pid: pid)
       let user = userName(pid: pid)
-      let cpuNanoseconds = taskInfo.pti_total_user + taskInfo.pti_total_system
+      let cpuNanoseconds = machTicksToNanoseconds(taskInfo.pti_total_user + taskInfo.pti_total_system)
 
       stats[pid] = ProcessStat(
         pid: pid,
@@ -385,6 +385,16 @@ enum SystemMetricsSampler {
     }
 
     return taskInfo
+  }
+
+  static func machTicksToNanoseconds(_ ticks: UInt64) -> UInt64 {
+    var timebase = mach_timebase_info_data_t()
+    guard mach_timebase_info(&timebase) == KERN_SUCCESS, timebase.denom > 0 else {
+      return ticks
+    }
+
+    let converted = Double(ticks) * Double(timebase.numer) / Double(timebase.denom)
+    return UInt64(converted)
   }
 
   private static func physicalFootprint(pid: pid_t) -> UInt64? {

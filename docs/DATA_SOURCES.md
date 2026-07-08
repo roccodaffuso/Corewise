@@ -59,7 +59,7 @@ Statuses:
 | System CPU now | Implemented | `host_statistics` CPU ticks | Medium | 1 second sample with user/system/idle split. |
 | System RAM now | Implemented | `host_statistics64` VM stats | Medium | Shows Corewise VM view: app memory, cached files, wired, compressed, and swap. |
 | Process table | Implemented | `sysctl KERN_PROC_ALL`, fallback `proc_listallpids`, `proc_pidinfo(PROC_PIDTASKINFO)` | Medium | Inaccessible processes may be omitted, but enumeration uses the BSD process list first to avoid missing renderer/helper processes. |
-| Process CPU | Implemented | Delta of `pti_total_user + pti_total_system` | Medium | 1 second sample; values may differ slightly from Monitoraggio Attività. |
+| Process CPU | Implemented | Delta of `pti_total_user + pti_total_system`, converted with `mach_timebase_info` | Medium | 1 second sample; processes that deny task info, such as some system-owned services, may be omitted rather than guessed. |
 | Process observed memory | Implemented | Derived from public process memory fields | Medium | Primary UI value is the larger public value between physical footprint and resident memory to avoid under-reporting. |
 | Process memory footprint | Implemented when present | `proc_pid_rusage(RUSAGE_INFO_V4)` / `ri_phys_footprint` | Medium | Public footprint can be lower than resident memory and does not promise exact Monitoraggio Attività parity. |
 | Process resident memory | Implemented | `proc_pidinfo(PROC_PIDTASKINFO)` resident size | Medium | Kept separate from footprint. |

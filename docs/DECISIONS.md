@@ -36,6 +36,12 @@ Decision: Corewise enumerates process IDs with `sysctl KERN_PROC_ALL` first and 
 
 Reason: Audit probes showed `proc_listallpids` could omit high-memory Codex renderer processes even though direct public PID reads succeeded. The BSD process list better matches `ps` and Monitoraggio Attività visibility while staying inside public local APIs.
 
+## 2026-07-08: Process CPU Converts Mach Timebase
+
+Decision: Corewise converts process task CPU ticks with `mach_timebase_info` before calculating the 1 second CPU percentage.
+
+Reason: Audit probes showed `pti_total_user` and `pti_total_system` were Mach timebase ticks on the current Mac, not already-normalized nanoseconds. Treating them as nanoseconds made Corewise under-report readable process CPU by roughly the timebase factor.
+
 ## 2026-07-08: Footprint And RSS Are Separate
 
 Decision: Process memory footprint comes from `proc_pid_rusage(RUSAGE_INFO_V4)` when available, while resident memory remains a separate RSS-style value from `PROC_PIDTASKINFO`.
