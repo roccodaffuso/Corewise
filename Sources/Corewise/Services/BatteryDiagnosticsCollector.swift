@@ -37,13 +37,13 @@ struct BatteryDiagnosticsCollector {
       metrics: metrics,
       findings: [
         DiagnosticFinding(title: "Battery basics are live", detail: "Charge, power source, and charging state come from macOS power-source data when available.", status: .good, severityScore: 8),
-        DiagnosticFinding(title: "Health details are not collected yet", detail: "Cycle count, maximum capacity, and condition stay unavailable until Corewise has a safe documented source.", status: .info, severityScore: 0)
+        DiagnosticFinding(title: "Health details are opportunistic", detail: "Cycle count, maximum capacity, and condition appear only when safe registry keys are present and internally plausible.", status: .info, severityScore: 0)
       ],
       actions: [
         SafeAction(title: "Use macOS for service status", body: "For battery service decisions, rely on System Settings until Corewise can read documented health data safely.", systemImage: "battery.75percent", status: .info),
         SafeAction(title: "Watch live charge state", body: "Use the live charge and charging state as context, not as a battery-health diagnosis.", systemImage: "bolt.horizontal", status: .good)
       ],
-      sourceNote: "Mixed data. Charge, power source, and charging state are live from IOKit power source APIs when an internal battery is present. Health details remain unavailable or planned."
+      sourceNote: "Mixed data. Charge, power source, and charging state are live from IOKit power source APIs when an internal battery is present. Health details appear only when safe registry values are present and plausible."
     )
   }
 
@@ -285,6 +285,11 @@ struct BatteryRegistrySnapshot {
       return nil
     }
 
-    return min(max(Double(maxCapacity) / Double(designCapacity) * 100, 0), 100)
+    let percent = Double(maxCapacity) / Double(designCapacity) * 100
+    guard percent >= 50, percent <= 120 else {
+      return nil
+    }
+
+    return min(percent, 100)
   }
 }

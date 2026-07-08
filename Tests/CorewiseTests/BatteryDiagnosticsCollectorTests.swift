@@ -59,6 +59,26 @@ import Testing
   #expect(battery.metrics.first { $0.title == "Condition" }?.dataMode == .unavailable)
 }
 
+@Test func implausibleBatteryCapacityRatioRemainsUnavailable() throws {
+  let dictionary: [String: Any] = [
+    kIOPSTypeKey as String: kIOPSInternalBatteryType as String,
+    kIOPSCurrentCapacityKey as String: 80,
+    kIOPSMaxCapacityKey as String: 100
+  ]
+
+  let battery = BatteryDiagnosticsCollector(
+    powerSources: { [BatteryPowerSourceDescription(dictionary: dictionary)] },
+    registrySnapshot: {
+      BatteryRegistrySnapshot(cycleCount: 120, maxCapacity: 110, designCapacity: 5000, condition: "Good")
+    }
+  ).currentBattery(now: Date())
+
+  let capacity = try #require(battery.metrics.first { $0.title == "Maximum Capacity" })
+
+  #expect(capacity.dataMode == .unavailable)
+  #expect(capacity.value == "Unavailable")
+}
+
 @Test func batteryDictionaryProducesLiveChargeSourceAndChargingState() throws {
   let dictionary: [String: Any] = [
     kIOPSTypeKey as String: kIOPSInternalBatteryType as String,
