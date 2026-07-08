@@ -25,7 +25,7 @@ struct CorewiseApp: App {
     MenuBarExtra("Corewise", systemImage: "waveform.path.ecg") {
       MenuBarMonitorView(store: store)
     }
-    .menuBarExtraStyle(.menu)
+    .menuBarExtraStyle(.window)
   }
 }
 
@@ -46,68 +46,125 @@ private struct MenuBarMonitorView: View {
   }
 
   var body: some View {
-    if let snapshot {
-      Text("Corewise")
-        .font(.headline)
-      Divider()
-      MenuMetricRow(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent))
-      MenuMetricRow(title: "Memory", value: menuBytes(snapshot.performance.memory.usedBytes))
-      MenuMetricRow(title: "Swap", value: snapshot.performance.memory.swapUsedBytes.map(menuBytes) ?? "N/A")
-      MenuMetricRow(title: "Top CPU", value: processValue(topCPUProcess, metric: .cpu))
-      MenuMetricRow(title: "Top Memory", value: processValue(topMemoryProcess, metric: .memory))
-      Divider()
-    } else {
-      Text("Checking your Mac...")
-      Divider()
-    }
+    VStack(alignment: .leading, spacing: 14) {
+      HStack(alignment: .center, spacing: 10) {
+        Image(systemName: "waveform.path.ecg")
+          .font(.system(size: 17, weight: .semibold))
+          .foregroundStyle(.green)
+          .frame(width: 30, height: 30)
+          .background(.green.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-    Button {
-      openWindow(id: "main")
-      NSApp.activate(ignoringOtherApps: true)
-    } label: {
-      Label("Open Corewise", systemImage: "arrow.up.forward.app")
-    }
+        VStack(alignment: .leading, spacing: 1) {
+          Text("Corewise")
+            .font(.headline.weight(.semibold))
+          Text(snapshot == nil ? "Checking your Mac" : "Live local signals")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
 
-    Button {
-      Task {
-        await store.refresh()
+        Spacer(minLength: 0)
+
+        Button {
+          Task {
+            await store.refresh()
+          }
+        } label: {
+          Image(systemName: "arrow.clockwise")
+        }
+        .buttonStyle(.borderless)
+        .help("Refresh")
       }
-    } label: {
-      Label("Refresh", systemImage: "arrow.clockwise")
+
+      if let snapshot {
+        HStack(spacing: 8) {
+          MenuMetricCard(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), tint: .blue)
+          MenuMetricCard(title: "Memory", value: menuBytes(snapshot.performance.memory.usedBytes), tint: .green)
+          MenuMetricCard(title: "Swap", value: snapshot.performance.memory.swapUsedBytes.map(menuBytes) ?? "N/A", tint: .orange)
+        }
+
+        VStack(spacing: 8) {
+          MenuProcessRow(title: "Top CPU", name: topCPUProcess?.displayName ?? "N/A", value: topCPUProcess.map { "\(number($0.cpuPercent))%" } ?? "N/A")
+          MenuProcessRow(title: "Top Memory", name: topMemoryProcess?.displayName ?? "N/A", value: topMemoryProcess.map { menuBytes($0.observedMemoryBytes) } ?? "N/A")
+        }
+      } else {
+        ProgressView()
+          .frame(maxWidth: .infinity, minHeight: 92)
+      }
+
+      Divider()
+
+      Button {
+        openWindow(id: "main")
+        NSApp.activate(ignoringOtherApps: true)
+      } label: {
+        Label("Open Corewise", systemImage: "arrow.up.forward.app")
+          .frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.borderedProminent)
     }
+    .padding(16)
+    .frame(width: 320)
   }
 
-  private enum ProcessMetric {
-    case cpu
-    case memory
-  }
+}
 
-  private func processValue(_ process: ProcessObservation?, metric: ProcessMetric) -> String {
-    guard let process else {
-      return "N/A"
-    }
+private struct MenuMetricCard: View {
+  var title: String
+  var value: String
+  var tint: Color
 
-    switch metric {
-    case .cpu:
-      return "\(process.displayName) \(number(process.cpuPercent))%"
-    case .memory:
-      return "\(process.displayName) \(menuBytes(process.observedMemoryBytes))"
+  var body: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(title)
+        .font(.caption2.weight(.semibold))
+        .foregroundStyle(.secondary)
+      Text(value)
+        .font(.system(size: 16, weight: .semibold, design: .rounded))
+        .monospacedDigit()
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
     }
+    .padding(10)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
   }
 }
 
-private struct MenuMetricRow: View {
+private struct MenuProcessRow: View {
   var title: String
+  var name: String
   var value: String
 
   var body: some View {
-    HStack {
-      Text(title)
-      Spacer()
+    HStack(alignment: .firstTextBaseline, spacing: 10) {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(title)
+          .font(.caption2.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Text(shortName(name))
+          .font(.callout.weight(.semibold))
+          .lineLimit(1)
+      }
+
+      Spacer(minLength: 8)
+
       Text(value)
+        .font(.callout.weight(.semibold))
         .monospacedDigit()
         .foregroundStyle(.secondary)
+        .lineLimit(1)
     }
+    .padding(.horizontal, 10)
+    .padding(.vertical, 9)
+    .background(.quinary, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+  }
+
+  private func shortName(_ value: String) -> String {
+    if value.count <= 24 {
+      return value
+    }
+
+    return String(value.prefix(21)) + "..."
   }
 }
 
