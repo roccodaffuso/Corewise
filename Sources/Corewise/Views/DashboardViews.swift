@@ -1561,7 +1561,7 @@ private func storageBreakdownColor(for item: ChartDatum) -> Color {
   case "Available":
     Color(nsColor: .systemGreen)
   case "Used":
-    Color(nsColor: .systemBlue)
+    Color(nsColor: .systemRed)
   default:
     color(for: item.status)
   }
