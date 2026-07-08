@@ -1250,7 +1250,7 @@ private struct ProcessObservationTable: View {
   var processes: [ProcessObservation]
 
   var body: some View {
-    PremiumPanel(title: "Process Details", subtitle: "Top 24 individual rows from the current live sample.", systemImage: "list.bullet.rectangle") {
+    PremiumPanel(title: "Processes", subtitle: "Top 24 individual rows from the current live sample.", systemImage: "list.bullet.rectangle") {
       if processes.isEmpty {
         EmptyDiagnosticState(
           title: "No process crossed the current display threshold",
@@ -1258,11 +1258,20 @@ private struct ProcessObservationTable: View {
           dataMode: .unavailable
         )
       } else {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 8) {
+          SourceNote(
+            text: "Live process data from public macOS process APIs. Memory is observed footprint when available, otherwise resident memory.",
+            dataMode: .live
+          )
+
+          VStack(spacing: 0) {
           ProcessTableHeader(mode: mode)
-          ForEach(processes.prefix(24)) { process in
-            ProcessTableRow(process: process, mode: mode)
-            Divider()
+            ForEach(Array(processes.prefix(24).enumerated()), id: \.element.id) { index, process in
+              ProcessTableRow(process: process, mode: mode, index: index)
+              if index < min(processes.count, 24) - 1 {
+                Divider()
+              }
+            }
           }
         }
         .font(.caption)
@@ -1273,18 +1282,22 @@ private struct ProcessObservationTable: View {
 
 private struct ProcessTableHeader: View {
   var mode: PerformanceMode
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    Grid(horizontalSpacing: 12, verticalSpacing: 0) {
-      GridRow {
-        header("Process").gridColumnAlignment(.leading)
-        header(mode == .cpu ? "% CPU" : "Memory").gridColumnAlignment(.trailing)
-        header(mode == .cpu ? "Memory" : "RSS").gridColumnAlignment(.trailing)
-        header("PID").gridColumnAlignment(.trailing)
-      }
+    HStack(spacing: 12) {
+      header("Process")
+        .frame(maxWidth: .infinity, alignment: .leading)
+      header(mode == .cpu ? "% CPU" : "Memory")
+        .frame(width: 92, alignment: .trailing)
+      header(mode == .cpu ? "Memory" : "RSS")
+        .frame(width: 86, alignment: .trailing)
+      header("PID")
+        .frame(width: 58, alignment: .trailing)
     }
-    .padding(.horizontal, 8)
-    .padding(.bottom, 6)
+    .padding(.horizontal, 12)
+    .padding(.vertical, 7)
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
   }
 
   private func header(_ title: String) -> some View {
@@ -1298,48 +1311,49 @@ private struct ProcessTableHeader: View {
 private struct ProcessTableRow: View {
   var process: ProcessObservation
   var mode: PerformanceMode
+  var index: Int
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    Grid(horizontalSpacing: 14, verticalSpacing: 0) {
-      GridRow {
-        VStack(alignment: .leading, spacing: 2) {
-          HStack(spacing: 6) {
-            Text(process.displayName)
-              .font(.caption.weight(.semibold))
-              .lineLimit(1)
-            if process.processName == "Corewise" {
-              Text("This app")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.blue)
-            }
-          }
-          Text(processContext)
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
+    HStack(spacing: 12) {
+      VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 6) {
+          Text(process.displayName)
+            .font(.caption.weight(.semibold))
             .lineLimit(1)
-            .truncationMode(.tail)
+          if process.processName == "Corewise" {
+            Text("This app")
+              .font(.caption2.weight(.semibold))
+              .foregroundStyle(CorewiseVisual.accent)
+          }
         }
-        .gridColumnAlignment(.leading)
-
-        Text(primaryValue)
-          .font(.caption.weight(.semibold))
-          .monospacedDigit()
-          .foregroundStyle(color(for: process.status))
-          .gridColumnAlignment(.trailing)
-
-        Text(secondaryValue)
-          .monospacedDigit()
-          .foregroundStyle(.secondary)
-          .gridColumnAlignment(.trailing)
-
-        Text("\(process.pid)")
-          .monospacedDigit()
-          .foregroundStyle(.secondary)
-          .gridColumnAlignment(.trailing)
+        Text(processContext)
+          .font(.caption2)
+          .foregroundStyle(.tertiary)
+          .lineLimit(1)
+          .truncationMode(.tail)
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
+
+      Text(primaryValue)
+        .font(.caption.weight(.semibold))
+        .monospacedDigit()
+        .foregroundStyle(color(for: process.status))
+        .frame(width: 92, alignment: .trailing)
+
+      Text(secondaryValue)
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
+        .frame(width: 86, alignment: .trailing)
+
+      Text("\(process.pid)")
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
+        .frame(width: 58, alignment: .trailing)
     }
-    .padding(.horizontal, 8)
-    .padding(.vertical, 8)
+    .padding(.horizontal, 12)
+    .padding(.vertical, 9)
+    .background(rowFill, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
   }
 
   private var primaryValue: String {
@@ -1376,6 +1390,10 @@ private struct ProcessTableRow: View {
       return "App process"
     }
     return "Background process"
+  }
+
+  private var rowFill: Color {
+    index.isMultiple(of: 2) ? CorewiseVisual.tileFill(colorScheme: colorScheme) : .clear
   }
 }
 

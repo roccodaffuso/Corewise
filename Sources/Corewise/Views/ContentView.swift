@@ -65,37 +65,16 @@ struct ContentView: View {
       List(selection: $selectedSectionID) {
         Section {
           ForEach(DashboardSection.allCases) { section in
-            HStack(spacing: 10) {
-              Image(systemName: section.systemImage)
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(section.rawValue == selectedSectionID ? CorewiseVisual.accent : .secondary)
-                .frame(width: 18)
-
-              VStack(alignment: .leading, spacing: 2) {
-                Text(section.title)
-                Text(section.detail)
-                  .font(.caption)
-                  .foregroundStyle(.secondary)
-                  .lineLimit(1)
-              }
-            }
+            SidebarSectionRow(section: section, isSelected: section.rawValue == selectedSectionID)
             .tag(section.rawValue)
           }
         } header: {
-          VStack(alignment: .leading, spacing: 5) {
-            Text("Corewise")
-              .font(.headline)
-              .foregroundStyle(.primary)
-            Text("Know what your Mac is really doing.")
-              .font(.caption)
-              .foregroundStyle(.secondary)
-              .textCase(nil)
-          }
+          SidebarHeader()
         }
       }
       .listStyle(.sidebar)
       .tint(CorewiseVisual.accent)
-      .navigationSplitViewColumnWidth(min: 230, ideal: 260)
+      .navigationSplitViewColumnWidth(min: 240, ideal: 268)
     } detail: {
       ZStack {
         MacWindowMaterialView()
@@ -124,12 +103,67 @@ struct ContentView: View {
             }
           } label: {
             Label("Refresh", systemImage: "arrow.clockwise")
+              .labelStyle(.iconOnly)
           }
+          .buttonStyle(.borderless)
+          .controlSize(.small)
           .disabled(store.isRefreshing)
           .help("Refresh health snapshot")
         }
       }
     }
+  }
+}
+
+private struct SidebarHeader: View {
+  var body: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      HStack(spacing: 8) {
+        Image(systemName: "waveform.path.ecg")
+          .font(.caption.weight(.bold))
+          .foregroundStyle(CorewiseVisual.accent)
+        Text("Corewise")
+          .font(.headline.weight(.semibold))
+          .foregroundStyle(.primary)
+      }
+
+      Text("Know what your Mac is really doing.")
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .textCase(nil)
+        .lineLimit(2)
+    }
+    .padding(.top, 8)
+    .padding(.bottom, 4)
+  }
+}
+
+private struct SidebarSectionRow: View {
+  var section: DashboardSection
+  var isSelected: Bool
+
+  var body: some View {
+    HStack(spacing: 11) {
+      Image(systemName: section.systemImage)
+        .font(.system(size: 13, weight: .semibold))
+        .symbolRenderingMode(.hierarchical)
+        .foregroundStyle(isSelected ? CorewiseVisual.accent : .secondary)
+        .frame(width: 23, height: 23)
+        .background(
+          RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .fill(isSelected ? CorewiseVisual.accent.opacity(0.13) : Color.clear)
+        )
+
+      VStack(alignment: .leading, spacing: 1) {
+        Text(section.title)
+          .font(.callout.weight(isSelected ? .semibold : .medium))
+        Text(section.detail)
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+      }
+    }
+    .padding(.vertical, 3)
   }
 }
 

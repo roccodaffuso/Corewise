@@ -8,6 +8,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 
 - Use native SwiftUI controls, system materials, soft transparency, and SF Symbols.
 - The app window background should be a real macOS material surface through a narrow AppKit bridge, with only a transparent color wash above it.
+- The app chrome should follow macOS source-list conventions: a restrained sidebar, compact row icons, icon-only toolbar actions, and no oversized navigation treatments.
 - Prefer natural, muted system-adaptive colors: teal/blue for information, moss green for live/good, amber for attention, red only for critical or used storage.
 - The app detail background should feel layered and translucent, not flat black or generic dashboard gray.
 - Panels should use material plus a subtle adaptive tint and hairline, with no heavy shadows or decorative gradients.
@@ -23,6 +24,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Data provenance badges must stay single-line. If a panel is narrow, wrap the surrounding layout rather than compressing badge text vertically.
 - Storage breakdown uses red for used space and green for available space. This is a storage-capacity convention, not a destructive-action cue.
 - Performance pages should lead with summary pressure and a compact top list. Full process rows should hide long filesystem paths behind short context labels unless the user asks for raw detail.
+- Process tables should use stable right-aligned numeric columns, monospaced digits, subtle alternating row fills, and a single table-level source note instead of per-row provenance noise.
 - Dense process rows should not repeat `Live` badges on every row when the whole table has a source note.
 - Performance explanations should be phrased as context from live process names, not causal proof. Use "may", "usually", and "can be normal" for system processes and helpers.
 - Startup inventory should use a compact table for plist rows instead of stacked diagnostic cards, with Finder reveal as the only row action.
