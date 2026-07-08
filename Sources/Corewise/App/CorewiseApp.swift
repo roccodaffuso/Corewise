@@ -63,16 +63,6 @@ private struct MenuBarMonitorView: View {
         }
 
         Spacer(minLength: 0)
-
-        Button {
-          Task {
-            await store.refresh()
-          }
-        } label: {
-          Image(systemName: "arrow.clockwise")
-        }
-        .buttonStyle(.borderless)
-        .help("Refresh")
       }
 
       if let snapshot {
