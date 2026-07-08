@@ -80,7 +80,7 @@ struct StorageView: View {
         metric: storage.summary
       )
 
-      HStack(alignment: .top, spacing: 14) {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14)], spacing: 14) {
         PremiumPanel(title: "Breakdown", subtitle: "GB by category", systemImage: "chart.pie") {
           StorageBreakdownChart(data: storage.breakdown)
         }
@@ -103,14 +103,25 @@ struct StorageView: View {
       )
 
       MetricBoard(metrics: storage.metrics)
-      StorageItemGroup(title: "Large Folders", items: storage.largeFolders)
-      StorageItemGroup(title: "Large Files", items: storage.largeFiles)
-      StorageItemGroup(title: "Developer Caches", items: storage.developerCaches)
-      StorageItemGroup(title: "Browser Caches", items: storage.browserCaches)
+      if hasStorageScanRows {
+        StorageItemGroup(title: "Large Folders", items: storage.largeFolders)
+        StorageItemGroup(title: "Large Files", items: storage.largeFiles)
+        StorageItemGroup(title: "Developer Caches", items: storage.developerCaches)
+        StorageItemGroup(title: "Browser Caches", items: storage.browserCaches)
+      } else {
+        StorageScanEmptySummary()
+      }
       PriorityPanel(title: "Findings", subtitle: "What the storage picture means.", findings: storage.findings)
       SafeActionPanel(title: "Safe actions", actions: storage.actions)
       SourceNote(text: storage.sourceNote, dataMode: storage.summary.dataMode)
     }
+  }
+
+  private var hasStorageScanRows: Bool {
+    !storage.largeFolders.isEmpty
+      || !storage.largeFiles.isEmpty
+      || !storage.developerCaches.isEmpty
+      || !storage.browserCaches.isEmpty
   }
 }
 
@@ -574,7 +585,8 @@ private struct MetricTile: View {
         Text(metric.source)
           .font(.caption2)
           .foregroundStyle(.tertiary)
-          .lineLimit(1)
+          .lineLimit(2)
+          .fixedSize(horizontal: false, vertical: true)
       }
     }
     .padding(12)
@@ -707,25 +719,41 @@ private struct StorageBreakdownChart: View {
   var data: [ChartDatum]
 
   var body: some View {
-    HStack(alignment: .center, spacing: 18) {
-      Chart(data) { item in
-        SectorMark(
-          angle: .value("Size", item.value),
-          innerRadius: .ratio(0.64),
-          angularInset: 1.2
-        )
-        .foregroundStyle(color(for: item.status))
+    ViewThatFits(in: .horizontal) {
+      HStack(alignment: .center, spacing: 18) {
+        chart
+        legend
       }
-      .chartLegend(.hidden)
-      .frame(width: 154, height: 154)
 
-      VStack(alignment: .leading, spacing: 7) {
-        ForEach(data) { item in
-          LegendRow(title: item.title, value: "\(number(item.value)) \(item.unit)", dataMode: item.dataMode, status: item.status)
-        }
+      VStack(alignment: .leading, spacing: 12) {
+        chart
+          .frame(maxWidth: .infinity, alignment: .center)
+        legend
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  private var chart: some View {
+    Chart(data) { item in
+      SectorMark(
+        angle: .value("Size", item.value),
+        innerRadius: .ratio(0.64),
+        angularInset: 1.2
+      )
+      .foregroundStyle(storageBreakdownColor(for: item))
+    }
+    .chartLegend(.hidden)
+    .frame(width: 142, height: 142)
+  }
+
+  private var legend: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      ForEach(data) { item in
+        LegendRow(title: item.title, value: "\(number(item.value)) \(item.unit)", dataMode: item.dataMode, status: item.status)
+      }
+    }
+    .frame(minWidth: 174, alignment: .leading)
   }
 }
 
@@ -1149,6 +1177,34 @@ private struct StorageItemGroup: View {
   }
 }
 
+private struct StorageScanEmptySummary: View {
+  private let categories = ["Large folders", "Large files", "Developer caches", "Browser caches"]
+
+  var body: some View {
+    PremiumPanel(title: "Folder details", subtitle: "Available after a targeted scan", systemImage: "folder.badge.questionmark") {
+      VStack(alignment: .leading, spacing: 12) {
+        EmptyDiagnosticState(
+          title: "Choose a folder to scan",
+          message: "Corewise shows largest folders, files, and cache-like areas only after you select a folder.",
+          dataMode: .unavailable
+        )
+
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 128), spacing: 8)], alignment: .leading, spacing: 8) {
+          ForEach(categories, id: \.self) { category in
+            Text(category)
+              .font(.caption.weight(.medium))
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+              .padding(.horizontal, 9)
+              .padding(.vertical, 5)
+              .background(.quaternary.opacity(0.55), in: Capsule())
+          }
+        }
+      }
+    }
+  }
+}
+
 private struct StartupItemGroup: View {
   var title: String
   var items: [StartupItem]
@@ -1345,10 +1401,13 @@ private struct LegendRow: View {
       StatusDot(status: status)
       Text(title)
         .lineLimit(1)
+        .truncationMode(.tail)
       Spacer(minLength: 8)
       DataModeBadge(dataMode: dataMode)
       Text(value)
         .foregroundStyle(.secondary)
+        .monospacedDigit()
+        .fixedSize(horizontal: true, vertical: false)
     }
     .font(.callout)
   }
@@ -1388,6 +1447,8 @@ private struct DataModeBadge: View {
     Text(dataMode.rawValue)
       .font(.caption2.weight(.semibold))
       .foregroundStyle(color(for: dataMode))
+      .lineLimit(1)
+      .fixedSize(horizontal: true, vertical: false)
       .padding(.horizontal, 7)
       .padding(.vertical, 3)
       .background(color(for: dataMode).opacity(0.12), in: Capsule())
@@ -1492,5 +1553,16 @@ private func color(for dataMode: DataMode) -> Color {
     Color(nsColor: .tertiaryLabelColor)
   case .avoided:
     Color(nsColor: .systemRed)
+  }
+}
+
+private func storageBreakdownColor(for item: ChartDatum) -> Color {
+  switch item.title {
+  case "Available":
+    Color(nsColor: .systemGreen)
+  case "Used":
+    Color(nsColor: .systemBlue)
+  default:
+    color(for: item.status)
   }
 }

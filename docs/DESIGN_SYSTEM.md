@@ -15,6 +15,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Put operational live diagnostics before explanatory access panels in the first viewport.
 - Do not use placeholder score states as the primary hero. The Overview hero must show a verifiable fact: live signals, coverage, and update time.
 - Coverage numbers must count diagnostic signal families, not table rows such as individual processes or launch plist entries.
+- Data provenance badges must stay single-line. If a panel is narrow, wrap the surrounding layout rather than compressing badge text vertically.
 
 ## Status Language
 
