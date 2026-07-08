@@ -58,24 +58,38 @@ struct ContentView: View {
 
   var body: some View {
     NavigationSplitView {
-      List(DashboardSection.allCases, selection: $selectedSectionID) { section in
-        HStack(spacing: 10) {
-          Image(systemName: section.systemImage)
-            .foregroundStyle(.secondary)
-            .frame(width: 18)
+      List(selection: $selectedSectionID) {
+        Section {
+          ForEach(DashboardSection.allCases) { section in
+            HStack(spacing: 10) {
+              Image(systemName: section.systemImage)
+                .foregroundStyle(.secondary)
+                .frame(width: 18)
 
-          VStack(alignment: .leading, spacing: 2) {
-            Text(section.title)
-            Text(section.detail)
+              VStack(alignment: .leading, spacing: 2) {
+                Text(section.title)
+                Text(section.detail)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
+              }
+            }
+            .tag(section.rawValue)
+          }
+        } header: {
+          VStack(alignment: .leading, spacing: 5) {
+            Text("Corewise")
+              .font(.headline)
+              .foregroundStyle(.primary)
+            Text("Know what your Mac is really doing.")
               .font(.caption)
               .foregroundStyle(.secondary)
-              .lineLimit(1)
+              .textCase(nil)
           }
         }
-        .tag(section.rawValue)
       }
       .listStyle(.sidebar)
-      .navigationSplitViewColumnWidth(min: 220, ideal: 250)
+      .navigationSplitViewColumnWidth(min: 230, ideal: 260)
     } detail: {
       Group {
         if let snapshot = store.snapshot {
@@ -119,15 +133,15 @@ private struct DetailRouter: View {
         case .performance:
           PerformanceView(performance: snapshot.performance)
         case .startup:
-          StartupView(items: snapshot.startupItems)
+          StartupView(startup: snapshot.startup)
         case .thermal:
           ThermalView(thermal: snapshot.thermal)
         case .issues:
-          IssuesView(issues: snapshot.crashIssues)
+          IssuesView(appIssues: snapshot.appIssues)
         }
       }
-      .padding(24)
-      .frame(maxWidth: 980, alignment: .leading)
+      .padding(26)
+      .frame(maxWidth: 1160, alignment: .leading)
     }
     .navigationTitle(section.title)
   }

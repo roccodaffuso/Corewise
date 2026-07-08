@@ -28,7 +28,7 @@ enum OverallStatus: String, CaseIterable {
   }
 }
 
-enum FindingSeverity: String {
+enum FindingSeverity: String, CaseIterable {
   case good = "Good"
   case info = "Info"
   case warning = "Warning"
@@ -37,75 +37,185 @@ enum FindingSeverity: String {
 
 struct HealthSnapshot {
   var generatedAt: Date
+  var healthScore: Int
   var overallStatus: OverallStatus
+  var overviewMetrics: [DiagnosticMetric]
   var battery: BatteryHealth
   var storage: StorageHealth
   var performance: PerformanceHealth
-  var startupItems: [StartupItem]
+  var startup: StartupHealth
   var thermal: ThermalHealth
-  var crashIssues: [CrashIssue]
+  var appIssues: AppIssuesHealth
   var suggestions: [Suggestion]
 }
 
+struct DiagnosticMetric: Identifiable {
+  let id = UUID()
+  var title: String
+  var value: String
+  var unit: String
+  var status: FindingSeverity
+  var severityScore: Int
+  var explanation: String
+  var source: String
+  var confidence: String
+  var recommendedAction: String
+  var lastUpdated: Date
+}
+
+struct DiagnosticFinding: Identifiable {
+  let id = UUID()
+  var title: String
+  var detail: String
+  var status: FindingSeverity
+  var severityScore: Int
+}
+
+struct SafeAction: Identifiable {
+  let id = UUID()
+  var title: String
+  var body: String
+  var systemImage: String
+  var status: FindingSeverity
+}
+
+struct ChartDatum: Identifiable {
+  let id = UUID()
+  var title: String
+  var value: Double
+  var unit: String
+  var status: FindingSeverity
+  var detail: String
+}
+
 struct BatteryHealth {
-  var cycleCount: Int
-  var maximumCapacityPercent: Int
-  var condition: String
-  var recentEnergyImpact: String
+  var summary: DiagnosticMetric
+  var metrics: [DiagnosticMetric]
+  var findings: [DiagnosticFinding]
+  var actions: [SafeAction]
   var sourceNote: String
 }
 
 struct StorageHealth {
-  var freeSpaceDescription: String
+  var summary: DiagnosticMetric
+  var totalGB: Double
+  var availableGB: Double
+  var usedGB: Double
+  var availablePercent: Double
+  var metrics: [DiagnosticMetric]
+  var breakdown: [ChartDatum]
   var largeFolders: [StorageItem]
-  var largeCaches: [StorageItem]
-  var hugeFiles: [StorageItem]
+  var largeFiles: [StorageItem]
+  var developerCaches: [StorageItem]
+  var browserCaches: [StorageItem]
+  var spaceOffenders: [ChartDatum]
+  var findings: [DiagnosticFinding]
+  var actions: [SafeAction]
   var sourceNote: String
 }
 
 struct StorageItem: Identifiable {
   let id = UUID()
-  var name: String
-  var detail: String
-  var sizeDescription: String
-  var severity: FindingSeverity
+  var title: String
+  var path: String
+  var sizeGB: Double
+  var status: FindingSeverity
+  var severityScore: Int
+  var explanation: String
+  var source: String
+  var confidence: String
+  var recommendedAction: String
+  var lastUpdated: Date
 }
 
 struct PerformanceHealth {
+  var summary: DiagnosticMetric
+  var metrics: [DiagnosticMetric]
   var cpuProcesses: [ProcessSample]
   var memoryProcesses: [ProcessSample]
+  var findings: [DiagnosticFinding]
+  var actions: [SafeAction]
   var sourceNote: String
 }
 
 struct ProcessSample: Identifiable {
   let id = UUID()
   var name: String
-  var metric: String
-  var detail: String
-  var severity: FindingSeverity
+  var value: Double
+  var unit: String
+  var status: FindingSeverity
+  var severityScore: Int
+  var explanation: String
+  var source: String
+  var confidence: String
+  var recommendedAction: String
+  var lastUpdated: Date
+}
+
+struct StartupHealth {
+  var summary: DiagnosticMetric
+  var metrics: [DiagnosticMetric]
+  var loginItems: [StartupItem]
+  var launchAgents: [StartupItem]
+  var launchDaemons: [StartupItem]
+  var backgroundItems: [StartupItem]
+  var privilegedHelpers: [StartupItem]
+  var findings: [DiagnosticFinding]
+  var actions: [SafeAction]
+  var sourceNote: String
 }
 
 struct StartupItem: Identifiable {
   let id = UUID()
-  var name: String
-  var location: String
-  var probableImpact: String
-  var severity: FindingSeverity
+  var title: String
+  var kind: String
+  var path: String
+  var startupImpact: String
+  var signedState: String
+  var recentlyAdded: Bool
+  var status: FindingSeverity
+  var severityScore: Int
+  var explanation: String
+  var source: String
+  var confidence: String
+  var recommendedAction: String
+  var lastUpdated: Date
 }
 
 struct ThermalHealth {
-  var state: String
-  var detail: String
+  var summary: DiagnosticMetric
+  var metrics: [DiagnosticMetric]
+  var contributors: [DiagnosticFinding]
+  var actions: [SafeAction]
   var sourceNote: String
-  var severity: FindingSeverity
+}
+
+struct AppIssuesHealth {
+  var summary: DiagnosticMetric
+  var metrics: [DiagnosticMetric]
+  var crashes: [CrashIssue]
+  var crashesByApp: [ChartDatum]
+  var findings: [DiagnosticFinding]
+  var actions: [SafeAction]
+  var sourceNote: String
 }
 
 struct CrashIssue: Identifiable {
   let id = UUID()
   var appName: String
-  var countDescription: String
-  var detail: String
-  var severity: FindingSeverity
+  var bundleID: String
+  var appVersion: String
+  var crashesLast7Days: Int
+  var crashesLast30Days: Int
+  var lastCrashDate: Date
+  var repeatedCrash: Bool
+  var diagnosticPermissionState: String
+  var status: FindingSeverity
+  var severityScore: Int
+  var explanation: String
+  var source: String
+  var confidence: String
+  var recommendedAction: String
 }
 
 struct Suggestion: Identifiable {

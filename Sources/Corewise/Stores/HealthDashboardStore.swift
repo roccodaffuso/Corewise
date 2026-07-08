@@ -25,4 +25,13 @@ final class HealthDashboardStore: ObservableObject {
 
     isRefreshing = false
   }
+
+  func startLiveRefresh(intervalSeconds: UInt64 = 2) async {
+    await refresh()
+
+    while !Task.isCancelled {
+      try? await Task.sleep(nanoseconds: intervalSeconds * 1_000_000_000)
+      await refresh()
+    }
+  }
 }

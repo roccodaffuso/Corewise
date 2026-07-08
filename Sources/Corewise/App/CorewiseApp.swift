@@ -10,7 +10,7 @@ struct CorewiseApp: App {
       ContentView(store: store)
         .frame(minWidth: 980, minHeight: 680)
         .task {
-          await store.refresh()
+          await store.startLiveRefresh()
         }
     }
     .windowStyle(.hiddenTitleBar)
