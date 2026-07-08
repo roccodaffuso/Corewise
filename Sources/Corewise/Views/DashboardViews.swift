@@ -172,6 +172,7 @@ struct PerformanceView: View {
       SourceNote(text: "Process rows are live. Corewise shows observed memory, RSS, CPU, PID, and process ownership from public macOS APIs; row-level badges are intentionally omitted to keep the table readable.", dataMode: .live)
       MetricBoard(metrics: performance.metrics)
 
+      ProcessInsightsPanel(insights: performance.insights)
       PriorityPanel(title: "Findings", subtitle: "Signals that deserve interpretation.", findings: performance.findings)
       SafeActionPanel(title: "Safe actions", actions: performance.actions)
       SourceNote(text: performance.sourceNote, dataMode: performance.summary.dataMode)
@@ -950,6 +951,48 @@ private struct PerformancePressurePanel: View {
       systemImage: mode == .cpu ? "cpu" : "memorychip"
     ) {
       ProcessBarChart(processes: processes, mode: mode)
+    }
+  }
+}
+
+private struct ProcessInsightsPanel: View {
+  var insights: [ProcessInsight]
+
+  var body: some View {
+    PremiumPanel(title: "What this means", subtitle: "Plain-language context from live process names only.", systemImage: "text.magnifyingglass") {
+      if insights.isEmpty {
+        EmptyDiagnosticState(
+          title: "No named process patterns detected",
+          message: "Corewise still shows the live process table; there are no extra explanations for this sample yet.",
+          dataMode: .unavailable
+        )
+      } else {
+        VStack(alignment: .leading, spacing: 10) {
+          ForEach(insights) { insight in
+            HStack(alignment: .top, spacing: 10) {
+              StatusDot(status: insight.status)
+                .padding(.top, 5)
+              VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                  Text(insight.title)
+                    .font(.callout.weight(.semibold))
+                  Spacer(minLength: 8)
+                  DataModeBadge(dataMode: insight.dataMode)
+                }
+                Text(insight.detail)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .fixedSize(horizontal: false, vertical: true)
+                Text(insight.matchedProcessNames.joined(separator: ", "))
+                  .font(.caption2)
+                  .foregroundStyle(.tertiary)
+                  .lineLimit(1)
+                  .truncationMode(.tail)
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

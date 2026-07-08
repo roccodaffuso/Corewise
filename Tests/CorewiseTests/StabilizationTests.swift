@@ -81,6 +81,27 @@ import Testing
   #expect(SystemMetricsSampler.machTicksToNanoseconds(UInt64(timebase.denom) * 1_000_000) == UInt64(timebase.numer) * 1_000_000)
 }
 
+@Test func processInsightsExplainLivePatternsWithoutCausalClaims() {
+  let processes = [
+    process("Google Chrome Helper (Renderer)", cpu: 3, appName: "Google Chrome"),
+    process("WindowServer", cpu: 8, path: "/System/Library/PrivateFrameworks/SkyLight.framework/WindowServer"),
+    process("mdworker_shared", cpu: 2),
+    process("fileproviderd", cpu: 2, path: "/System/Library/Frameworks/FileProvider.framework/Support/fileproviderd"),
+    process("Corewise", cpu: 1)
+  ]
+
+  let insights = ProcessInsightBuilder().insights(for: processes)
+  let titles = insights.map(\.title)
+
+  #expect(titles.contains("Helpers belong to apps"))
+  #expect(titles.contains("WindowServer is display work"))
+  #expect(titles.contains("Spotlight may be indexing"))
+  #expect(titles.contains("Cloud sync can be visible"))
+  #expect(titles.contains("Corewise includes itself"))
+  #expect(insights.allSatisfy { $0.dataMode == .live })
+  #expect(!insights.map(\.detail).joined(separator: " ").localizedCaseInsensitiveContains("kill"))
+}
+
 @Test func dataCoverageSummaryCountsModes() {
   let summary = DataCoverageSummary(modes: [.live, .live, .planned, .unavailable, .avoided])
 
@@ -234,13 +255,20 @@ private func instant(processes: [ProcessObservation]) -> InstantSystemMetrics {
   )
 }
 
-private func process(_ name: String, cpu: Double, residentMB: UInt64 = 128, footprintMB: UInt64 = 160) -> ProcessObservation {
+private func process(
+  _ name: String,
+  cpu: Double,
+  residentMB: UInt64 = 128,
+  footprintMB: UInt64 = 160,
+  appName: String? = nil,
+  path: String? = nil
+) -> ProcessObservation {
   ProcessObservation(
     pid: Int32(abs(name.hashValue % 30_000) + 100),
     processName: name,
     displayName: name,
-    appName: nil,
-    path: nil,
+    appName: appName,
+    path: path,
     user: "tester",
     cpuPercent: cpu,
     cpuTimeSeconds: 10,
@@ -277,6 +305,7 @@ private func allDataModes(in snapshot: HealthSnapshot) -> [DataMode] {
     + snapshot.performance.metrics.map(\.dataMode)
     + snapshot.performance.processes.map(\.dataMode)
     + snapshot.performance.appGroups.map(\.dataMode)
+    + snapshot.performance.insights.map(\.dataMode)
     + snapshot.startup.metrics.map(\.dataMode)
     + snapshot.startup.loginItems.map(\.dataMode)
     + snapshot.startup.launchAgents.map(\.dataMode)

@@ -173,3 +173,9 @@ Reason: Repeated badges make operational data harder to scan. Provenance remains
 Decision: Diagnostic Report exports a local Markdown summary to the clipboard only. It must not upload, persist, include stack traces, include raw crash report bodies, or include document contents.
 
 Reason: The report should be useful like a diagnostic summary while staying inside Corewise's local-first and non-destructive trust model.
+
+## 2026-07-08: Process Insights Are Explanatory, Not Causal
+
+Decision: Corewise may explain common live process patterns such as helpers, renderers, WindowServer, Spotlight indexing, file provider sync, and Corewise itself, but it must not present those explanations as proof of root cause.
+
+Reason: Process names are useful context, but a serious diagnostic app should avoid false certainty or automatic remediation advice.

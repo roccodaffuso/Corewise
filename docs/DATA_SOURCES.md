@@ -74,6 +74,7 @@ Statuses:
 | Sustained high CPU | Implemented | In-memory recent process history | Medium | Unavailable until enough samples are collected; not persisted. |
 | WindowServer impact | Planned | Process sample plus explanation | Low | Needs careful wording because high usage can be normal. |
 | Process-row provenance | Implemented | Table-level live source note | High | Row-level `Live` badges are intentionally omitted in dense tables to preserve readability. |
+| Process insights | Implemented | Names, app owners, and paths from live process rows | Medium | Explains common patterns only; does not prove cause or recommend killing processes. |
 
 ## Startup
 

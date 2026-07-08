@@ -13,6 +13,7 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 Real-data acquisition baseline pushed: `db21865` (`Add real data acquisition flows`).
 Current state: real-data acquisition started; Performance parity is partially implemented through live process rows, observed memory, RSS, and footprint, but Corewise still does not claim exact Activity Monitor parity.
 Product realignment: after last30days research, Corewise is positioned as local diagnostics and explanation, not automatic cleanup or Activity Monitor exact parity.
+Remaining last30days work started: Corewise is now moving from realignment foundation into deeper workflow polish for Performance explanations, Storage exploration, Report quality, Startup/App Issues readability, and a light menu bar monitor.
 
 ## Implemented
 
@@ -21,6 +22,7 @@ Product realignment: after last30days research, Corewise is positioned as local 
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
 - Overview leads with `Live Signals`, concrete first-viewport system signals, and signal-family coverage instead of a placeholder health score. Coverage intentionally does not count every process or table row.
 - Live sampler for system CPU split, system VM memory fields, process rows, app groups, observed process memory, resident memory, and physical footprint when macOS returns it. Process enumeration now uses `sysctl KERN_PROC_ALL` first so renderer/helper processes are less likely to be missed.
+- Performance explanations derive plain-language process insights from live process rows for helpers/renderers, Electron-style apps, WindowServer, Spotlight, file provider sync, and Corewise itself.
 - Short in-memory performance history for sustained high CPU interpretation.
 - Live uptime from `ProcessInfo.systemUptime`.
 - App-bundle grouping for process helpers when a `.app` path is readable.

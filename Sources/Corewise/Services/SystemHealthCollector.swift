@@ -92,6 +92,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
         metrics: performanceMetrics,
         processes: cpuProcesses,
         appGroups: appGroups,
+        insights: ProcessInsightBuilder().insights(for: processes),
         findings: performanceFindings(historySummary, processes: processes),
         actions: [
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),

@@ -20,6 +20,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Storage breakdown uses red for used space and green for available space. This is a storage-capacity convention, not a destructive-action cue.
 - Performance pages should lead with summary pressure and a compact top list. Full process rows should hide long filesystem paths behind short context labels unless the user asks for raw detail.
 - Dense process rows should not repeat `Live` badges on every row when the whole table has a source note.
+- Performance explanations should be phrased as context from live process names, not causal proof. Use "may", "usually", and "can be normal" for system processes and helpers.
 
 ## Status Language
 

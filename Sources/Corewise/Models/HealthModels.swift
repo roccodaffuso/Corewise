@@ -201,9 +201,19 @@ struct PerformanceHealth {
   var metrics: [DiagnosticMetric]
   var processes: [ProcessObservation]
   var appGroups: [AppProcessGroup]
+  var insights: [ProcessInsight]
   var findings: [DiagnosticFinding]
   var actions: [SafeAction]
   var sourceNote: String
+}
+
+struct ProcessInsight: Identifiable {
+  let id = UUID()
+  var title: String
+  var detail: String
+  var matchedProcessNames: [String]
+  var status: FindingSeverity
+  var dataMode: DataMode = .live
 }
 
 struct SystemCPUReading {
