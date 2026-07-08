@@ -25,7 +25,7 @@ Implemented live signals:
 - Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report folder parsing for app crash counts and repeated-crash patterns.
-- Local Diagnostic Report page that copies a Markdown snapshot without uploads, stack traces, file contents, cleanup, or persistence.
+- Local Diagnostic Report page that copies Summary or Markdown text without uploads, stack traces, file contents, cleanup, or persistence.
 
 Planned or unavailable areas:
 
@@ -62,7 +62,7 @@ Corewise is organized around three trustworthy workflows:
 
 - Performance: understand CPU, memory, swap, and which live process rows are active.
 - Storage Scan: choose a folder, inspect the largest real files and folders, and reveal items in Finder manually.
-- Diagnostic Report: copy a local Markdown summary for review without collecting stack traces or file contents.
+- Diagnostic Report: copy a local Summary or Markdown report for review without collecting stack traces or file contents.
 
 ## Project Docs
 

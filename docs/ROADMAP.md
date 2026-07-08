@@ -42,8 +42,9 @@
 
 ## Phase 4.5: Diagnostic Report
 
-- Implemented: local Markdown report builder from the current snapshot.
-- Implemented: Report page copies Markdown to the clipboard only.
+- Implemented: local Summary and Markdown report builder from the current snapshot.
+- Implemented: Report page copies Summary or Markdown to the clipboard only.
+- Implemented: notable findings, manual next steps, and source/confidence notes derived from existing snapshot data.
 - Implemented: report excludes stack traces, raw crash contents, file contents, uploads, and cleanup actions.
 - Planned: refine report grouping after real user review.
 

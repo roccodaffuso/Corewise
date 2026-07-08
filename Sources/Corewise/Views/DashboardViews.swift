@@ -269,10 +269,31 @@ struct IssuesView: View {
 
 struct ReportView: View {
   var snapshot: HealthSnapshot
-  @State private var didCopyReport = false
+  @State private var reportMode: ReportMode = .summary
+  @State private var copiedLabel: String?
 
-  private var reportText: String {
+  private enum ReportMode: String, CaseIterable, Identifiable {
+    case summary = "Summary"
+    case markdown = "Markdown"
+
+    var id: String { rawValue }
+  }
+
+  private var summaryText: String {
+    DiagnosticReportBuilder().summary(for: snapshot)
+  }
+
+  private var markdownText: String {
     DiagnosticReportBuilder().markdown(for: snapshot)
+  }
+
+  private var previewText: String {
+    switch reportMode {
+    case .summary:
+      summaryText
+    case .markdown:
+      markdownText
+    }
   }
 
   var body: some View {
@@ -296,30 +317,46 @@ struct ReportView: View {
         )
       )
 
-      PremiumPanel(title: "Copy report", subtitle: "Markdown snapshot. Local clipboard only.", systemImage: "doc.on.clipboard") {
-        HStack(spacing: 10) {
-          Button {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(reportText, forType: .string)
-            didCopyReport = true
-          } label: {
-            Label("Copy Markdown", systemImage: "doc.on.doc")
+      PremiumPanel(title: "Copy report", subtitle: "Summary or Markdown. Local clipboard only.", systemImage: "doc.on.clipboard") {
+        VStack(alignment: .leading, spacing: 14) {
+          Picker("Report format", selection: $reportMode) {
+            ForEach(ReportMode.allCases) { mode in
+              Text(mode.rawValue).tag(mode)
+            }
           }
-          .buttonStyle(.borderedProminent)
+          .pickerStyle(.segmented)
+          .labelsHidden()
+          .frame(maxWidth: 280)
 
-          if didCopyReport {
-            Text("Copied")
-              .font(.caption.weight(.semibold))
-              .foregroundStyle(color(for: FindingSeverity.good))
+          HStack(spacing: 10) {
+            Button {
+              copy(summaryText, label: "Summary copied")
+            } label: {
+              Label("Copy Summary", systemImage: "doc.on.doc")
+            }
+            .buttonStyle(.borderedProminent)
+
+            Button {
+              copy(markdownText, label: "Markdown copied")
+            } label: {
+              Label("Copy Markdown", systemImage: "text.page")
+            }
+            .buttonStyle(.bordered)
+
+            if let copiedLabel {
+              Text(copiedLabel)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(color(for: FindingSeverity.good))
+            }
+
+            Spacer(minLength: 0)
           }
-
-          Spacer(minLength: 0)
         }
       }
 
-      PremiumPanel(title: "Preview", subtitle: "Safe summary only. No stack traces or file contents.", systemImage: "text.page") {
+      PremiumPanel(title: reportMode.rawValue, subtitle: "Safe summary only. No stack traces or file contents.", systemImage: "text.page") {
         ScrollView {
-          Text(reportText)
+          Text(previewText)
             .font(.system(.caption, design: .monospaced))
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -329,6 +366,12 @@ struct ReportView: View {
 
       SourceNote(text: "Report export is local clipboard text. Corewise does not upload reports, include crash stack traces, or modify files.", dataMode: .live)
     }
+  }
+
+  private func copy(_ text: String, label: String) {
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(text, forType: .string)
+    copiedLabel = label
   }
 }
 

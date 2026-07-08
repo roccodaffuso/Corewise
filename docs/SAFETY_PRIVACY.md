@@ -14,7 +14,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Current process data is used for display and grouping, not upload.
 - Storage details are read only after the user chooses a folder.
 - Crash report metadata is read only after the user chooses a reports folder.
-- Diagnostic Report copy is generated locally from the current snapshot.
+- Diagnostic Report Summary and Markdown copy are generated locally from the current snapshot.
 
 ## Runtime Data
 
@@ -30,7 +30,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Prefer opening Finder, System Settings, or vendor-owned tools for user action.
 - `Reveal in Finder` is allowed for scanned storage items because it opens location context without changing files.
 - Storage drilldown is allowed only after a user-selected folder scan and stays in memory for the current session.
-- Report export must stay local clipboard text unless a future version explicitly adds a user-chosen save action.
+- Report export must stay local clipboard text unless a future version explicitly adds a user-chosen save action. Summary and Markdown modes must use the same snapshot and must not run extra collectors.
 - Ask for permissions only when a feature clearly needs them and can explain why.
 - Omit unreadable files and reports instead of estimating them.
 

@@ -35,7 +35,7 @@ Remaining last30days work started: Corewise is now moving from realignment found
 - Live swap usage. Memory pressure is unavailable until a reliable public parity source is selected.
 - Live high-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report metadata parsing for crash counts and repeated app patterns.
-- Local Diagnostic Report page that copies a Markdown summary of the current snapshot without stack traces, uploads, file contents, or cleanup actions.
+- Local Diagnostic Report page with `Summary / Markdown` views, notable findings, manual next steps, source/confidence notes, and clipboard-only copy without stack traces, uploads, file contents, or cleanup actions.
 - Read-only, manual-action product stance.
 
 ## Planned
@@ -69,4 +69,4 @@ Remaining last30days work started: Corewise is now moving from realignment found
 - Storage details depend on a user-selected folder and should not be mistaken for full-disk analysis.
 - Crash report details depend on a user-selected folder and may miss reports outside that folder.
 - Health score is not calculated yet and must not be presented as a final diagnostic score; Overview should continue emphasizing live signals and coverage.
-- Report copy is a current-snapshot summary, not a full support bundle or persistent diagnostic archive.
+- Report copy is a current-snapshot summary, not a full support bundle or persistent diagnostic archive. It now has a short summary view and a fuller Markdown view, both generated from the same snapshot.

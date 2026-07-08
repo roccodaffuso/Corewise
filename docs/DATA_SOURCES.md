@@ -115,7 +115,10 @@ Statuses:
 
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Markdown report | Implemented | Current `HealthSnapshot` through `DiagnosticReportBuilder` | High | Local clipboard export only; not persisted or uploaded. |
+| Summary report | Implemented | Current `HealthSnapshot` through `DiagnosticReportBuilder` | High | Short local clipboard summary with live signals, notable findings, safe next steps, and limits. |
+| Markdown report | Implemented | Current `HealthSnapshot` through `DiagnosticReportBuilder` | High | Fuller local clipboard export only; not persisted or uploaded. |
+| Notable findings | Implemented | Existing section findings already present in `HealthSnapshot` | Medium | Reuses current findings; does not inspect additional files or logs. |
+| Manual next steps | Implemented | Existing safe actions already present in `HealthSnapshot` | Medium | Manual review only; no cleanup or process termination. |
 | Top CPU and memory rows | Implemented | Live process rows already present in the snapshot | Medium | Uses the same public API semantics as Performance. |
 | Storage scan summary | Implemented after selection | User-selected folder scan results | Medium | Empty when no manual scan exists. |
 | Crash summary | Implemented after selection | User-selected report folder metadata | Medium | Counts only; no stack traces or raw report contents. |

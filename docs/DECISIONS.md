@@ -174,6 +174,12 @@ Decision: Diagnostic Report exports a local Markdown summary to the clipboard on
 
 Reason: The report should be useful like a diagnostic summary while staying inside Corewise's local-first and non-destructive trust model.
 
+## 2026-07-08: Report Has Summary And Markdown Modes
+
+Decision: Diagnostic Report should expose both a short Summary and a fuller Markdown export, generated from the same current `HealthSnapshot`.
+
+Reason: Users need a fast readable diagnostic view and a more complete EtreCheck-like text artifact, but both must stay traceable to already-visible local data.
+
 ## 2026-07-08: Process Insights Are Explanatory, Not Causal
 
 Decision: Corewise may explain common live process patterns such as helpers, renderers, WindowServer, Spotlight indexing, file provider sync, and Corewise itself, but it must not present those explanations as proof of root cause.

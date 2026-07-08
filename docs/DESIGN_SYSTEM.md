@@ -48,7 +48,7 @@ Every diagnostic page should include:
 - Safe actions.
 - Data source note.
 - Manual scan controls only where the user explicitly grants scope.
-- Report/export surfaces must summarize the current snapshot without raw crash contents, stack traces, uploads, or file writes.
+- Report/export surfaces must offer a short `Summary` and fuller `Markdown` view from the same snapshot, without raw crash contents, stack traces, uploads, or file writes.
 
 ## Permission Controls
 
