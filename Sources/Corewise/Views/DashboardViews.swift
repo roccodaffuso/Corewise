@@ -129,30 +129,42 @@ struct PerformanceView: View {
   var performance: PerformanceHealth
   @State private var selectedMode: PerformanceMode = .cpu
 
+  private var sortedProcesses: [ProcessObservation] {
+    selectedMode == .cpu
+      ? performance.processes.sorted { $0.cpuPercent > $1.cpuPercent }
+      : performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       SectionHero(
         title: "Performance",
-        subtitle: "Live process rows with CPU, observed memory, RSS, threads, PID, and user.",
+        subtitle: "Live CPU and memory pressure from local process samples.",
         systemImage: "cpu",
         metric: performance.summary
       )
 
       PerformanceSystemStrip(performance: performance)
 
-      Picker("Performance mode", selection: $selectedMode) {
-        ForEach(PerformanceMode.allCases) { mode in
-          Text(mode.title).tag(mode)
+      HStack(spacing: 10) {
+        Text("Focus")
+          .font(.callout.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Picker("Focus", selection: $selectedMode) {
+          ForEach(PerformanceMode.allCases) { mode in
+            Text(mode.title).tag(mode)
+          }
         }
+        .labelsHidden()
+        .pickerStyle(.segmented)
+        .frame(width: 190)
       }
-      .pickerStyle(.segmented)
-      .frame(maxWidth: 360)
+
+      PerformancePressurePanel(mode: selectedMode, processes: Array(sortedProcesses.prefix(8)))
 
       ProcessObservationTable(
         mode: selectedMode,
-        processes: selectedMode == .cpu
-          ? performance.processes.sorted { $0.cpuPercent > $1.cpuPercent }
-          : performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }
+        processes: sortedProcesses
       )
 
       MetricBoard(metrics: performance.metrics)
@@ -796,17 +808,11 @@ private struct PerformanceSystemStrip: View {
   var performance: PerformanceHealth
 
   var body: some View {
-    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
+    LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 10)], spacing: 10) {
       CompactStat(title: "CPU", value: percent(performance.cpu.totalPercent), detail: "total")
-      CompactStat(title: "User", value: percent(performance.cpu.userPercent), detail: "CPU")
-      CompactStat(title: "System", value: percent(performance.cpu.systemPercent), detail: "CPU")
       CompactStat(title: "Memory", value: bytes(performance.memory.usedBytes), detail: "used")
-      CompactStat(title: "App Mem", value: bytes(performance.memory.appMemoryBytes), detail: "VM")
-      CompactStat(title: "Wired", value: bytes(performance.memory.wiredBytes), detail: "memory")
-      CompactStat(title: "Compressed", value: bytes(performance.memory.compressedBytes), detail: "memory")
-      CompactStat(title: "Cached", value: bytes(performance.memory.cachedFilesBytes), detail: "files")
       CompactStat(title: "Swap", value: performance.memory.swapUsedBytes.map(bytes) ?? "N/A", detail: "used")
-      CompactStat(title: "Processes", value: "\(performance.processes.count)", detail: "visible")
+      CompactStat(title: "Processes", value: "\(performance.processes.count)", detail: "sampled")
     }
   }
 }
@@ -833,6 +839,21 @@ private struct CompactStat: View {
     .padding(10)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+  }
+}
+
+private struct PerformancePressurePanel: View {
+  var mode: PerformanceMode
+  var processes: [ProcessObservation]
+
+  var body: some View {
+    PremiumPanel(
+      title: mode == .cpu ? "Top CPU Pressure" : "Top Memory Pressure",
+      subtitle: mode == .cpu ? "Highest live CPU samples right now" : "Highest observed memory right now",
+      systemImage: mode == .cpu ? "cpu" : "memorychip"
+    ) {
+      ProcessBarChart(processes: processes, mode: mode)
+    }
   }
 }
 
@@ -1031,7 +1052,7 @@ private struct ProcessObservationTable: View {
   var processes: [ProcessObservation]
 
   var body: some View {
-    PremiumPanel(title: "Processes", subtitle: "Individual live rows, not app-group estimates.", systemImage: "list.bullet.rectangle") {
+    PremiumPanel(title: "Process Details", subtitle: "Top 24 individual rows from the current live sample.", systemImage: "list.bullet.rectangle") {
       if processes.isEmpty {
         EmptyDiagnosticState(
           title: "No process crossed the current display threshold",
@@ -1041,7 +1062,7 @@ private struct ProcessObservationTable: View {
       } else {
         VStack(spacing: 0) {
           ProcessTableHeader(mode: mode)
-          ForEach(processes.prefix(40)) { process in
+          ForEach(processes.prefix(24)) { process in
             ProcessTableRow(process: process, mode: mode)
             Divider()
           }
@@ -1058,12 +1079,10 @@ private struct ProcessTableHeader: View {
   var body: some View {
     Grid(horizontalSpacing: 12, verticalSpacing: 0) {
       GridRow {
-        header("Name").gridColumnAlignment(.leading)
+        header("Process").gridColumnAlignment(.leading)
         header(mode == .cpu ? "% CPU" : "Memory").gridColumnAlignment(.trailing)
-        header("RSS").gridColumnAlignment(.trailing)
-        header("Threads").gridColumnAlignment(.trailing)
+        header(mode == .cpu ? "Memory" : "RSS").gridColumnAlignment(.trailing)
         header("PID").gridColumnAlignment(.trailing)
-        header("User").gridColumnAlignment(.leading)
       }
     }
     .padding(.horizontal, 8)
@@ -1083,7 +1102,7 @@ private struct ProcessTableRow: View {
   var mode: PerformanceMode
 
   var body: some View {
-    Grid(horizontalSpacing: 12, verticalSpacing: 0) {
+    Grid(horizontalSpacing: 14, verticalSpacing: 0) {
       GridRow {
         VStack(alignment: .leading, spacing: 2) {
           HStack(spacing: 6) {
@@ -1096,10 +1115,11 @@ private struct ProcessTableRow: View {
                 .foregroundStyle(.blue)
             }
           }
-          Text(process.appName ?? process.path ?? "No app bundle")
+          Text(processContext)
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .lineLimit(1)
+            .truncationMode(.tail)
         }
         .gridColumnAlignment(.leading)
 
@@ -1109,12 +1129,7 @@ private struct ProcessTableRow: View {
           .foregroundStyle(color(for: process.status))
           .gridColumnAlignment(.trailing)
 
-        Text(bytes(process.residentMemoryBytes))
-          .monospacedDigit()
-          .foregroundStyle(.secondary)
-          .gridColumnAlignment(.trailing)
-
-        Text("\(process.threadCount)")
+        Text(secondaryValue)
           .monospacedDigit()
           .foregroundStyle(.secondary)
           .gridColumnAlignment(.trailing)
@@ -1123,17 +1138,10 @@ private struct ProcessTableRow: View {
           .monospacedDigit()
           .foregroundStyle(.secondary)
           .gridColumnAlignment(.trailing)
-
-        HStack(spacing: 6) {
-          Text(process.user)
-            .lineLimit(1)
-          DataModeBadge(dataMode: process.dataMode)
-        }
-        .gridColumnAlignment(.leading)
       }
     }
     .padding(.horizontal, 8)
-    .padding(.vertical, 7)
+    .padding(.vertical, 8)
   }
 
   private var primaryValue: String {
@@ -1143,6 +1151,33 @@ private struct ProcessTableRow: View {
     case .memory:
       bytes(process.observedMemoryBytes)
     }
+  }
+
+  private var secondaryValue: String {
+    switch mode {
+    case .cpu:
+      bytes(process.observedMemoryBytes)
+    case .memory:
+      bytes(process.residentMemoryBytes)
+    }
+  }
+
+  private var processContext: String {
+    let owner = process.appName ?? processCategory
+    return "\(owner) · \(process.user) · \(process.threadCount) threads"
+  }
+
+  private var processCategory: String {
+    guard let path = process.path, !path.isEmpty else {
+      return "Background process"
+    }
+    if path.hasPrefix("/System/") || path.hasPrefix("/usr/") {
+      return "System process"
+    }
+    if path.contains(".app/") {
+      return "App process"
+    }
+    return "Background process"
   }
 }
 

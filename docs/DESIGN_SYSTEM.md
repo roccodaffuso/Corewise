@@ -17,6 +17,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Coverage numbers must count diagnostic signal families, not table rows such as individual processes or launch plist entries.
 - Data provenance badges must stay single-line. If a panel is narrow, wrap the surrounding layout rather than compressing badge text vertically.
 - Storage breakdown uses red for used space and green for available space. This is a storage-capacity convention, not a destructive-action cue.
+- Performance pages should lead with summary pressure and a compact top list. Full process rows should hide long filesystem paths behind short context labels unless the user asks for raw detail.
 
 ## Status Language
 
