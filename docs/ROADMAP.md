@@ -70,5 +70,6 @@ Before calling the MVP trustworthy, Corewise must show provenance for every metr
 
 ## Later Ideas
 
-- Menu bar monitor for at-a-glance CPU, memory, swap, and top active process.
+- Implemented: lightweight menu bar monitor for at-a-glance CPU, memory, swap, top CPU process, top memory process, and Open Corewise.
+- Planned: refine menu bar behavior after manual QA.
 - Health score only after real data coverage and a documented formula are stable.

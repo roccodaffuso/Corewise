@@ -126,6 +126,16 @@ Statuses:
 | Crash summary | Implemented after selection | User-selected report folder metadata | Medium | Counts only; no stack traces or raw report contents. |
 | Global score in report | Planned | Corewise scoring model | High | Report states that global scoring is planned, not calculated. |
 
+## Menu Bar
+
+| Metric | Status | Source | Confidence | Limit |
+| --- | --- | --- | --- | --- |
+| CPU total | Implemented | Current `HealthSnapshot` performance CPU reading | Medium | At-a-glance value only; open Corewise for detail. |
+| Memory used | Implemented | Current `HealthSnapshot` system memory reading | Medium | Uses Corewise memory semantics, not private Activity Monitor internals. |
+| Swap used | Implemented when available | Current `HealthSnapshot` swap reading | Medium | Shows `N/A` when the snapshot does not contain swap. |
+| Top CPU process | Implemented | Current live process rows | Medium | Snapshot sample only; not a persistent monitor. |
+| Top memory process | Implemented | Current live process rows | Medium | Uses observed memory from the existing Performance model. |
+
 ## Privacy Notes
 
 - Corewise should not upload diagnostic data.

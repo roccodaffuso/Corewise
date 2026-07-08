@@ -23,6 +23,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Performance explanations should be phrased as context from live process names, not causal proof. Use "may", "usually", and "can be normal" for system processes and helpers.
 - Startup inventory should use a compact table for plist rows instead of stacked diagnostic cards, with Finder reveal as the only row action.
 - App Issues should lead with an empty/manual-access state until the user chooses reports; repeated crash counts should appear only after selection.
+- Menu bar content should stay glanceable: CPU, memory, swap, top CPU process, top memory process, and one Open Corewise action.
 
 ## Status Language
 

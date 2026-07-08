@@ -18,7 +18,7 @@ Remaining last30days work started: Corewise is now moving from realignment found
 ## Implemented
 
 - SwiftPM macOS app target named `Corewise`.
-- SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, Report, and Settings.
+- SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, Report, Settings, and a lightweight menu bar monitor.
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
 - Overview leads with `Live Signals`, concrete first-viewport system signals, and signal-family coverage instead of a placeholder health score. Coverage intentionally does not count every process or table row.
 - Live sampler for system CPU split, system VM memory fields, process rows, app groups, observed process memory, resident memory, and physical footprint when macOS returns it. Process enumeration now uses `sysctl KERN_PROC_ALL` first so renderer/helper processes are less likely to be missed.
@@ -46,7 +46,7 @@ Remaining last30days work started: Corewise is now moving from realignment found
 - Broaden startup beyond plist inventory only where macOS exposes safe public visibility.
 - Add WindowServer interpretation and thermal contributor attribution only through safe sources.
 - Keep unavailable wattage clearly marked unless a safe, user-approved source exists.
-- Menu bar monitor is a roadmap idea only; it is not part of this batch.
+- Refine menu bar monitor copy and behavior after manual app QA.
 
 ## Unavailable
 

@@ -17,6 +17,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Diagnostic Report Summary and Markdown copy are generated locally from the current snapshot.
 - Startup plist rows can be revealed in Finder, but Corewise does not edit, disable, delete, or unload them.
 - App Issues remains empty until a report folder is selected; it does not infer crash counts from other sources.
+- Menu bar values reuse the current app snapshot and do not create a second background data collector.
 
 ## Runtime Data
 

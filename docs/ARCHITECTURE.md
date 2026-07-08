@@ -20,6 +20,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Startup helper: `StartupDiagnosticsCollector` provides read-only LaunchAgents and LaunchDaemons plist metadata.
 - Report helper: `DiagnosticReportBuilder` renders read-only Summary and Markdown text from the current `HealthSnapshot`.
 - UI: `ContentView` hosts navigation; `DashboardViews` renders section pages, cards, charts, findings, actions, and source notes.
+- Menu bar: `MenuBarExtra` reuses `HealthDashboardStore` snapshot values for at-a-glance CPU, memory, swap, and top process rows.
 
 ## Data Flow
 
@@ -31,6 +32,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 6. The store refreshes live data periodically.
 7. User-selected storage or crash scans are owned by `HealthDashboardStore` and reapplied to later snapshots. Automatic refresh never starts personal-folder or report scans.
 8. The Report page formats the current snapshot locally and can copy either Summary or Markdown text to the clipboard. It does not write files, upload data, or include crash stack traces.
+9. The menu bar extra reads the same store snapshot; it does not start a separate collector or persist history.
 
 ## Collector Boundaries
 

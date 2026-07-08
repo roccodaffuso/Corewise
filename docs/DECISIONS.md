@@ -186,6 +186,12 @@ Decision: Startup should present launch plist rows as a compact read-only invent
 
 Reason: These areas can look scary if over-interpreted. Corewise should help the user review provenance and patterns without implying that plist files or one-off crashes are automatically problems.
 
+## 2026-07-08: Menu Bar Reuses The Main Snapshot
+
+Decision: The menu bar monitor should reuse `HealthDashboardStore` and show only compact values already available in the main app.
+
+Reason: A menu bar surface is useful for quick trust and visibility, but a second collector would add complexity and could make values diverge from the main diagnostic pages.
+
 ## 2026-07-08: Process Insights Are Explanatory, Not Causal
 
 Decision: Corewise may explain common live process patterns such as helpers, renderers, WindowServer, Spotlight indexing, file provider sync, and Corewise itself, but it must not present those explanations as proof of root cause.
