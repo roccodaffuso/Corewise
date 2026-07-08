@@ -95,22 +95,6 @@ struct ContentView: View {
           }
         }
       }
-      .toolbar {
-        ToolbarItem(placement: .primaryAction) {
-          Button {
-            Task {
-              await store.refresh()
-            }
-          } label: {
-            Label("Refresh", systemImage: "arrow.clockwise")
-              .labelStyle(.iconOnly)
-          }
-          .buttonStyle(.borderless)
-          .controlSize(.small)
-          .disabled(store.isRefreshing)
-          .help("Refresh health snapshot")
-        }
-      }
     }
   }
 }
