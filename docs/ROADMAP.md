@@ -16,8 +16,9 @@
 
 ## Phase 3: Battery Collector
 
-- Replace battery mocks with safe power-source and battery-health data where public APIs expose it.
-- Mark unavailable battery details honestly by hardware/macOS support.
+- Implemented: live charge, power source, and charging state from safe IOKit power-source data.
+- Implemented: no-battery state and missing keys render unavailable values instead of placeholders.
+- Keep cycle count, maximum capacity, and condition unavailable until a safe documented source is selected.
 - Keep service wording tied to macOS-provided state only.
 
 ## Phase 4: Performance History

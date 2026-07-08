@@ -8,21 +8,11 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
     let memoryUsedValue = number(instant.usedMemoryGB)
     let memoryTotalValue = number(instant.totalMemoryGB)
     let memoryPercentValue = number(instant.memoryPercent)
+    let batteryHealth = BatteryDiagnosticsCollector().currentBattery(now: now)
     let storageHealth = StorageDiagnosticsCollector().currentStorage(now: now)
     let thermalState = ProcessInfo.processInfo.thermalState
     let thermalStateValue = thermalStateLabel(thermalState)
     let thermalStateStatus = thermalStatus(thermalState)
-
-    let batteryMetrics = [
-      metric("Charge", "74", "%", .good, 4, "The battery has enough charge for normal work.", "Power source snapshot", "Mock / high", "No action needed right now.", now),
-      metric("Cycle Count", "412", "cycles", .info, 28, "Cycle count is moderate for a portable Mac and does not suggest immediate battery risk.", "Battery health report", "Mock / medium", "Watch for faster drain or service warnings over time.", now),
-      metric("Maximum Capacity", "87", "%", .info, 34, "Capacity is below new-battery level but still within a normal range.", "Battery health report", "Mock / medium", "Consider service only if runtime feels poor or macOS reports service recommended.", now),
-      metric("Condition", "Normal", "", .good, 6, "macOS would not currently flag this battery for service.", "Battery health report", "Mock / medium", "Keep using the Mac normally.", now),
-      metric("Power Source", "Battery", "", .info, 15, "The Mac is currently modeled as running on battery power.", "Power source snapshot", "Mock / high", "Connect power before long CPU-heavy work.", now),
-      metric("Charging State", "Not Charging", "", .info, 18, "The battery is discharging normally in this snapshot.", "Power source snapshot", "Mock / high", "No action unless this differs from what you expect.", now),
-      metric("Recent Energy Impact", "Medium", "", .warning, 55, "Developer tools and browser tabs are the main recent energy users.", "Energy impact sample", "Mock / medium", "Close unused simulators or heavy tabs when working unplugged.", now),
-      metric("Battery Risk", "Low", "", .good, 18, "Capacity and cycle count do not point to an urgent issue.", "Corewise score", "Mock / medium", "Recheck after a few charge cycles.", now)
-    ]
 
     let performanceMetrics = [
       metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpuPercent), cpuSeverity(instant.cpuPercent), "Instant CPU load sampled over a short window from macOS CPU ticks.", "host_statistics CPU_LOAD_INFO", "Live / medium", "Watch sustained high CPU, not a single short spike.", now, dataMode: .live),
@@ -89,19 +79,7 @@ struct MockSystemHealthCollector: SystemHealthCollecting {
         metric("Score Confidence", "Low", "", .info, 20, "The current score mixes live and mock coverage, so it is not a final diagnostic score.", "Corewise scoring model", "Mock / high", "Use section-level badges before trusting the score.", now),
         metric("Data Mode", "Mock", "", .info, 0, "This build uses realistic mock data until safe collectors are implemented.", "App build", "High", "Treat values as UI/product scaffolding, not real device diagnostics.", now)
       ],
-      battery: BatteryHealth(
-        summary: batteryMetrics[7],
-        metrics: batteryMetrics,
-        findings: [
-          DiagnosticFinding(title: "Battery looks serviceable", detail: "Cycle count and capacity do not suggest urgent service.", status: .good, severityScore: 18),
-          DiagnosticFinding(title: "Energy use is worth watching", detail: "Recent developer and browser activity can reduce runtime on battery.", status: .warning, severityScore: 55)
-        ],
-        actions: [
-          SafeAction(title: "Review energy-heavy apps", body: "Use Activity Monitor's Energy tab when working unplugged.", systemImage: "bolt.horizontal", status: .info),
-          SafeAction(title: "Avoid battery-service claims", body: "Corewise should only explain battery signals and point to macOS service status.", systemImage: "checkmark.shield", status: .good)
-        ],
-        sourceNote: "Mock data. Real battery metrics should come from safe power-source APIs and documented macOS battery health surfaces where available."
-      ),
+      battery: batteryHealth,
       storage: storageHealth,
       performance: PerformanceHealth(
         summary: performanceMetrics[0],

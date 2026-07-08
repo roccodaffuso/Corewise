@@ -13,6 +13,7 @@ Implemented live signals:
 - Top CPU process groups from public process information.
 - Top RAM process groups from public process information.
 - Process path lookup for grouping helpers under their owning `.app` bundle when available.
+- Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
 - Startup volume total, used, available, and available percent.
 - Read-only sizes for selected known folders and large files where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
@@ -20,7 +21,7 @@ Implemented live signals:
 Mock or scaffolded areas:
 
 - Overall health score.
-- Detailed battery health.
+- Detailed battery health: cycles, maximum capacity, condition, energy impact, and risk scoring.
 - Startup, login, agent, daemon, background item, and helper lists.
 - Memory pressure, swap, sustained CPU history, and WindowServer interpretation.
 - Thermal contributors beyond high-level public thermal state.

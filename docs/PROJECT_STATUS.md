@@ -18,6 +18,7 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
 - Live sampler for system CPU, system RAM, top CPU process groups, and top RAM process groups.
 - App-bundle grouping for process helpers when a `.app` path is readable.
+- Live battery basics from IOKit power-source APIs: charge, power source, and charging state when an internal battery exists.
 - Structured `DataMode` provenance for visible diagnostic values.
 - Read-only live storage collector for startup volume capacity and selected known paths.
 - Live high-level thermal state from `ProcessInfo.thermalState`.
@@ -26,7 +27,7 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 ## Mock
 
 - Health score and overall status.
-- Battery cycles, capacity, condition, charge state, energy impact, and risk.
+- Battery cycle count, maximum capacity, condition, recent energy impact, and risk scoring.
 - Startup/login/background/privileged helper inventory.
 - Memory pressure, swap, uptime, sustained CPU history, and WindowServer interpretation.
 - Storage categories that require broad or permission-limited scans remain omitted rather than estimated.
@@ -37,7 +38,7 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 
 - Expand visible provenance coverage as new row types are added.
 - Broaden storage scanning only where it stays read-only and clearly permission-limited.
-- Replace battery mocks with safe public power-source and battery-health signals where available.
+- Expand battery only where documented safe public data is available; do not infer health details.
 - Replace startup mocks with read-only inventory and clear permission limits.
 - Replace crash mocks with permitted diagnostic report reading.
 - Keep unavailable wattage clearly marked unless a safe, user-approved source exists.
@@ -52,7 +53,7 @@ MVP trust baseline: `996af98` (`Stabilize Corewise trust baseline`).
 
 ## Current Risks
 
-- Some mock section content remains in Battery, Startup, Performance secondary metrics, and App Issues.
+- Some mock or unavailable section content remains in Battery health details, Startup, Performance secondary metrics, and App Issues.
 - Read-only folder sizing may be slow on large known directories and needs UX tuning before release.
 - Health score currently mixes live and mock signals, so it must not be presented as a final diagnostic score.
 - The current branch now has a checkpoint baseline plus additional stabilization changes in progress.

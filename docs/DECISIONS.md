@@ -53,3 +53,9 @@ Reason: The user must be able to tell immediately whether a value is real, scaff
 Decision: Storage reads startup volume capacity and selected known paths only. Missing, absent, or unreadable folders are omitted instead of estimated.
 
 Reason: It is safer to show fewer real values than to fill the UI with plausible but false storage diagnostics.
+
+## 2026-07-08: Battery Collector Reads Only Safe Basics
+
+Decision: Battery reads charge, power source, and charging state from IOKit power-source APIs. Cycle count, maximum capacity, and condition stay unavailable until Corewise has a safe documented source.
+
+Reason: Battery trust depends on not inventing health details or implying service status without macOS-backed evidence.

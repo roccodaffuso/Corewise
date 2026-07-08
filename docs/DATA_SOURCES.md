@@ -26,14 +26,15 @@ Statuses:
 
 | Metric | Status | Planned source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Charge | Mock | IOKit power source APIs where safe | Medium | Current value is not read from the user's Mac. |
-| Cycle count | Mock | Documented battery health surface if available | Medium | Availability varies by hardware and macOS version. |
-| Maximum capacity | Mock | Documented battery health surface if available | Medium | Do not infer service need without macOS status. |
-| Condition | Mock | macOS battery condition when accessible | Medium | Must avoid unsupported hardware claims. |
-| Power source | Mock | Power source snapshot | Medium | Should become live before battery page is trusted. |
-| Charging state | Mock | Power source snapshot | Medium | Should become live before battery page is trusted. |
-| Recent energy impact | Mock | Energy/process correlation if public and safe | Low | Not all Energy tab data is exposed as public API. |
-| Battery risk | Mock | Corewise scoring model | Medium | Should stay explanatory, not prescriptive. |
+| Battery present | Implemented | IOKit power source APIs | High | If no internal battery is found, Corewise shows unavailable values instead of placeholders. |
+| Charge | Implemented | IOKit power source APIs | High | Live only when current/max capacity are present in the power-source snapshot. |
+| Power source | Implemented | IOKit power source APIs | High | Live only when power source state is present in the snapshot. |
+| Charging state | Implemented | IOKit power source APIs | High | Live only when charging state is present in the snapshot. |
+| Cycle count | Unavailable | Documented battery health surface if available later | High | Not collected through the current safe power-source API path. |
+| Maximum capacity | Unavailable | Documented battery health surface if available later | High | Not collected through the current safe power-source API path. |
+| Condition | Unavailable | macOS battery condition if safely/documentedly accessible later | High | Not collected through the current safe power-source API path. |
+| Recent energy impact | Planned | Energy/process correlation if public and safe | Low | Not all Energy tab data is exposed as public API. |
+| Battery risk | Mock | Corewise scoring model | Medium | Not scored until health and trend signals are available. |
 
 ## Storage
 

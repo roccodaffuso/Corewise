@@ -11,6 +11,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Collector protocol: `SystemHealthCollecting.currentSnapshot()` returns a complete `HealthSnapshot`.
 - Current collector: `MockSystemHealthCollector` builds the full product-shaped snapshot.
 - Live helper: `SystemMetricsSampler` provides live CPU, RAM, and process samples to the mock collector.
+- Battery helper: `BatteryDiagnosticsCollector` provides live safe power-source basics and unavailable/planned health details.
 - Storage helper: `StorageDiagnosticsCollector` provides read-only live volume and known-path storage data.
 - UI: `ContentView` hosts navigation; `DashboardViews` renders section pages, cards, charts, findings, actions, and source notes.
 
@@ -19,7 +20,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 1. App starts and creates `HealthDashboardStore`.
 2. Store asks the configured collector for the current snapshot.
 3. `MockSystemHealthCollector` asks `SystemMetricsSampler` for live performance signals.
-4. The collector combines live performance/storage/thermal signals with remaining mock diagnostic coverage.
+4. The collector combines live battery/performance/storage/thermal signals with remaining mock diagnostic coverage.
 5. SwiftUI renders the snapshot into section pages.
 6. The store refreshes live data periodically.
 
