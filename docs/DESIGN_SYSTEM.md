@@ -57,6 +57,7 @@ Every diagnostic page should include:
 - Do not present manual scans as required, urgent, or automatic.
 - After a scan, keep `Live` badges tied to the selected folder/report source.
 - `Reveal in Finder` is allowed for scanned storage items because it opens user-visible context without changing files.
+- Storage drilldown must show the selected root/current folder, breadcrumbs, scanned size, file count, unreadable count, and duration before listing items.
 
 ## Chart Rules
 

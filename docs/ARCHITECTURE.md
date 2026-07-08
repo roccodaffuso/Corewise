@@ -8,6 +8,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 
 - App entry: `CorewiseApp` owns a `HealthDashboardStore`.
 - Store: `HealthDashboardStore` requests snapshots from `SystemHealthCollecting`.
+- Store session state: `HealthDashboardStore` owns the session-only storage scan root/current folder and reapplies the latest result to snapshots.
 - Collector protocol: `SystemHealthCollecting.currentSnapshot()` returns a complete `HealthSnapshot`.
 - Current collector: `SystemHealthCollector` builds the full product-shaped snapshot without synthetic runtime diagnostics.
 - Live helper: `SystemMetricsSampler` provides live CPU split, VM memory fields, process rows, observed memory, physical footprint when available, RSS, and app groups to the collector.
@@ -57,6 +58,8 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Read file sizes and directory totals without modifying files.
 - Omit unreadable items and report their count instead of estimating them.
 - Do not persist folder access bookmarks in the first version.
+- Allow drilldown only inside the current user-selected scan session.
+- Keep breadcrumbs derived from the chosen root and current folder, not from automatic background enumeration.
 
 `CrashReportDiagnosticsCollector` should stay narrow:
 

@@ -136,10 +136,13 @@ private struct DetailRouter: View {
         case .storage:
           StorageView(
             storage: snapshot.storage,
+            scanSession: store.storageScanSession,
             isScanning: store.isScanningStorage,
             scanFolder: { Task { await store.scanStorageFolder() } },
             scanDownloads: { Task { await store.scanDownloadsFolder() } },
-            scanDeveloperData: { Task { await store.scanDeveloperFolder() } }
+            scanDeveloperData: { Task { await store.scanDeveloperFolder() } },
+            scanFolderAt: { url in Task { await store.scanStorageSessionFolder(url) } },
+            scanParent: { Task { await store.scanStorageParentFolder() } }
           )
         case .performance:
           PerformanceView(performance: snapshot.performance)

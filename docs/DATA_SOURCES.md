@@ -45,9 +45,12 @@ Statuses:
 | Total, used, available | Implemented | `FileManager` volume resource values | High | Startup volume only. |
 | Available percent | Implemented | Derived from real volume values | High | Startup volume only. |
 | User-selected folder scan | Implemented | `NSOpenPanel` folder choice plus read-only size scan | Medium | Runs only after user action; no bookmark is persisted in this version. |
+| Storage scan session | Implemented | In-memory root/current folder URLs plus scan result | Medium | Session-only; folder access is not persisted across launches. |
+| Storage breadcrumbs | Implemented | Derived from selected root and current scan folder | Medium | Used only for navigation inside the chosen folder scope. |
 | Large folders | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
 | Large files | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
 | Reveal in Finder | Implemented after selection | Finder reveal for a scanned item path | High | Opens Finder only; it does not delete, move, or modify files. |
+| Drilldown scan | Implemented after selection | Read-only scan of a folder discovered inside the selected scan session | Medium | Does not scan unrelated folders automatically. |
 | Developer caches | Planned | Explicit targeted scan later | Medium | Not scanned automatically because these live under user Library. |
 | Browser caches | Planned | Browser-owned settings or explicit targeted scan | Low | Browser cache folders are not scanned during refresh. |
 | Downloads | Unavailable | Explicit targeted scan later | High | Corewise does not request Downloads access at launch/refresh. |

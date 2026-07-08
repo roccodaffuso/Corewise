@@ -68,10 +68,13 @@ struct BatteryView: View {
 
 struct StorageView: View {
   var storage: StorageHealth
+  var scanSession: StorageScanSession?
   var isScanning: Bool
   var scanFolder: () -> Void
   var scanDownloads: () -> Void
   var scanDeveloperData: () -> Void
+  var scanFolderAt: (URL) -> Void
+  var scanParent: () -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
@@ -104,26 +107,17 @@ struct StorageView: View {
         ]
       )
 
+      StorageExplorerPanel(
+        session: scanSession,
+        isScanning: isScanning,
+        scanFolderAt: scanFolderAt,
+        scanParent: scanParent
+      )
       MetricBoard(metrics: storage.metrics)
-      if hasStorageScanRows {
-        StorageItemGroup(title: "Large Folders", items: storage.largeFolders)
-        StorageItemGroup(title: "Large Files", items: storage.largeFiles)
-        StorageItemGroup(title: "Developer Caches", items: storage.developerCaches)
-        StorageItemGroup(title: "Browser Caches", items: storage.browserCaches)
-      } else {
-        StorageScanEmptySummary()
-      }
       PriorityPanel(title: "Findings", subtitle: "What the storage picture means.", findings: storage.findings)
       SafeActionPanel(title: "Safe actions", actions: storage.actions)
       SourceNote(text: storage.sourceNote, dataMode: storage.summary.dataMode)
     }
-  }
-
-  private var hasStorageScanRows: Bool {
-    !storage.largeFolders.isEmpty
-      || !storage.largeFiles.isEmpty
-      || !storage.developerCaches.isEmpty
-      || !storage.browserCaches.isEmpty
   }
 }
 
@@ -1319,6 +1313,152 @@ private struct ProcessTableRow: View {
   }
 }
 
+private struct StorageExplorerPanel: View {
+  var session: StorageScanSession?
+  var isScanning: Bool
+  var scanFolderAt: (URL) -> Void
+  var scanParent: () -> Void
+
+  var body: some View {
+    PremiumPanel(title: "Selected Folder Explorer", subtitle: "Read-only drilldown inside the folder you chose.", systemImage: "folder.badge.gearshape") {
+      if let session {
+        VStack(alignment: .leading, spacing: 14) {
+          HStack(alignment: .center, spacing: 8) {
+            ForEach(Array(session.breadcrumbs.enumerated()), id: \.element.id) { index, crumb in
+              if index > 0 {
+                Image(systemName: "chevron.right")
+                  .font(.caption2)
+                  .foregroundStyle(.tertiary)
+              }
+              Button {
+                scanFolderAt(crumb.url)
+              } label: {
+                Text(crumb.title)
+                  .lineLimit(1)
+              }
+              .buttonStyle(.link)
+              .disabled(isScanning)
+            }
+
+            Spacer(minLength: 8)
+
+            Button {
+              revealInFinder(path: session.result.rootPath)
+            } label: {
+              Label("Open in Finder", systemImage: "folder")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            Button {
+              scanParent()
+            } label: {
+              Label("Scan Parent", systemImage: "arrow.up")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(isScanning || session.breadcrumbs.count <= 1)
+          }
+
+          LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8) {
+            CompactStat(title: "Current Folder", value: session.result.rootTitle, detail: "selected scope")
+            CompactStat(title: "Scanned Size", value: gb(session.result.totalSizeGB), detail: "read-only")
+            CompactStat(title: "Files", value: "\(session.result.scannedItemCount)", detail: "readable")
+            CompactStat(title: "Unreadable", value: "\(session.result.inaccessibleItemCount)", detail: "omitted")
+            CompactStat(title: "Duration", value: "\(number(session.result.scanDuration))s", detail: "last scan")
+          }
+
+          if session.result.largestFolders.isEmpty && session.result.largestFiles.isEmpty {
+            EmptyDiagnosticState(
+              title: "No large items found",
+              message: "Corewise scanned the selected folder but did not find readable files to rank.",
+              dataMode: .live
+            )
+          } else {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 310), spacing: 12)], alignment: .leading, spacing: 12) {
+              StorageExplorerList(
+                title: "Largest Folders",
+                items: session.result.largestFolders,
+                actionTitle: "Scan This Folder",
+                actionImage: "arrow.down.forward.circle",
+                action: { item in scanFolderAt(fileURL(for: item.path)) }
+              )
+
+              StorageExplorerList(
+                title: "Largest Files",
+                items: session.result.largestFiles,
+                actionTitle: "Reveal in Finder",
+                actionImage: "arrow.up.forward.app",
+                action: { item in revealInFinder(path: item.path) }
+              )
+            }
+          }
+        }
+      } else {
+        EmptyDiagnosticState(
+          title: "Choose a folder to scan",
+          message: "Corewise will show breadcrumbs, largest folders, largest files, unreadable count, and scan duration after a manual folder choice.",
+          dataMode: .unavailable
+        )
+      }
+    }
+  }
+}
+
+private struct StorageExplorerList: View {
+  var title: String
+  var items: [StorageItem]
+  var actionTitle: String
+  var actionImage: String
+  var action: (StorageItem) -> Void
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(title)
+        .font(.callout.weight(.semibold))
+
+      if items.isEmpty {
+        Text("No readable rows")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      } else {
+        ForEach(items.prefix(8)) { item in
+          HStack(alignment: .firstTextBaseline, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+              Text(item.title)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+              Text(item.path)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            }
+
+            Spacer(minLength: 8)
+
+            Text(gb(item.sizeGB))
+              .font(.caption.weight(.semibold))
+              .monospacedDigit()
+              .foregroundStyle(color(for: item.status))
+
+            Button {
+              action(item)
+            } label: {
+              Image(systemName: actionImage)
+            }
+            .buttonStyle(.borderless)
+            .help(actionTitle)
+          }
+          Divider()
+        }
+      }
+    }
+    .padding(12)
+    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+  }
+}
+
 private struct StorageItemGroup: View {
   var title: String
   var items: [StorageItem]
@@ -1741,16 +1881,15 @@ private func number(_ value: Double) -> String {
 }
 
 private func revealInFinder(path: String) {
-  let expandedPath: String
-  if path.hasPrefix("~/") {
-    expandedPath = FileManager.default.homeDirectoryForCurrentUser
-      .appendingPathComponent(String(path.dropFirst(2)))
-      .path
-  } else {
-    expandedPath = path
-  }
+  NSWorkspace.shared.activateFileViewerSelecting([fileURL(for: path)])
+}
 
-  NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: expandedPath)])
+private func fileURL(for path: String) -> URL {
+  if path.hasPrefix("~/") {
+    return FileManager.default.homeDirectoryForCurrentUser
+      .appendingPathComponent(String(path.dropFirst(2)))
+  }
+  return URL(fileURLWithPath: path)
 }
 
 private func color(for status: OverallStatus) -> Color {

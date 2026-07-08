@@ -9,9 +9,9 @@ final class HealthDashboardStore: ObservableObject {
   @Published private(set) var isScanningStorage = false
   @Published private(set) var isScanningReports = false
   @Published private(set) var errorMessage: String?
+  @Published private(set) var storageScanSession: StorageScanSession?
 
   private let collector: SystemHealthCollecting
-  private var storageScanResult: StorageScanResult?
   private var appIssuesScanResult: AppIssuesHealth?
 
   init(collector: SystemHealthCollecting) {
@@ -49,21 +49,7 @@ final class HealthDashboardStore: ObservableObject {
       return
     }
 
-    isScanningStorage = true
-    errorMessage = nil
-    let didStartAccess = url.startAccessingSecurityScopedResource()
-    let result = await Task.detached {
-      StorageTargetedScanCollector().scan(root: url, now: Date())
-    }.value
-    if didStartAccess {
-      url.stopAccessingSecurityScopedResource()
-    }
-
-    storageScanResult = result
-    if let snapshot {
-      self.snapshot = applyManualResults(to: snapshot)
-    }
-    isScanningStorage = false
+    await scanStorageSessionFolder(url, root: url)
   }
 
   func scanDownloadsFolder() async {
@@ -72,6 +58,23 @@ final class HealthDashboardStore: ObservableObject {
 
   func scanDeveloperFolder() async {
     await scanStorageFolder(startingAt: FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Developer"))
+  }
+
+  func scanStorageSessionFolder(_ url: URL) async {
+    await scanStorageSessionFolder(url, root: storageScanSession?.rootURL ?? url)
+  }
+
+  func scanStorageParentFolder() async {
+    guard let session = storageScanSession else {
+      return
+    }
+
+    let parent = session.currentURL.deletingLastPathComponent()
+    guard parent.path.hasPrefix(session.rootURL.path), parent.path != session.currentURL.path else {
+      return
+    }
+
+    await scanStorageSessionFolder(parent, root: session.rootURL)
   }
 
   func scanCrashReportsFolder() async {
@@ -118,8 +121,8 @@ final class HealthDashboardStore: ObservableObject {
   private func applyManualResults(to snapshot: HealthSnapshot) -> HealthSnapshot {
     var snapshot = snapshot
 
-    if let storageScanResult {
-      snapshot.storage = storageByApplying(storageScanResult, to: snapshot.storage)
+    if let storageScanSession {
+      snapshot.storage = storageByApplying(storageScanSession.result, to: snapshot.storage)
       snapshot.dataAccess = updateDataAccess(snapshot.dataAccess, title: "Storage folder details", dataMode: .live)
     }
 
@@ -157,6 +160,50 @@ final class HealthDashboardStore: ObservableObject {
     )
     storage.sourceNote = "Mixed live storage data. Volume capacity is automatic; largest items come only from the last user-selected folder scan."
     return storage
+  }
+
+  private func scanStorageSessionFolder(_ url: URL, root: URL) async {
+    isScanningStorage = true
+    errorMessage = nil
+    let didStartAccess = root.startAccessingSecurityScopedResource()
+    let result = await Task.detached {
+      StorageTargetedScanCollector().scan(root: url, now: Date())
+    }.value
+    if didStartAccess {
+      root.stopAccessingSecurityScopedResource()
+    }
+
+    storageScanSession = StorageScanSession(
+      rootURL: root,
+      currentURL: url,
+      breadcrumbs: breadcrumbs(root: root, current: url),
+      result: result
+    )
+    if let snapshot {
+      self.snapshot = applyManualResults(to: snapshot)
+    }
+    isScanningStorage = false
+  }
+
+  private func breadcrumbs(root: URL, current: URL) -> [StorageBreadcrumb] {
+    let root = root.standardizedFileURL
+    let current = current.standardizedFileURL
+    let rootPath = root.path
+    let currentPath = current.path
+    let rootTitle = root.lastPathComponent.isEmpty ? root.path : root.lastPathComponent
+
+    guard currentPath.hasPrefix(rootPath) else {
+      return [StorageBreadcrumb(title: rootTitle, url: root)]
+    }
+
+    let relative = currentPath.dropFirst(rootPath.count).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    var breadcrumbs = [StorageBreadcrumb(title: rootTitle, url: root)]
+    var url = root
+    for part in relative.split(separator: "/", omittingEmptySubsequences: true) {
+      url.appendPathComponent(String(part))
+      breadcrumbs.append(StorageBreadcrumb(title: String(part), url: url))
+    }
+    return breadcrumbs
   }
 
   private func updateDataAccess(_ capabilities: [DataAccessCapability], title: String, dataMode: DataMode) -> [DataAccessCapability] {

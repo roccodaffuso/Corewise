@@ -179,3 +179,9 @@ Reason: The report should be useful like a diagnostic summary while staying insi
 Decision: Corewise may explain common live process patterns such as helpers, renderers, WindowServer, Spotlight indexing, file provider sync, and Corewise itself, but it must not present those explanations as proof of root cause.
 
 Reason: Process names are useful context, but a serious diagnostic app should avoid false certainty or automatic remediation advice.
+
+## 2026-07-08: Storage Drilldown Is Session-Only
+
+Decision: Corewise may let the user drill into folders discovered by a manual storage scan, but the selected root/current folder stay in memory only and no security-scoped bookmark is persisted in this version.
+
+Reason: Drilldown makes storage useful without reintroducing surprising personal-folder scanning or durable permission ambiguity.

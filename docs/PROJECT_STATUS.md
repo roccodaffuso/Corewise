@@ -30,7 +30,7 @@ Remaining last30days work started: Corewise is now moving from realignment found
 - Opportunistic battery health context from safe IOKit registry keys when present: cycle count, maximum capacity, and condition.
 - Structured `DataMode` provenance for visible diagnostic values.
 - Read-only live storage collector for startup volume capacity only; personal folders are not scanned automatically.
-- User-selected read-only storage folder scan for largest folders/files, total scanned size, item count, unreadable count, and scan duration.
+- User-selected read-only storage folder scan with session-only folder explorer, breadcrumbs, drilldown into largest folders, parent navigation, largest files, total scanned size, item count, unreadable count, and scan duration.
 - Read-only startup plist inventory for accessible LaunchAgents and LaunchDaemons metadata.
 - Live swap usage. Memory pressure is unavailable until a reliable public parity source is selected.
 - Live high-level thermal state from `ProcessInfo.thermalState`.

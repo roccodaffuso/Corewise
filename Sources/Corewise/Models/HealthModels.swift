@@ -194,6 +194,19 @@ struct StorageScanResult {
   var lastUpdated: Date
 }
 
+struct StorageBreadcrumb: Identifiable {
+  var id: String { url.path }
+  var title: String
+  var url: URL
+}
+
+struct StorageScanSession {
+  var rootURL: URL
+  var currentURL: URL
+  var breadcrumbs: [StorageBreadcrumb]
+  var result: StorageScanResult
+}
+
 struct PerformanceHealth {
   var summary: DiagnosticMetric
   var cpu: SystemCPUReading

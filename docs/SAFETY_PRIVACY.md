@@ -29,6 +29,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Keep storage scanning read-only.
 - Prefer opening Finder, System Settings, or vendor-owned tools for user action.
 - `Reveal in Finder` is allowed for scanned storage items because it opens location context without changing files.
+- Storage drilldown is allowed only after a user-selected folder scan and stays in memory for the current session.
 - Report export must stay local clipboard text unless a future version explicitly adds a user-chosen save action.
 - Ask for permissions only when a feature clearly needs them and can explain why.
 - Omit unreadable files and reports instead of estimating them.
@@ -39,6 +40,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Private APIs for consumer-facing claims.
 - Automatic file deletion.
 - Silent background scanning of personal folders.
+- Persistent access to selected storage folders without explicit future consent.
 - Silent background scanning of diagnostic report folders.
 - Reading document contents for diagnostics.
 - Uploading process, file, crash, or device data.

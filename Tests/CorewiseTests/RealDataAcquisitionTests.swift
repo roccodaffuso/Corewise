@@ -31,6 +31,36 @@ import Testing
   #expect(result.chartData.isEmpty)
 }
 
+@MainActor
+@Test func storageScanSessionSupportsBreadcrumbDrilldown() async throws {
+  let root = FileManager.default.temporaryDirectory.appendingPathComponent("corewise-session-\(UUID().uuidString)")
+  let nested = root.appendingPathComponent("Nested")
+  try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+  try Data(repeating: 1, count: 1024).write(to: nested.appendingPathComponent("nested.bin"))
+
+  let store = HealthDashboardStore(collector: SystemHealthCollector())
+  await store.scanStorageSessionFolder(root)
+  let rootSession = try #require(store.storageScanSession)
+
+  #expect(rootSession.rootURL.standardizedFileURL == root.standardizedFileURL)
+  #expect(rootSession.currentURL.standardizedFileURL == root.standardizedFileURL)
+  #expect(rootSession.breadcrumbs.count == 1)
+  #expect(rootSession.result.largestFolders.contains { $0.title == "Nested" })
+
+  await store.scanStorageSessionFolder(nested)
+  let nestedSession = try #require(store.storageScanSession)
+
+  #expect(nestedSession.rootURL.standardizedFileURL == root.standardizedFileURL)
+  #expect(nestedSession.currentURL.standardizedFileURL == nested.standardizedFileURL)
+  #expect(nestedSession.breadcrumbs.map(\.title).contains("Nested"))
+  #expect(nestedSession.result.largestFiles.contains { $0.title == "nested.bin" })
+
+  await store.scanStorageParentFolder()
+  let parentSession = try #require(store.storageScanSession)
+
+  #expect(parentSession.currentURL.standardizedFileURL == root.standardizedFileURL)
+}
+
 @Test func crashReportCollectorParsesRepeatedAppsFromSelectedFolder() throws {
   let root = FileManager.default.temporaryDirectory.appendingPathComponent("corewise-reports-\(UUID().uuidString)")
   try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
