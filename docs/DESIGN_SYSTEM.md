@@ -13,6 +13,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Keep typography compact and readable in narrow macOS windows.
 - Prefer calm density over marketing-style hero composition.
 - Put operational live diagnostics before explanatory access panels in the first viewport.
+- Do not use placeholder score states as the primary hero. The Overview hero must show a verifiable fact: live signals, coverage, and update time.
 
 ## Status Language
 

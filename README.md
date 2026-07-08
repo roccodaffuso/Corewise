@@ -8,6 +8,7 @@ The current build is a trust-first product prototype. Runtime values are either 
 
 Implemented live signals:
 
+- Overview `Live Signals` header with data coverage instead of a placeholder health score.
 - Data Access overview for live, user-selected, planned, unavailable, and avoided data paths.
 - System CPU load and user/system/idle split from macOS CPU ticks.
 - System RAM fields from VM statistics: used, app memory, cached files, wired, compressed, and swap.
@@ -26,7 +27,7 @@ Implemented live signals:
 
 Planned or unavailable areas:
 
-- Overall health score and cross-section prioritization.
+- Overall health score and cross-section prioritization. The Overview does not present this as a primary diagnosis until the scoring model is real.
 - Battery energy impact and risk scoring.
 - Automatic detailed storage folder scans, caches, Trash, and personal folder offenders.
 - Modern login items, background items, privileged helpers, and startup code signing checks.

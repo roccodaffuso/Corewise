@@ -13,9 +13,10 @@ Statuses:
 
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
+| Live Signals header | Implemented | DataMode coverage plus live section signals | High | Shows coverage and real local signals; it is not a health score. |
 | Health score | Planned | Corewise scoring model | High | Not calculated until scoring has enough live inputs. |
 | Score confidence | Implemented | DataMode coverage count | High | Describes coverage, not device health. |
-| Overall status | Planned | Corewise scoring model | High | UI shows Not Scored Yet until real scoring exists. |
+| Overall status | Planned | Corewise scoring model | High | Overview leads with coverage and live signals until real scoring exists. |
 | CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | 1 second sample; not a sysmond clone. |
 | RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Corewise VM view based on app memory, wired memory, and compressed pages; not a private Activity Monitor clone. |
 | System power watts | Unavailable | Safe public API check | High | No reliable whole-system wattage through safe public APIs in this MVP. |

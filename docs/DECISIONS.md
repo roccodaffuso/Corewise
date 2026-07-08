@@ -143,3 +143,9 @@ Reason: Battery health should not be inferred from partial data or presented as 
 Decision: Corewise keeps the global score off until enough real live signals exist and the scoring model ignores planned, unavailable, and avoided values.
 
 Reason: A premature score would look authoritative while still depending on incomplete coverage.
+
+## 2026-07-08: Overview Leads With Live Signals, Not Score
+
+Decision: The Overview hero uses `Live Signals` plus data coverage instead of a placeholder health score.
+
+Reason: A first-viewport score placeholder makes the product look unfinished or unreliable. Live signal coverage is verifiable and preserves trust while global scoring remains planned.

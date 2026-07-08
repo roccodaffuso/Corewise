@@ -1,7 +1,7 @@
 import Foundation
 
 enum OverallStatus: String, CaseIterable {
-  case notScored = "Not Scored Yet"
+  case notScored = "Score Planned"
   case good = "Good"
   case needsAttention = "Needs Attention"
   case critical = "Critical"
@@ -51,6 +51,7 @@ struct HealthSnapshot {
   var generatedAt: Date
   var healthScore: Int
   var overallStatus: OverallStatus
+  var coverageSummary: DataCoverageSummary
   var overviewMetrics: [DiagnosticMetric]
   var dataAccess: [DataAccessCapability]
   var battery: BatteryHealth
@@ -60,6 +61,32 @@ struct HealthSnapshot {
   var thermal: ThermalHealth
   var appIssues: AppIssuesHealth
   var suggestions: [Suggestion]
+}
+
+struct DataCoverageSummary {
+  var live: Int
+  var planned: Int
+  var unavailable: Int
+  var avoided: Int
+
+  var total: Int {
+    live + planned + unavailable + avoided
+  }
+
+  var livePercent: Double {
+    guard total > 0 else {
+      return 0
+    }
+
+    return Double(live) / Double(total) * 100
+  }
+
+  init(modes: [DataMode]) {
+    live = modes.filter { $0 == .live }.count
+    planned = modes.filter { $0 == .planned }.count
+    unavailable = modes.filter { $0 == .unavailable }.count
+    avoided = modes.filter { $0 == .avoided }.count
+  }
 }
 
 struct DiagnosticMetric: Identifiable {

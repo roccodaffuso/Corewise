@@ -81,6 +81,24 @@ import Testing
   #expect(SystemMetricsSampler.machTicksToNanoseconds(UInt64(timebase.denom) * 1_000_000) == UInt64(timebase.numer) * 1_000_000)
 }
 
+@Test func dataCoverageSummaryCountsModes() {
+  let summary = DataCoverageSummary(modes: [.live, .live, .planned, .unavailable, .avoided])
+
+  #expect(summary.live == 2)
+  #expect(summary.planned == 1)
+  #expect(summary.unavailable == 1)
+  #expect(summary.avoided == 1)
+  #expect(summary.total == 5)
+  #expect(summary.livePercent == 40)
+}
+
+@Test func dataCoverageSummaryHandlesEmptyInput() {
+  let summary = DataCoverageSummary(modes: [])
+
+  #expect(summary.total == 0)
+  #expect(summary.livePercent == 0)
+}
+
 @Test func scoreConfidenceStaysLowWhenCoverageIsSparse() {
   let metric = ScoreConfidenceCalculator.metric(modes: [.live, .planned, .unavailable, .avoided], now: Date())
 
@@ -154,9 +172,13 @@ import Testing
   #expect(modes.allSatisfy { DataMode.allCases.contains($0) })
   #expect(snapshot.overallStatus == .notScored)
   #expect(snapshot.healthScore == 0)
+  #expect(snapshot.coverageSummary.total > 0)
+  #expect(snapshot.coverageSummary.live > 0)
   #expect(snapshot.appIssues.crashes.isEmpty)
   #expect(snapshot.appIssues.crashesByApp.isEmpty)
   #expect(!overviewText.contains("Health Score 74"))
+  #expect(!overviewText.contains("Not Scored Yet"))
+  #expect(snapshot.overviewMetrics.first { $0.title == "Global Score" }?.value == "Planned")
   #expect(!snapshot.overviewMetrics.contains { $0.title == "Data Mode" })
   #expect(!overviewText.contains("Example" + "App"))
   #expect(!overviewText.contains("Photo" + "Tool"))

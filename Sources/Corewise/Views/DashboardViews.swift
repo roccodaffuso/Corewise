@@ -31,7 +31,8 @@ struct OverviewView: View {
 
   private var overviewFindings: [DiagnosticFinding] {
     [
-      DiagnosticFinding(title: "Global score is not calculated yet", detail: "Corewise has live section data, but no real cross-section scoring model yet.", status: .info, severityScore: 0),
+      DiagnosticFinding(title: "Live signals are active", detail: "CPU, RAM, process rows, storage volume, battery basics, thermal state, and startup plist rows are read live where macOS exposes them.", status: .good, severityScore: 6),
+      DiagnosticFinding(title: "Global score is planned", detail: "Corewise has live section data, but no real cross-section scoring model yet.", status: .info, severityScore: 0),
       DiagnosticFinding(title: "Manual scans unlock detail", detail: "Storage folder details and crash reports are read only after you choose a folder.", status: .info, severityScore: 12),
       DiagnosticFinding(title: "No destructive action is required", detail: "Corewise explains signals and leaves every change to you.", status: .good, severityScore: 0)
     ]
@@ -283,29 +284,34 @@ private struct CommandCenterHeader: View {
   var body: some View {
     PremiumPanel {
       HStack(alignment: .center, spacing: 24) {
-        HealthScoreRing(score: snapshot.healthScore, status: snapshot.overallStatus)
+        CoverageRing(summary: snapshot.coverageSummary)
           .frame(width: 132, height: 132)
 
         VStack(alignment: .leading, spacing: 12) {
           HStack(spacing: 10) {
-            Image(systemName: snapshot.overallStatus.systemImage)
-              .foregroundStyle(color(for: snapshot.overallStatus))
-            Text(snapshot.overallStatus.rawValue)
+            Image(systemName: "waveform.path.ecg")
+              .foregroundStyle(color(for: FindingSeverity.good))
+            Text("Live Signals")
               .font(.system(size: 30, weight: .semibold))
           }
 
-          Text("Your Mac’s health, explained clearly.")
+          Text("Corewise is reading real local system signals.")
             .font(.title3.weight(.medium))
 
-          Text("Corewise separates live signals from planned and unavailable coverage, tells you what it cannot know yet, and keeps every action manual.")
+          Text("Performance, storage volume, battery basics, thermal state, and startup plist data are live where macOS exposes them. Global scoring remains planned.")
             .font(.callout)
             .foregroundStyle(.secondary)
             .lineLimit(3)
             .fixedSize(horizontal: false, vertical: true)
 
           HStack(spacing: 8) {
-            StatusPill(status: snapshot.overallStatus)
-            DataModeBadge(dataMode: .planned)
+            DataModeBadge(dataMode: .live)
+            Text("Score Planned")
+              .font(.caption.weight(.semibold))
+              .foregroundStyle(color(for: .planned))
+              .padding(.horizontal, 8)
+              .padding(.vertical, 4)
+              .background(color(for: .planned).opacity(0.16), in: Capsule())
             Text("Updated \(snapshot.generatedAt.formatted(date: .omitted, time: .shortened))")
               .font(.caption)
               .foregroundStyle(.tertiary)
@@ -490,20 +496,15 @@ private struct ProcessChartPanel: View {
   }
 }
 
-private struct HealthScoreRing: View {
-  var score: Int
-  var status: OverallStatus
+private struct CoverageRing: View {
+  var summary: DataCoverageSummary
 
   private var progress: Double {
-    min(max(Double(score) / 100, 0), 1)
+    min(max(summary.livePercent / 100, 0), 1)
   }
 
   private var centerValue: String {
-    status == .notScored ? "--" : "\(score)"
-  }
-
-  private var centerLabel: String {
-    status == .notScored ? "Not scored" : "Score"
+    "\(summary.live)"
   }
 
   var body: some View {
@@ -512,18 +513,21 @@ private struct HealthScoreRing: View {
         .stroke(.quaternary, lineWidth: 12)
       Circle()
         .trim(from: 0, to: progress)
-        .stroke(color(for: status), style: StrokeStyle(lineWidth: 12, lineCap: .round))
+        .stroke(color(for: FindingSeverity.good), style: StrokeStyle(lineWidth: 12, lineCap: .round))
         .rotationEffect(.degrees(-90))
 
       VStack(spacing: 2) {
         Text(centerValue)
           .font(.system(size: 38, weight: .semibold, design: .rounded))
-        Text(centerLabel)
+        Text("Live")
+          .font(.caption.weight(.medium))
+          .foregroundStyle(.secondary)
+        Text("Coverage")
           .font(.caption.weight(.medium))
           .foregroundStyle(.secondary)
       }
     }
-    .accessibilityLabel(status == .notScored ? "Health score not calculated yet" : "Health score \(score) out of 100")
+    .accessibilityLabel("Data coverage \(summary.live) live signals out of \(summary.total)")
   }
 }
 

@@ -51,7 +51,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
     let crashes = appIssuesHealth.crashes
     let crashesByApp = appIssuesHealth.crashesByApp
     let dataAccess = dataAccessCapabilities()
-    let scoreConfidence = ScoreConfidenceCalculator.metric(
+    let coverageSummary = DataCoverageSummary(
       modes: coverageModes(
         dataAccess: dataAccess,
         battery: batteryHealth,
@@ -64,16 +64,17 @@ struct SystemHealthCollector: SystemHealthCollecting {
         issueMetrics: issueMetrics,
         crashes: crashes,
         crashCharts: crashesByApp
-      ),
-      now: now
+      )
     )
+    let scoreConfidence = ScoreConfidenceCalculator.metric(summary: coverageSummary, now: now)
 
     return HealthSnapshot(
       generatedAt: now,
       healthScore: 0,
       overallStatus: .notScored,
+      coverageSummary: coverageSummary,
       overviewMetrics: [
-        metric("Health Score", "Not Scored Yet", "", .info, 0, "Corewise does not calculate a global health score until enough section data is live.", "Corewise scoring model", "Planned / high", "Use section-level Live badges instead of a global score for now.", now, dataMode: .planned),
+        metric("Global Score", "Planned", "", .info, 0, "Corewise will calculate a global score only after enough live signals are stable.", "Corewise scoring model", "Planned / high", "Use section-level Live badges instead of a global score for now.", now, dataMode: .planned),
         metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU usage sampled from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Refresh or wait a few seconds to see whether this is sustained.", now, dataMode: instant.cpu.dataMode),
         metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryPercentValue)% of physical memory is app memory, wired memory, or compressed memory in Corewise's VM view.", instant.memory.source, instant.memory.confidence, "Check process memory and swap before blaming a single app.", now, dataMode: instant.memory.dataMode),
         metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Do not show unsupported or elevated-tool wattage readings in the MVP.", now, dataMode: .unavailable),

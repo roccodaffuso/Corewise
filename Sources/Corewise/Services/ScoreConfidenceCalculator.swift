@@ -2,12 +2,11 @@ import Foundation
 
 enum ScoreConfidenceCalculator {
   static func metric(modes: [DataMode], now: Date) -> DiagnosticMetric {
-    let total = max(modes.count, 1)
-    let liveCount = modes.filter { $0 == .live }.count
-    let plannedCount = modes.filter { $0 == .planned }.count
-    let unavailableCount = modes.filter { $0 == .unavailable }.count
-    let avoidedCount = modes.filter { $0 == .avoided }.count
-    let livePercent = Double(liveCount) / Double(total) * 100
+    metric(summary: DataCoverageSummary(modes: modes), now: now)
+  }
+
+  static func metric(summary: DataCoverageSummary, now: Date) -> DiagnosticMetric {
+    let livePercent = summary.livePercent
     let label: String
     let status: FindingSeverity
     let severity: Int
@@ -33,7 +32,7 @@ enum ScoreConfidenceCalculator {
       dataMode: .live,
       status: status,
       severityScore: severity,
-      explanation: "\(liveCount) of \(total) diagnostic values are live; \(plannedCount) planned, \(unavailableCount) unavailable, \(avoidedCount) avoided.",
+      explanation: "\(summary.live) of \(max(summary.total, 1)) diagnostic values are live; \(summary.planned) planned, \(summary.unavailable) unavailable, \(summary.avoided) avoided.",
       source: "DataMode coverage count",
       confidence: "Live calculation / high",
       recommendedAction: "Use section-level Live badges before trusting the global score.",

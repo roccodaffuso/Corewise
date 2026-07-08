@@ -4,7 +4,7 @@ Last updated: 2026-07-08
 
 ## Summary
 
-Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, live CPU/RAM process sampling, process table, observed process memory, physical-footprint reads when available, safe battery basics, opportunistic battery health keys, startup volume storage, manual storage folder scans, manual crash report parsing, and launch plist inventory exist locally. Runtime diagnostics no longer use synthetic values.
+Corewise is an early macOS SwiftUI MVP. The app shell, diagnostic pages, richer data model, charts, Overview Live Signals header, live CPU/RAM process sampling, process table, observed process memory, physical-footprint reads when available, safe battery basics, opportunistic battery health keys, startup volume storage, manual storage folder scans, manual crash report parsing, and launch plist inventory exist locally. Runtime diagnostics no longer use synthetic values.
 
 The immediate priority is trust: the UI and docs must make it obvious which values are live, planned, unavailable, or avoided by design.
 
@@ -18,6 +18,7 @@ Current state: real-data acquisition started; Performance parity is partially im
 - SwiftPM macOS app target named `Corewise`.
 - SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, and Settings.
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
+- Overview leads with `Live Signals` and data coverage instead of a placeholder health score.
 - Live sampler for system CPU split, system VM memory fields, process rows, app groups, observed process memory, resident memory, and physical footprint when macOS returns it. Process enumeration now uses `sysctl KERN_PROC_ALL` first so renderer/helper processes are less likely to be missed.
 - Short in-memory performance history for sustained high CPU interpretation.
 - Live uptime from `ProcessInfo.systemUptime`.
@@ -62,5 +63,5 @@ Current state: real-data acquisition started; Performance parity is partially im
 - Performance values are closer to Monitoraggio Attività than before, but Corewise still uses public APIs and should not claim sysmond-level parity. The primary process memory value is observed memory, defined as the larger public value between footprint and RSS.
 - Storage details depend on a user-selected folder and should not be mistaken for full-disk analysis.
 - Crash report details depend on a user-selected folder and may miss reports outside that folder.
-- Health score is not calculated yet and must not be presented as a final diagnostic score.
+- Health score is not calculated yet and must not be presented as a final diagnostic score; Overview should continue emphasizing live signals and coverage.
 - The current branch now has a checkpoint baseline plus additional stabilization changes in progress.
