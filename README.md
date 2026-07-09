@@ -18,7 +18,7 @@ Implemented live signals:
 - App grouping derived from real process rows, kept separate from individual process rows.
 - Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
 - Battery cycle count, maximum capacity, and condition when safe battery registry keys are present.
-- Startup volume total, used, available, and available percent.
+- Startup volume total, used, available, available percent, Finder-style free space, opportunistic space when macOS exposes it, volume name, format, local/internal flags, and read-only state.
 - Startup volume breakdown as used vs available space.
 - User-selected storage folder scan for largest folders/files, item count, unreadable count, and scan size.
 - Short local performance history for sustained CPU interpretation.

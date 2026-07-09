@@ -32,6 +32,7 @@ Premium redesign baseline: visual foundation, sidebar, shared panels, process ta
 - Opportunistic battery health context from safe IOKit registry keys when present: cycle count, maximum capacity, and condition.
 - Structured `DataMode` provenance for visible diagnostic values.
 - Read-only live storage collector for startup volume capacity only; personal folders are not scanned automatically.
+- Storage volume context now includes Finder-style free space, important/opportunistic capacity where available, volume name, format, local/internal flags, and read-only state without opening personal folders.
 - User-selected read-only storage folder scan with session-only folder explorer, breadcrumbs, drilldown into largest folders, parent navigation, largest files, total scanned size, item count, unreadable count, and scan duration.
 - Read-only startup plist inventory for accessible LaunchAgents and LaunchDaemons metadata, shown as a compact table with label, kind, executable, startup impact, trust state, and Finder reveal.
 - Swap Insight in `Performance > Memory`: system swap used/total/available, trend, swap in/out rates, swapped VM pages, encryption state, and likely memory-pressure contributors. Corewise does not claim exact per-process swap ownership.
@@ -77,3 +78,4 @@ Premium redesign baseline: visual foundation, sidebar, shared panels, process ta
 - Health score is not calculated yet and must not be presented as a final diagnostic score; Overview should continue emphasizing live signals and coverage.
 - Report copy is a current-snapshot summary, not a full support bundle or persistent diagnostic archive. It now has a short summary view and a fuller Markdown view, both generated from the same snapshot.
 - Premium visual polish still needs manual screenshot QA across light/dark and narrow/wide windows before treating the redesign as final.
+- Storage is more informative than the first zero-mock pass, but full folder-level insight still requires a user-selected scan by design.

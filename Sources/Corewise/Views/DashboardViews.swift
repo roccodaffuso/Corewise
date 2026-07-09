@@ -85,19 +85,11 @@ struct StorageView: View {
         metric: storage.summary
       )
 
-      LazyVGrid(columns: CorewiseLayout.panelGrid, alignment: .leading, spacing: CorewiseLayout.panelSpacing) {
-        PremiumPanel(title: "Breakdown", subtitle: "GB by category", systemImage: "chart.pie") {
-          StorageBreakdownChart(data: storage.breakdown)
-        }
-
-        PremiumPanel(title: "Largest items from selected scan", subtitle: "Manual scan results, not cleanup commands", systemImage: "chart.bar.xaxis") {
-          HorizontalBarChart(data: storage.spaceOffenders, unit: "GB")
-        }
-      }
+      MetricBoard(metrics: storage.metrics)
 
       ManualScanPanel(
-        title: "Targeted scan",
-        subtitle: "Choose one folder. Corewise reads file sizes only.",
+        title: "Scan a folder",
+        subtitle: "Choose a scope when you want folder-level detail. Nothing is scanned before you ask.",
         isRunning: isScanning,
         primaryTitle: "Choose Folder",
         primaryAction: scanFolder,
@@ -113,7 +105,17 @@ struct StorageView: View {
         scanFolderAt: scanFolderAt,
         scanParent: scanParent
       )
-      MetricBoard(metrics: storage.metrics)
+
+      LazyVGrid(columns: CorewiseLayout.panelGrid, alignment: .leading, spacing: CorewiseLayout.panelSpacing) {
+        PremiumPanel(title: "Breakdown", subtitle: "GB by category", systemImage: "chart.pie") {
+          StorageBreakdownChart(data: storage.breakdown)
+        }
+
+        PremiumPanel(title: "Largest items from selected scan", subtitle: "Manual scan results, not cleanup commands", systemImage: "chart.bar.xaxis") {
+          HorizontalBarChart(data: storage.spaceOffenders, unit: "GB")
+        }
+      }
+
       PriorityPanel(title: "Findings", subtitle: "What the storage picture means.", findings: storage.findings)
       SafeActionPanel(title: "Safe actions", actions: storage.actions)
       SourceNote(text: storage.sourceNote, dataMode: storage.summary.dataMode)

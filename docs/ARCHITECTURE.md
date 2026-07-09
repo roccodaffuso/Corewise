@@ -69,7 +69,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 
 `StorageDiagnosticsCollector` should stay privacy-first:
 
-- Read startup volume capacity resource values during automatic refresh.
+- Read startup volume capacity and safe volume metadata during automatic refresh: total, used, important/free capacity, Finder-style available capacity, opportunistic capacity when present, localized volume name, format description, local/internal flags, and read-only state.
 - Do not enumerate Downloads, Trash, user Library caches, developer folders, or browser caches automatically.
 - Leave detailed folder review unavailable or planned until there is an explicit targeted scan flow.
 

@@ -45,6 +45,11 @@ Statuses:
 | --- | --- | --- | --- | --- |
 | Total, used, available | Implemented | `FileManager` volume resource values | High | Startup volume only. |
 | Available percent | Implemented | Derived from real volume values | High | Startup volume only. |
+| Finder available | Implemented | `FileManager` `volumeAvailableCapacity` | High | Lower-level free-space context; Corewise still uses important-usage capacity for practical headroom. |
+| Important available | Implemented | `FileManager` `volumeAvailableCapacityForImportantUsage` | High | Best current automatic capacity signal for user-important work and updates. |
+| Opportunistic available | Implemented when present | `FileManager` `volumeAvailableCapacityForOpportunisticUsage` | Medium | Some volumes may not expose it; unavailable is shown instead of `0 GB`. |
+| Volume name and format | Implemented | `FileManager` `volumeLocalizedName` and `volumeLocalizedFormatDescription` | High | Startup volume only; not a full disk inventory. |
+| Volume flags | Implemented | `FileManager` `volumeIsInternal`, `volumeIsLocal`, `volumeIsReadOnly` | Medium | Flags are shown as volume context, not health scoring. |
 | User-selected folder scan | Implemented | `NSOpenPanel` folder choice plus read-only size scan | Medium | Runs only after user action; no bookmark is persisted in this version. |
 | Storage scan session | Implemented | In-memory root/current folder URLs plus scan result | Medium | Session-only; folder access is not persisted across launches. |
 | Storage breadcrumbs | Implemented | Derived from selected root and current scan folder | Medium | Used only for navigation inside the chosen folder scope. |

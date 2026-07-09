@@ -239,3 +239,9 @@ Reason: The user’s trust concern centered on real CPU/RAM numbers. A serious C
 Decision: Data Access remains visible but secondary to live signals and operational data.
 
 Reason: Provenance matters, but leading with missing/planned access made Corewise feel incomplete. The first viewport should show what Corewise can currently read.
+
+## 2026-07-09: Storage Gets More Volume Context Before More Permissions
+
+Decision: Corewise should enrich automatic Storage with safe startup-volume metadata before adding broader folder access: important/free capacity, Finder-style free capacity, opportunistic capacity when present, volume name, format, local/internal flags, and read-only state.
+
+Reason: The Storage page needs to feel useful before a manual scan, but broad automatic folder enumeration would violate the product's privacy posture. Volume metadata gives more real information without opening personal folders.

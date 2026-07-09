@@ -13,6 +13,7 @@
 ## Phase 2: Storage Read-Only Collector
 
 - Implemented: real total, used, available, and available-percent values.
+- Implemented: safe startup-volume context for Finder-style free space, important/opportunistic availability, volume name, format, local/internal flags, and read-only state.
 - Implemented: automatic refresh reads startup volume capacity only.
 - Implemented: Downloads, Trash, caches, and user Library folders are not scanned automatically.
 - Implemented: explicit user-selected folder scan with largest folders/files, unreadable count, and scan duration.

@@ -6,8 +6,14 @@ import Testing
 @Test func storageCollectorDoesNotPopulateAutomaticFolderScans() {
   let storage = StorageDiagnosticsCollector().currentStorage(now: Date())
 
-  #expect(storage.metrics.allSatisfy { $0.dataMode == .live })
+  #expect(storage.metrics.allSatisfy { $0.dataMode == .live || $0.dataMode == .unavailable })
   #expect(storage.breakdown.allSatisfy { $0.dataMode == .live })
+  #expect(storage.metrics.contains { $0.title == "Finder Available" })
+  #expect(storage.metrics.contains { $0.title == "Opportunistic" })
+  #expect(storage.metrics.contains { $0.title == "Volume" })
+  #expect(storage.metrics.contains { $0.title == "Format" })
+  #expect(storage.metrics.contains { $0.title == "Volume Type" })
+  #expect(storage.metrics.contains { $0.title == "Read-only" })
   #expect(storage.largeFolders.isEmpty)
   #expect(storage.largeFiles.isEmpty)
   #expect(storage.developerCaches.isEmpty)

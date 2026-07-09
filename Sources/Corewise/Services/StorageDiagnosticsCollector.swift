@@ -13,9 +13,15 @@ struct StorageDiagnosticsCollector {
 
     let metrics = [
       metric("Total Storage", totalValue, "GB", .live, .info, 0, "Total capacity reported by the startup volume.", "FileManager volume resource values", "Live / high", "No action needed.", now),
-      metric("Available", availableValue, "GB", .live, storageStatus, storageSeverity, "Free space currently available on the startup volume.", "FileManager volume resource values", "Live / high", "Keep enough room for updates, builds, and temporary files.", now),
       metric("Used", usedValue, "GB", .live, storageStatus, storageSeverity, "Capacity currently allocated on the startup volume.", "Derived from volume capacity and available capacity", "Live / high", "Review the largest readable folders before removing anything.", now),
-      metric("Available", percentValue, "%", .live, storageStatus, storageSeverity, "Percentage of startup volume capacity still available.", "Derived from volume capacity and available capacity", "Live / high", "Aim for comfortable free space before large macOS or Xcode updates.", now)
+      metric("Available", availableValue, "GB", .live, storageStatus, storageSeverity, "Free space currently available for important work on the startup volume.", "FileManager volumeAvailableCapacityForImportantUsage", "Live / high", "Keep enough room for updates, builds, and temporary files.", now),
+      metric("Available", percentValue, "%", .live, storageStatus, storageSeverity, "Percentage of startup volume capacity still available for important work.", "Derived from volume capacity and important-usage capacity", "Live / high", "Aim for comfortable free space before large macOS or Xcode updates.", now),
+      metric("Finder Available", number(volume.rawAvailableGB), "GB", .live, .info, 0, "Raw available capacity reported by the volume, similar to the lower-level file-system free-space view.", "FileManager volumeAvailableCapacity", "Live / high", "Use Important Available for practical update/build headroom.", now),
+      metric("Opportunistic", volume.opportunisticAvailableGB.map(number) ?? "N/A", volume.opportunisticAvailableGB == nil ? "" : "GB", volume.opportunisticAvailableGB == nil ? .unavailable : .live, .info, 0, "Space macOS reports as available for less urgent opportunistic work when exposed by the volume.", "FileManager volumeAvailableCapacityForOpportunisticUsage", volume.opportunisticAvailableGB == nil ? "Unavailable" : "Live / medium", "Treat this as context, not cleanup advice.", now),
+      metric("Volume", volume.name, "", .live, .info, 0, "Startup volume name returned by macOS.", "FileManager volumeLocalizedName", "Live / high", "No action needed.", now),
+      metric("Format", volume.formatDescription, "", .live, .info, 0, "File-system format description returned by macOS.", "FileManager volumeLocalizedFormatDescription", "Live / high", "No action needed.", now),
+      metric("Volume Type", volume.volumeType, "", .live, .info, 0, "Whether the startup volume is local/internal when macOS exposes those flags.", "FileManager volume flags", "Live / medium", "No action needed.", now),
+      metric("Read-only", volume.isReadOnly ? "Yes" : "No", "", .live, volume.isReadOnly ? .warning : .good, volume.isReadOnly ? 55 : 0, "Whether macOS reports the startup volume as read-only.", "FileManager volumeIsReadOnly", "Live / high", volume.isReadOnly ? "Review the volume state in Disk Utility." : "No action needed.", now)
     ]
 
     return StorageHealth(
@@ -43,15 +49,52 @@ struct StorageDiagnosticsCollector {
     )
   }
 
-  private func volumeStats() -> (totalGB: Double, availableGB: Double, usedGB: Double) {
+  private func volumeStats() -> (
+    totalGB: Double,
+    availableGB: Double,
+    usedGB: Double,
+    rawAvailableGB: Double,
+    opportunisticAvailableGB: Double?,
+    name: String,
+    formatDescription: String,
+    volumeType: String,
+    isReadOnly: Bool
+  ) {
     let url = URL(fileURLWithPath: NSHomeDirectory())
-    let keys: Set<URLResourceKey> = [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey, .volumeAvailableCapacityKey]
+    let keys: Set<URLResourceKey> = [
+      .volumeTotalCapacityKey,
+      .volumeAvailableCapacityForImportantUsageKey,
+      .volumeAvailableCapacityForOpportunisticUsageKey,
+      .volumeAvailableCapacityKey,
+      .volumeLocalizedNameKey,
+      .volumeLocalizedFormatDescriptionKey,
+      .volumeIsInternalKey,
+      .volumeIsLocalKey,
+      .volumeIsReadOnlyKey
+    ]
     let values = try? url.resourceValues(forKeys: keys)
     let totalBytes = Double(values?.volumeTotalCapacity ?? 0)
+    let rawAvailableBytes = Double(values?.volumeAvailableCapacity ?? 0)
     let availableBytes = Double(values?.volumeAvailableCapacityForImportantUsage ?? Int64(values?.volumeAvailableCapacity ?? 0))
+    let opportunisticAvailableGB = values?.volumeAvailableCapacityForOpportunisticUsage.map { Double($0) / bytesPerGB }
     let usedBytes = max(totalBytes - availableBytes, 0)
+    let volumeName = values?.volumeLocalizedName ?? "Startup Volume"
+    let formatDescription = values?.volumeLocalizedFormatDescription ?? "Unknown"
+    let isInternal = values?.volumeIsInternal
+    let isLocal = values?.volumeIsLocal
+    let isReadOnly = values?.volumeIsReadOnly ?? false
 
-    return (totalBytes / bytesPerGB, availableBytes / bytesPerGB, usedBytes / bytesPerGB)
+    return (
+      totalBytes / bytesPerGB,
+      availableBytes / bytesPerGB,
+      usedBytes / bytesPerGB,
+      rawAvailableBytes / bytesPerGB,
+      opportunisticAvailableGB,
+      volumeName,
+      formatDescription,
+      volumeType(isInternal: isInternal, isLocal: isLocal),
+      isReadOnly
+    )
   }
 
   private func findings(availablePercent: Double) -> [DiagnosticFinding] {
@@ -124,6 +167,23 @@ struct StorageDiagnosticsCollector {
       return String(Int(value))
     }
     return String(format: "%.1f", value)
+  }
+
+  private func volumeType(isInternal: Bool?, isLocal: Bool?) -> String {
+    switch (isInternal, isLocal) {
+    case (.some(true), .some(true)):
+      return "Internal local"
+    case (.some(false), .some(true)):
+      return "External local"
+    case (_, .some(false)):
+      return "Network"
+    case (.some(true), nil):
+      return "Internal"
+    case (.some(false), nil):
+      return "External"
+    default:
+      return "Unknown"
+    }
   }
 
   private let bytesPerGB = 1024.0 * 1024.0 * 1024.0
