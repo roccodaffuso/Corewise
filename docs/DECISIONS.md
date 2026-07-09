@@ -209,3 +209,9 @@ Reason: Drilldown makes storage useful without reintroducing surprising personal
 Decision: Corewise Settings should mature inside the existing SwiftUI `Settings` scene and should not be added to the main diagnostic sidebar.
 
 Reason: The sidebar is for diagnostic workflows. Settings is configuration, privacy explanation, and display behavior; making it another dashboard page would dilute the product structure and feel less macOS-native.
+
+## 2026-07-09: Settings V1 Controls Display And Report Preferences Only
+
+Decision: Settings V1 may persist Performance default focus, Report defaults, optional report summary inclusion, and visible Menu Bar rows. It must not change data collection scope.
+
+Reason: These controls are useful and low-risk. Launch at login, refresh interval, remembered folders, and broad scan controls need separate safety decisions before implementation.

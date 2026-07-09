@@ -36,7 +36,7 @@ Remaining last30days work batch completed locally through `fa4e241`: Performance
 - Live high-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report metadata parsing for crash counts and repeated app patterns, with a strong empty state before reports are selected.
 - Local Diagnostic Report page with `Summary / Markdown` views, notable findings, manual next steps, source/confidence notes, and clipboard-only copy without stack traces, uploads, file contents, or cleanup actions.
-- Native SwiftUI Settings scene exists with placeholder local-first copy; `docs/SETTINGS_PLAN.md` now defines how to mature it.
+- Native SwiftUI Settings scene has compact General, Privacy & Data, Performance, Report, and Menu Bar tabs. Settings controls display/report preferences only and does not change automatic data collection.
 - Read-only, manual-action product stance.
 
 ## Planned
@@ -48,7 +48,7 @@ Remaining last30days work batch completed locally through `fa4e241`: Performance
 - Add WindowServer interpretation and thermal contributor attribution only through safe sources.
 - Keep unavailable wattage clearly marked unless a safe, user-approved source exists.
 - Refine menu bar monitor copy and behavior after manual app QA.
-- Mature Settings as a compact native macOS settings window, separate from the diagnostic sidebar.
+- Keep Settings preferences small and local; consider launch-at-login, refresh interval, or remembered folders only after separate safety decisions.
 
 ## Unavailable
 

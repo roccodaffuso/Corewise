@@ -1,7 +1,7 @@
 import Foundation
 
 struct DiagnosticReportBuilder {
-  func summary(for snapshot: HealthSnapshot) -> String {
+  func summary(for snapshot: HealthSnapshot, options: DiagnosticReportOptions = .default) -> String {
     """
     Corewise Diagnostic Summary
     Generated: \(snapshot.generatedAt.formatted(date: .abbreviated, time: .shortened))
@@ -19,7 +19,8 @@ struct DiagnosticReportBuilder {
     - Battery: \(displayValue(snapshot.battery.summary))
     - Thermal: \(displayValue(snapshot.thermal.summary))
     - Startup plist rows: \(snapshot.startup.launchAgents.count + snapshot.startup.launchDaemons.count)
-    - Crash reports: \(snapshot.appIssues.crashes.isEmpty ? "No user-selected reports" : "\(snapshot.appIssues.crashes.count) apps with reports")
+    - Storage scan: \(storageScanSummary(snapshot, options: options))
+    - Crash reports: \(crashReportSummary(snapshot, options: options))
 
     Limits
     - Global score is planned, not calculated.
@@ -28,7 +29,7 @@ struct DiagnosticReportBuilder {
     """
   }
 
-  func markdown(for snapshot: HealthSnapshot) -> String {
+  func markdown(for snapshot: HealthSnapshot, options: DiagnosticReportOptions = .default) -> String {
     let cpuProcesses = snapshot.performance.processes
       .sorted { $0.cpuPercent > $1.cpuPercent }
       .prefix(5)
@@ -39,13 +40,9 @@ struct DiagnosticReportBuilder {
       .prefix(5)
       .map { "- \($0.displayName): \(bytes($0.observedMemoryBytes)) memory, \(number($0.cpuPercent))% CPU, PID \($0.pid)" }
       .joined(separator: "\n")
-    let storageScan = snapshot.storage.spaceOffenders.isEmpty
-      ? "No user-selected folder scan in this snapshot."
-      : snapshot.storage.spaceOffenders.prefix(5).map { "- \($0.title): \(number($0.value)) \($0.unit)" }.joined(separator: "\n")
+    let storageScan = storageScanMarkdown(snapshot, options: options)
     let startupRows = snapshot.startup.launchAgents.count + snapshot.startup.launchDaemons.count
-    let crashSummary = snapshot.appIssues.crashes.isEmpty
-      ? "No diagnostic reports selected in this snapshot."
-      : snapshot.appIssues.crashes.prefix(5).map { "- \($0.appName): \($0.crashesLast7Days) in 7 days, \($0.crashesLast30Days) in 30 days" }.joined(separator: "\n")
+    let crashSummary = crashSummaryMarkdown(snapshot, options: options)
 
     return """
     # Corewise Diagnostic Report
@@ -143,6 +140,46 @@ struct DiagnosticReportBuilder {
       .prefix(8)
       .map { "- \($0.title): \($0.body)" }
       .joined(separator: "\n")
+  }
+
+  private func storageScanSummary(_ snapshot: HealthSnapshot, options: DiagnosticReportOptions) -> String {
+    guard options.includeStorageScan else {
+      return "Excluded by Settings"
+    }
+
+    return snapshot.storage.spaceOffenders.isEmpty
+      ? "No user-selected folder scan"
+      : "\(snapshot.storage.spaceOffenders.count) selected-scan items"
+  }
+
+  private func crashReportSummary(_ snapshot: HealthSnapshot, options: DiagnosticReportOptions) -> String {
+    guard options.includeCrashSummary else {
+      return "Excluded by Settings"
+    }
+
+    return snapshot.appIssues.crashes.isEmpty
+      ? "No user-selected reports"
+      : "\(snapshot.appIssues.crashes.count) apps with reports"
+  }
+
+  private func storageScanMarkdown(_ snapshot: HealthSnapshot, options: DiagnosticReportOptions) -> String {
+    guard options.includeStorageScan else {
+      return "Excluded by Settings."
+    }
+
+    return snapshot.storage.spaceOffenders.isEmpty
+      ? "No user-selected folder scan in this snapshot."
+      : snapshot.storage.spaceOffenders.prefix(5).map { "- \($0.title): \(number($0.value)) \($0.unit)" }.joined(separator: "\n")
+  }
+
+  private func crashSummaryMarkdown(_ snapshot: HealthSnapshot, options: DiagnosticReportOptions) -> String {
+    guard options.includeCrashSummary else {
+      return "Excluded by Settings."
+    }
+
+    return snapshot.appIssues.crashes.isEmpty
+      ? "No diagnostic reports selected in this snapshot."
+      : snapshot.appIssues.crashes.prefix(5).map { "- \($0.appName): \($0.crashesLast7Days) in 7 days, \($0.crashesLast30Days) in 30 days" }.joined(separator: "\n")
   }
 
   private func displayValue(_ metric: DiagnosticMetric) -> String {

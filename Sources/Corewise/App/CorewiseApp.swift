@@ -32,6 +32,11 @@ struct CorewiseApp: App {
 private struct MenuBarMonitorView: View {
   @ObservedObject var store: HealthDashboardStore
   @Environment(\.openWindow) private var openWindow
+  @AppStorage(CorewiseSettingsKeys.menuBarShowCPU) private var showCPU = true
+  @AppStorage(CorewiseSettingsKeys.menuBarShowMemory) private var showMemory = true
+  @AppStorage(CorewiseSettingsKeys.menuBarShowSwap) private var showSwap = true
+  @AppStorage(CorewiseSettingsKeys.menuBarShowTopCPU) private var showTopCPU = true
+  @AppStorage(CorewiseSettingsKeys.menuBarShowTopMemory) private var showTopMemory = true
 
   private var snapshot: HealthSnapshot? {
     store.snapshot
@@ -66,15 +71,36 @@ private struct MenuBarMonitorView: View {
       }
 
       if let snapshot {
-        HStack(spacing: 8) {
-          MenuMetricCard(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), tint: CorewiseVisual.accent)
-          MenuMetricCard(title: "Memory", value: menuBytes(snapshot.performance.memory.usedBytes), tint: CorewiseVisual.moss)
-          MenuMetricCard(title: "Swap", value: snapshot.performance.memory.swapUsedBytes.map(menuBytes) ?? "N/A", tint: CorewiseVisual.amber)
+        if showCPU || showMemory || showSwap {
+          HStack(spacing: 8) {
+            if showCPU {
+              MenuMetricCard(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), tint: CorewiseVisual.accent)
+            }
+            if showMemory {
+              MenuMetricCard(title: "Memory", value: menuBytes(snapshot.performance.memory.usedBytes), tint: CorewiseVisual.moss)
+            }
+            if showSwap {
+              MenuMetricCard(title: "Swap", value: snapshot.performance.memory.swapUsedBytes.map(menuBytes) ?? "N/A", tint: CorewiseVisual.amber)
+            }
+          }
         }
 
-        VStack(spacing: 8) {
-          MenuProcessRow(title: "Top CPU", name: topCPUProcess?.displayName ?? "N/A", value: topCPUProcess.map { "\(number($0.cpuPercent))%" } ?? "N/A")
-          MenuProcessRow(title: "Top Memory", name: topMemoryProcess?.displayName ?? "N/A", value: topMemoryProcess.map { menuBytes($0.observedMemoryBytes) } ?? "N/A")
+        if showTopCPU || showTopMemory {
+          VStack(spacing: 8) {
+            if showTopCPU {
+              MenuProcessRow(title: "Top CPU", name: topCPUProcess?.displayName ?? "N/A", value: topCPUProcess.map { "\(number($0.cpuPercent))%" } ?? "N/A")
+            }
+            if showTopMemory {
+              MenuProcessRow(title: "Top Memory", name: topMemoryProcess?.displayName ?? "N/A", value: topMemoryProcess.map { menuBytes($0.observedMemoryBytes) } ?? "N/A")
+            }
+          }
+        }
+
+        if !showCPU && !showMemory && !showSwap && !showTopCPU && !showTopMemory {
+          Text("Menu bar signals are hidden in Settings.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, minHeight: 70)
         }
       } else {
         ProgressView()

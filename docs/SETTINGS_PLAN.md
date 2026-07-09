@@ -4,7 +4,7 @@
 
 Corewise should implement Settings as a native macOS settings window, not as another diagnostic page in the main sidebar. The main app stays focused on live diagnostics; Settings controls product behavior, privacy choices, display preferences, and optional future persistence.
 
-The current app already declares a SwiftUI `Settings` scene and a minimal `SettingsView`. This plan documents how to mature that surface without adding code in this task.
+The app now declares a SwiftUI `Settings` scene and uses a dedicated `SettingsView` with compact native tabs. Settings remains configuration, not diagnosis.
 
 ## Research Notes
 
@@ -36,13 +36,15 @@ Reason:
 Implemented:
 
 - `CorewiseApp` declares `Settings { SettingsView() }`.
-- `SettingsView` exists, but it is a placeholder form with local-first copy only.
+- `SettingsView` lives in its own view file.
+- Settings uses a compact `TabView` with native `Form`, `Section`, `Picker`, and `Toggle` controls.
+- Settings contains General, Privacy & Data, Performance, Report, and Menu Bar tabs.
 
 Planned:
 
-- Move Settings content into a dedicated view file when implementation begins.
-- Replace the placeholder with a compact native settings window.
-- Add only preferences that have a clear product effect.
+- Launch at login only if implemented through safe user-visible macOS APIs.
+- Refresh interval only if refresh behavior becomes deliberately configurable.
+- Remember selected folders only after security-scoped bookmark consent is designed.
 
 Avoided:
 
@@ -52,9 +54,7 @@ Avoided:
 
 ## Proposed Structure
 
-Use a compact `TabView` or sectioned `Form`, depending on final density.
-
-Recommended first implementation:
+Implemented first version:
 
 1. General
 2. Privacy & Data
@@ -62,7 +62,19 @@ Recommended first implementation:
 4. Report
 5. Menu Bar
 
-Avoid deep navigation. Settings should feel like a small macOS utility window, roughly `460-560px` wide and `320-420px` tall unless content genuinely needs more space.
+Settings uses a small macOS utility window footprint and avoids deep navigation.
+
+## Implemented Preference Keys
+
+- `settings.performance.defaultFocus`: `"cpu"` by default.
+- `settings.report.defaultFormat`: `"summary"` by default.
+- `settings.report.includeStorageScan`: `true` by default.
+- `settings.report.includeCrashSummary`: `true` by default.
+- `settings.menuBar.showCPU`: `true` by default.
+- `settings.menuBar.showMemory`: `true` by default.
+- `settings.menuBar.showSwap`: `true` by default.
+- `settings.menuBar.showTopCPU`: `true` by default.
+- `settings.menuBar.showTopMemory`: `true` by default.
 
 ## General
 
@@ -70,7 +82,7 @@ Purpose: lightweight app behavior.
 
 Possible preferences:
 
-- Show menu bar monitor: `Live` if the menu bar extra can be toggled safely; otherwise planned.
+- Show menu bar monitor: not implemented; the menu bar extra remains present in this version.
 - Refresh interval: planned until refresh behavior is deliberately configurable.
 - Launch at login: planned only if implemented through safe user-visible macOS APIs.
 - Appearance: avoided for now unless there is a strong reason; Corewise should follow system appearance.
@@ -107,7 +119,7 @@ Purpose: let users tune how performance diagnostics are displayed, not how data 
 
 Possible preferences:
 
-- Default Performance tab: CPU or Memory.
+- Default Performance tab: implemented as CPU or Memory.
 - Show system/root processes: planned; default should be visible because hiding them can reduce trust.
 - Highlight this app: implemented behavior can remain always on; a setting is probably unnecessary.
 - High CPU threshold for explanations: planned only if users need it.
@@ -123,10 +135,10 @@ Purpose: control local report formatting and privacy.
 
 Possible preferences:
 
-- Default report format: Summary or Markdown.
+- Default report format: implemented as Summary or Markdown.
 - Include full paths in copied report: planned, default off unless the user explicitly enables it.
-- Include selected storage scan summary: default on if a scan exists.
-- Include crash report summary: default on if reports were manually selected, but never include stack traces or raw report bodies.
+- Include selected storage scan summary: implemented, default on if a scan exists.
+- Include crash report summary: implemented, default on if reports were manually selected, but never includes stack traces or raw report bodies.
 
 Avoided:
 
@@ -140,8 +152,11 @@ Purpose: configure the lightweight monitor without turning it into a second dash
 
 Possible preferences:
 
-- Show CPU in menu bar label: planned.
-- Show memory in menu bar label: planned.
+- Show CPU in menu bar popover: implemented.
+- Show memory in menu bar popover: implemented.
+- Show swap in menu bar popover: implemented.
+- Show top CPU process row: implemented.
+- Show top memory process row: implemented.
 - Keep popover compact: always on.
 - Open Corewise from menu bar: implemented behavior should remain.
 
@@ -152,12 +167,12 @@ Avoided:
 
 ## Implementation Guidance
 
-When coding begins:
+Implementation status:
 
 - Keep `Settings` scene in `CorewiseApp`.
-- Move `SettingsView` out of `DashboardViews.swift` into a dedicated settings view file.
+- Keep `SettingsView` out of `DashboardViews.swift` in a dedicated settings view file.
 - Use `@AppStorage` only for real user preferences.
-- Use `SettingsLink` from small entry points if needed, such as menu bar or Data Access copy.
+- Use `SettingsLink` from small entry points only if needed later, such as menu bar or Data Access copy.
 - Keep settings rows simple: label, short explanatory text, control.
 - Prefer system controls: `Toggle`, `Picker`, `Stepper`, `Button`, and `Form`.
 - Avoid custom card-heavy settings UI.

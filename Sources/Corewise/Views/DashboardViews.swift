@@ -123,6 +123,7 @@ struct StorageView: View {
 
 struct PerformanceView: View {
   var performance: PerformanceHealth
+  @AppStorage(CorewiseSettingsKeys.performanceDefaultFocus) private var defaultFocus = PerformanceDefaultFocus.cpu.rawValue
   @State private var selectedMode: PerformanceMode = .cpu
 
   private var sortedProcesses: [ProcessObservation] {
@@ -171,6 +172,12 @@ struct PerformanceView: View {
       SafeActionPanel(title: "Safe actions", actions: performance.actions)
       SourceNote(text: performance.sourceNote, dataMode: performance.summary.dataMode)
     }
+    .onAppear {
+      selectedMode = PerformanceMode(defaultFocus: defaultFocus)
+    }
+    .onChange(of: defaultFocus) { _, newValue in
+      selectedMode = PerformanceMode(defaultFocus: newValue)
+    }
   }
 }
 
@@ -185,6 +192,10 @@ private enum PerformanceMode: String, CaseIterable, Identifiable {
     case .cpu: "CPU"
     case .memory: "Memory"
     }
+  }
+
+  init(defaultFocus rawValue: String) {
+    self = PerformanceMode(rawValue: PerformanceDefaultFocus.normalized(rawValue).rawValue) ?? .cpu
   }
 }
 
@@ -269,22 +280,25 @@ struct IssuesView: View {
 
 struct ReportView: View {
   var snapshot: HealthSnapshot
-  @State private var reportMode: ReportMode = .summary
+  @AppStorage(CorewiseSettingsKeys.reportDefaultFormat) private var defaultReportFormat = ReportFormatPreference.summary.rawValue
+  @AppStorage(CorewiseSettingsKeys.reportIncludeStorageScan) private var includeStorageScan = true
+  @AppStorage(CorewiseSettingsKeys.reportIncludeCrashSummary) private var includeCrashSummary = true
+  @State private var reportMode: ReportFormatPreference = .summary
   @State private var copiedLabel: String?
 
-  private enum ReportMode: String, CaseIterable, Identifiable {
-    case summary = "Summary"
-    case markdown = "Markdown"
-
-    var id: String { rawValue }
+  private var reportOptions: DiagnosticReportOptions {
+    DiagnosticReportOptions(
+      includeStorageScan: includeStorageScan,
+      includeCrashSummary: includeCrashSummary
+    )
   }
 
   private var summaryText: String {
-    DiagnosticReportBuilder().summary(for: snapshot)
+    DiagnosticReportBuilder().summary(for: snapshot, options: reportOptions)
   }
 
   private var markdownText: String {
-    DiagnosticReportBuilder().markdown(for: snapshot)
+    DiagnosticReportBuilder().markdown(for: snapshot, options: reportOptions)
   }
 
   private var previewText: String {
@@ -320,8 +334,8 @@ struct ReportView: View {
       PremiumPanel(title: "Copy report", subtitle: "Summary or Markdown. Local clipboard only.", systemImage: "doc.on.clipboard") {
         VStack(alignment: .leading, spacing: 14) {
           Picker("Report format", selection: $reportMode) {
-            ForEach(ReportMode.allCases) { mode in
-              Text(mode.rawValue).tag(mode)
+            ForEach(ReportFormatPreference.allCases) { mode in
+              Text(mode.title).tag(mode)
             }
           }
           .pickerStyle(.segmented)
@@ -354,7 +368,7 @@ struct ReportView: View {
         }
       }
 
-      PremiumPanel(title: reportMode.rawValue, subtitle: "Safe summary only. No stack traces or file contents.", systemImage: "text.page") {
+      PremiumPanel(title: reportMode.title, subtitle: "Safe summary only. No stack traces or file contents.", systemImage: "text.page") {
         ScrollView {
           Text(previewText)
             .font(.system(.caption, design: .monospaced))
@@ -366,23 +380,18 @@ struct ReportView: View {
 
       SourceNote(text: "Report export is local clipboard text. Corewise does not upload reports, include crash stack traces, or modify files.", dataMode: .live)
     }
+    .onAppear {
+      reportMode = ReportFormatPreference.normalized(defaultReportFormat)
+    }
+    .onChange(of: defaultReportFormat) { _, newValue in
+      reportMode = ReportFormatPreference.normalized(newValue)
+    }
   }
 
   private func copy(_ text: String, label: String) {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(text, forType: .string)
     copiedLabel = label
-  }
-}
-
-struct SettingsView: View {
-  var body: some View {
-    Form {
-      Text("Corewise is local-first. This MVP does not use accounts, backend services, tracking, or automatic cleanup.")
-        .foregroundStyle(.secondary)
-    }
-    .padding()
-    .frame(width: 460)
   }
 }
 

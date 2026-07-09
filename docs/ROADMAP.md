@@ -75,9 +75,8 @@ Before calling the MVP trustworthy, Corewise must show provenance for every metr
 
 ## Phase 7.5: Settings
 
-- Planned: mature the existing SwiftUI `Settings` scene into a compact native macOS settings window.
-- Planned: include only useful controls for General behavior, Privacy & Data, Performance display, Report formatting, and Menu Bar behavior.
-- Planned: document every persisted preference key before implementation.
+- Implemented: compact native SwiftUI Settings window with General, Privacy & Data, Performance, Report, and Menu Bar tabs.
+- Implemented: documented `@AppStorage` keys for Performance default focus, Report defaults, optional report summaries, and visible Menu Bar rows.
 - Avoid: adding Settings as a main diagnostic sidebar destination.
 - Avoid: any setting that enables automatic cleanup, broad background scans, private APIs, sudo-only data collection, process killing, accounts, backend services, telemetry, or tracking.
 

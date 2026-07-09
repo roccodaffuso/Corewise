@@ -21,7 +21,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Report helper: `DiagnosticReportBuilder` renders read-only Summary and Markdown text from the current `HealthSnapshot`.
 - UI: `ContentView` hosts navigation; `DashboardViews` renders section pages, cards, charts, findings, actions, and source notes.
 - Menu bar: `MenuBarExtra` reuses `HealthDashboardStore` snapshot values for at-a-glance CPU, memory, swap, and top process rows.
-- Settings: `CorewiseApp` declares a native SwiftUI `Settings` scene. Settings is configuration, not a diagnostic sidebar destination; future persistent preferences should use documented `@AppStorage` keys.
+- Settings: `CorewiseApp` declares a native SwiftUI `Settings` scene. Settings is configuration, not a diagnostic sidebar destination. The dedicated Settings view uses documented `@AppStorage` keys for display/report preferences only.
 
 ## Data Flow
 
@@ -34,6 +34,16 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 7. User-selected storage or crash scans are owned by `HealthDashboardStore` and reapplied to later snapshots. Automatic refresh never starts personal-folder or report scans.
 8. The Report page formats the current snapshot locally and can copy either Summary or Markdown text to the clipboard. It does not write files, upload data, or include crash stack traces.
 9. The menu bar extra reads the same store snapshot; it does not start a separate collector or persist history.
+10. Settings writes local `@AppStorage` preferences. These preferences affect Performance default focus, Report defaults/included summaries, and visible Menu Bar rows; they do not change automatic data collection.
+
+## Settings Preferences
+
+- `settings.performance.defaultFocus`: initial Performance focus, `cpu` or `memory`.
+- `settings.report.defaultFormat`: initial Report view, `summary` or `markdown`.
+- `settings.report.includeStorageScan`: whether copied/previewed reports include selected storage scan summaries.
+- `settings.report.includeCrashSummary`: whether copied/previewed reports include crash report summaries.
+- `settings.menuBar.showCPU`, `settings.menuBar.showMemory`, `settings.menuBar.showSwap`: visible menu bar metric cards.
+- `settings.menuBar.showTopCPU`, `settings.menuBar.showTopMemory`: visible menu bar process rows.
 
 ## Collector Boundaries
 
@@ -96,7 +106,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Add per-section collector errors and permission states.
 - Add tests around data-mode labeling and non-destructive behavior.
 - Consider a menu bar monitor only after the main diagnostic workflows are trustworthy.
-- Mature the existing Settings scene according to `docs/SETTINGS_PLAN.md`, keeping it separate from diagnostic navigation and documenting any persistent preferences.
+- Keep future Settings changes aligned with `docs/SETTINGS_PLAN.md`; no preference may enable automatic cleanup, broad scans, or private data collection.
 
 ## Avoided
 

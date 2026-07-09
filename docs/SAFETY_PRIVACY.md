@@ -18,7 +18,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Startup plist rows can be revealed in Finder, but Corewise does not edit, disable, delete, or unload them.
 - App Issues remains empty until a report folder is selected; it does not infer crash counts from other sources.
 - Menu bar values reuse the current app snapshot and do not create a second background data collector.
-- Settings currently contains local-first copy only. Future Settings controls must be explicit preferences, not hidden permission grants or remediation shortcuts.
+- Settings controls local display/report preferences only. Settings controls must stay explicit preferences, not hidden permission grants or remediation shortcuts.
 
 ## Runtime Data
 
@@ -38,6 +38,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Ask for permissions only when a feature clearly needs them and can explain why.
 - Omit unreadable files and reports instead of estimating them.
 - Document every persistent Settings preference key before implementation.
+- Settings toggles can hide or show already-collected Menu Bar values and optional report summaries, but they must not enable new automatic reads.
 - Keep any future `Remember selected folder` behavior off by default until security-scoped bookmark consent is designed.
 
 ## Avoided

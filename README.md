@@ -65,6 +65,7 @@ Corewise is organized around three trustworthy workflows:
 - Storage Scan: choose a folder, inspect the largest real files and folders, and reveal items in Finder manually.
 - Diagnostic Report: copy a local Summary or Markdown report for review without collecting stack traces or file contents.
 - Menu Bar: glance at the same live CPU, memory, swap, and top process values without opening a second diagnostic surface.
+- Settings: control local display/report preferences; Settings does not grant new data access or enable automatic scans.
 
 ## Project Docs
 
