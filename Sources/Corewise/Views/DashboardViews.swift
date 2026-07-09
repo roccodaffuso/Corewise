@@ -157,6 +157,10 @@ struct PerformanceView: View {
         .frame(width: 190)
       }
 
+      if selectedMode == .memory {
+        SwapInsightPanel(insight: performance.swapInsight)
+      }
+
       PerformancePressurePanel(mode: selectedMode, processes: Array(sortedProcesses.prefix(8)))
 
       ProcessObservationTable(
@@ -535,7 +539,7 @@ private struct OverviewSignalGrid: View {
   var body: some View {
     LazyVGrid(columns: CorewiseLayout.metricGrid, alignment: .leading, spacing: CorewiseLayout.tileSpacing) {
       CompactStat(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), detail: cpuDetail)
-      CompactStat(title: "Memory", value: bytes(snapshot.performance.memory.usedBytes), detail: "swap \(snapshot.performance.memory.swapUsedBytes.map(bytes) ?? "N/A")")
+      CompactStat(title: "Memory", value: bytes(snapshot.performance.memory.usedBytes), detail: memoryDetail)
       CompactStat(title: "Top CPU", value: topCPU.map { "\(number($0.cpuPercent))%" } ?? "N/A", detail: topCPU?.displayName ?? "No readable process")
       CompactStat(title: "Top Memory", value: topMemory.map { bytes($0.observedMemoryBytes) } ?? "N/A", detail: topMemory?.displayName ?? "No readable process")
       CompactStat(title: "Storage Free", value: gb(snapshot.storage.availableGB), detail: "\(number(snapshot.storage.availablePercent))% available")
@@ -546,6 +550,14 @@ private struct OverviewSignalGrid: View {
 
   private var cpuDetail: String {
     "user \(percent(snapshot.performance.cpu.userPercent)) · system \(percent(snapshot.performance.cpu.systemPercent))"
+  }
+
+  private var memoryDetail: String {
+    let swap = snapshot.performance.memory.swapUsedBytes.map(bytes) ?? "N/A"
+    let trend = snapshot.performance.swapInsight.trend == .unavailable
+      ? "trend N/A"
+      : snapshot.performance.swapInsight.trend.title.lowercased()
+    return "swap \(swap) · \(trend)"
   }
 }
 
@@ -973,7 +985,7 @@ private struct PerformanceSystemStrip: View {
       CompactStat(title: "CPU Total", value: percent(performance.cpu.totalPercent), detail: "user \(percent(performance.cpu.userPercent))")
       CompactStat(title: "CPU System", value: percent(performance.cpu.systemPercent), detail: "idle \(percent(performance.cpu.idlePercent))")
       CompactStat(title: "Memory", value: bytes(performance.memory.usedBytes), detail: "used")
-      CompactStat(title: "Swap", value: performance.memory.swapUsedBytes.map(bytes) ?? "N/A", detail: "used")
+      CompactStat(title: "Swap", value: performance.memory.swapUsedBytes.map(bytes) ?? "N/A", detail: performance.swapInsight.trend.title.lowercased())
       CompactStat(title: "Processes", value: "\(performance.processes.count)", detail: "sampled")
     }
   }
@@ -1021,6 +1033,158 @@ private struct PerformancePressurePanel: View {
     ) {
       ProcessBarChart(processes: processes, mode: mode)
     }
+  }
+}
+
+private struct SwapInsightPanel: View {
+  var insight: SwapInsight
+
+  private var contributors: [SwapContributor] {
+    Array(insight.contributors.prefix(6))
+  }
+
+  var body: some View {
+    PremiumPanel(
+      title: "Swap Insight",
+      subtitle: "Real swap context, not per-process swap ownership.",
+      systemImage: "arrow.triangle.2.circlepath"
+    ) {
+      VStack(alignment: .leading, spacing: 14) {
+        LazyVGrid(columns: CorewiseLayout.metricGrid, alignment: .leading, spacing: CorewiseLayout.tileSpacing) {
+          CompactStat(title: "Used", value: insight.reading.map { bytes($0.usedBytes) } ?? "Unavailable", detail: "system swap")
+          CompactStat(title: "Total", value: insight.reading.map { bytes($0.totalBytes) } ?? "Unavailable", detail: "configured")
+          CompactStat(title: "Available", value: insight.reading.map { bytes($0.availableBytes) } ?? "Unavailable", detail: "remaining")
+          CompactStat(title: "Trend", value: insight.trend.title, detail: "120s window")
+          CompactStat(title: "Swap Out", value: ratePerMinute(insight.swapOutRateBytesPerSecond), detail: "per minute")
+          CompactStat(title: "Swapped", value: insight.reading.map { bytes($0.swappedBytes) } ?? "Unavailable", detail: "VM pages")
+          CompactStat(title: "Encrypted", value: encryptedValue, detail: "macOS swap")
+        }
+
+        SourceNote(
+          text: "macOS does not expose exact per-process swap ownership through public APIs. These rows show likely contributors based on live memory signals.",
+          dataMode: insight.dataMode
+        )
+
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Likely memory pressure contributors")
+            .font(.callout.weight(.semibold))
+          if contributors.isEmpty {
+            EmptyDiagnosticState(
+              title: "No likely contributors yet",
+              message: "Corewise needs live memory rows and at least one swap sample before it can rank likely pressure contributors.",
+              dataMode: insight.dataMode
+            )
+          } else {
+            VStack(spacing: 0) {
+              SwapContributorHeader()
+              ForEach(Array(contributors.enumerated()), id: \.element.id) { index, contributor in
+                SwapContributorRow(contributor: contributor)
+                if index < contributors.count - 1 {
+                  Divider()
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private var encryptedValue: String {
+    guard let reading = insight.reading else {
+      return "Unavailable"
+    }
+    return reading.isEncrypted ? "Yes" : "No"
+  }
+
+  private func ratePerMinute(_ bytesPerSecond: Double?) -> String {
+    guard let bytesPerSecond else {
+      return "N/A"
+    }
+    return "\(bytes(UInt64(max(0, bytesPerSecond * 60))))/min"
+  }
+}
+
+private struct SwapContributorHeader: View {
+  @Environment(\.colorScheme) private var colorScheme
+
+  var body: some View {
+    HStack(spacing: 12) {
+      header("Process")
+        .frame(maxWidth: .infinity, alignment: .leading)
+      header("Observed")
+        .frame(width: 88, alignment: .trailing)
+      header("RSS")
+        .frame(width: 78, alignment: .trailing)
+      header("Page-ins")
+        .frame(width: 72, alignment: .trailing)
+      header("Growth")
+        .frame(width: 78, alignment: .trailing)
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 7)
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+  }
+
+  private func header(_ title: String) -> some View {
+    Text(title)
+      .font(.caption2.weight(.semibold))
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+  }
+}
+
+private struct SwapContributorRow: View {
+  var contributor: SwapContributor
+  @Environment(\.colorScheme) private var colorScheme
+
+  var body: some View {
+    HStack(spacing: 12) {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(contributor.processName)
+          .font(.caption.weight(.semibold))
+          .lineLimit(1)
+        Text(contributor.confidence)
+          .font(.caption2)
+          .foregroundStyle(.tertiary)
+          .lineLimit(1)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+
+      Text(bytes(contributor.observedMemoryBytes))
+        .font(.caption.weight(.semibold))
+        .monospacedDigit()
+        .foregroundStyle(CorewiseVisual.moss)
+        .frame(width: 88, alignment: .trailing)
+
+      Text(bytes(contributor.residentMemoryBytes))
+        .font(.caption)
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
+        .frame(width: 78, alignment: .trailing)
+
+      Text("\(contributor.pageIns)")
+        .font(.caption)
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
+        .frame(width: 72, alignment: .trailing)
+
+      Text(growthValue)
+        .font(.caption)
+        .monospacedDigit()
+        .foregroundStyle(.secondary)
+        .frame(width: 78, alignment: .trailing)
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 9)
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(0.45), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+  }
+
+  private var growthValue: String {
+    if contributor.memoryGrowthBytes == 0 {
+      return "0 MB"
+    }
+    return bytes(UInt64(max(0, contributor.memoryGrowthBytes)))
   }
 }
 

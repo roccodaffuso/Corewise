@@ -11,8 +11,8 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Store session state: `HealthDashboardStore` owns the session-only storage scan root/current folder and reapplies the latest result to snapshots.
 - Collector protocol: `SystemHealthCollecting.currentSnapshot()` returns a complete `HealthSnapshot`.
 - Current collector: `SystemHealthCollector` builds the full product-shaped snapshot without synthetic runtime diagnostics.
-- Live helper: `SystemMetricsSampler` provides live CPU split, VM memory fields, process rows, observed memory, physical footprint when available, RSS, and app groups to the collector.
-- History helper: `PerformanceHistoryTracker` keeps a short in-memory window for sustained CPU interpretation.
+- Live helper: `SystemMetricsSampler` provides live CPU split, VM memory fields, swap reading, process rows, page-ins, observed memory, physical footprint when available, RSS, and app groups to the collector.
+- History helper: `PerformanceHistoryTracker` keeps a short in-memory window for sustained CPU interpretation and Swap Insight trend/rate calculations.
 - Battery helper: `BatteryDiagnosticsCollector` provides live safe power-source basics and unavailable/planned health details.
 - Manual storage helper: `StorageTargetedScanCollector` scans only a user-selected folder and returns largest real items.
 - Manual crash helper: `CrashReportDiagnosticsCollector` parses metadata only from a user-selected reports folder.
@@ -20,7 +20,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Startup helper: `StartupDiagnosticsCollector` provides read-only LaunchAgents and LaunchDaemons plist metadata.
 - Report helper: `DiagnosticReportBuilder` renders read-only Summary and Markdown text from the current `HealthSnapshot`.
 - UI: `ContentView` hosts navigation; `DashboardViews` renders section pages, cards, charts, findings, actions, and source notes.
-- Menu bar: `MenuBarExtra` reuses `HealthDashboardStore` snapshot values for at-a-glance CPU, memory, swap, and top process rows.
+- Menu bar: `MenuBarExtra` reads the existing `HealthDashboardStore` snapshot for at-a-glance CPU, memory, swap, and top process rows.
 - Settings: `CorewiseApp` declares a native SwiftUI `Settings` scene. Settings is configuration, not a diagnostic sidebar destination. The dedicated Settings view uses documented `@AppStorage` keys for display/report preferences only.
 
 ## Data Flow
@@ -28,7 +28,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 1. App starts and creates `HealthDashboardStore`.
 2. Store asks the configured collector for the current snapshot.
 3. `SystemHealthCollector` asks `SystemMetricsSampler` for live performance signals.
-4. The collector records short performance history in memory, then combines live battery/performance/storage/startup/thermal signals with planned and unavailable coverage.
+4. The collector records short performance history in memory, derives Swap Insight from system swap samples plus live process memory signals, then combines live battery/performance/storage/startup/thermal signals with planned and unavailable coverage.
 5. SwiftUI renders the snapshot into section pages.
 6. The store refreshes live data periodically.
 7. User-selected storage or crash scans are owned by `HealthDashboardStore` and reapplied to later snapshots. Automatic refresh never starts personal-folder or report scans.
@@ -54,10 +54,18 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Enumerate processes through `sysctl KERN_PROC_ALL`, with `proc_listallpids` as fallback.
 - Read public process task information for PID, CPU time, thread count, resident memory, path, and user.
 - Convert process CPU task ticks with `mach_timebase_info` before computing the 1 second CPU delta.
-- Read `ri_phys_footprint` through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns it.
+- Read `ri_phys_footprint` and `ri_pageins` through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns them.
+- Read `vm.swapusage` through `sysctlbyname` for system swap used, total, available, page size, and encryption state.
 - Use observed process memory as the larger public value between footprint and RSS so low footprint values do not hide real process memory.
 - Keep individual process rows separate from app-bundle groups.
 - Return `nil` or `Unavailable` for unsupported values instead of inventing readings.
+
+`PerformanceHistoryTracker` should keep Swap Insight bounded:
+
+- Keep swap samples in memory only for the short performance window.
+- Calculate `rising`, `stable`, `falling`, or `unavailable` from real swap deltas and swap-out rate.
+- Rank likely memory-pressure contributors from observed memory, page-ins, and memory growth.
+- Never expose exact per-process swap ownership because Corewise does not have a reliable public API for that.
 
 `StorageDiagnosticsCollector` should stay privacy-first:
 
@@ -84,6 +92,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 
 - Summarize current snapshot values only; do not run new collectors during export.
 - Include top process names, metrics, storage scan summary, startup counts, crash counts, notable findings, manual next steps, and source/confidence notes.
+- Include Swap Insight values and the per-process ownership limit.
 - Exclude stack traces, raw report bodies, document contents, and automatic remediation.
 
 `StartupDiagnosticsCollector` should stay read-only:

@@ -12,6 +12,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - No network dependency.
 - Live performance sampling stays on-device.
 - Current process data is used for display and grouping, not upload.
+- Swap Insight reads public system swap counters, VM statistics, and process memory/page-in signals. It does not inspect swap files or claim exact per-process swap ownership.
 - Storage details are read only after the user chooses a folder.
 - Crash report metadata is read only after the user chooses a reports folder.
 - Diagnostic Report Summary and Markdown copy are generated locally from the current snapshot.
@@ -53,6 +54,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Uploading process, file, crash, or device data.
 - Including raw crash stack traces or document contents in exported summaries.
 - Claiming certainty when macOS only exposes a partial signal.
+- Presenting likely swap contributors as exact swap owners.
 
 ## Action Policy
 

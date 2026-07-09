@@ -30,6 +30,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Process tables should use stable right-aligned numeric columns, monospaced digits, subtle alternating row fills, and a single table-level source note instead of per-row provenance noise.
 - Dense process rows should not repeat `Live` badges on every row when the whole table has a source note.
 - Performance explanations should be phrased as context from live process names, not causal proof. Use "may", "usually", and "can be normal" for system processes and helpers.
+- Swap Insight should be shown as pressure context in `Performance > Memory`: system swap totals/rates first, likely contributors second, and a visible note that Corewise does not show exact per-process swap ownership.
 - Startup inventory should use a compact table for plist rows instead of stacked diagnostic cards, with Finder reveal as the only row action.
 - App Issues should lead with an empty/manual-access state until the user chooses reports; repeated crash counts should appear only after selection.
 - Menu bar content should use a compact window-style popover, not a plain text menu, with CPU, memory, swap, top CPU process, top memory process, and one Open Corewise action.

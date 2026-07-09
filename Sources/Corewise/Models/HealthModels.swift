@@ -211,6 +211,7 @@ struct PerformanceHealth {
   var summary: DiagnosticMetric
   var cpu: SystemCPUReading
   var memory: SystemMemoryReading
+  var swapInsight: SwapInsight
   var metrics: [DiagnosticMetric]
   var processes: [ProcessObservation]
   var appGroups: [AppProcessGroup]
@@ -241,6 +242,63 @@ struct SystemCPUReading {
   var lastUpdated: Date
 }
 
+enum SwapTrend: String {
+  case rising
+  case stable
+  case falling
+  case unavailable
+
+  var title: String {
+    switch self {
+    case .rising: "Rising"
+    case .stable: "Stable"
+    case .falling: "Falling"
+    case .unavailable: "Unavailable"
+    }
+  }
+}
+
+struct SwapReading {
+  var usedBytes: UInt64
+  var totalBytes: UInt64
+  var availableBytes: UInt64
+  var pageSize: UInt64
+  var isEncrypted: Bool
+  var swappedBytes: UInt64
+  var swapIns: UInt64
+  var swapOuts: UInt64
+  var dataMode: DataMode = .live
+  var source: String
+  var confidence: String
+  var lastUpdated: Date
+}
+
+struct SwapInsight {
+  var reading: SwapReading?
+  var trend: SwapTrend
+  var swapInRateBytesPerSecond: Double?
+  var swapOutRateBytesPerSecond: Double?
+  var contributors: [SwapContributor]
+  var explanation: String
+  var source: String
+  var confidence: String
+  var dataMode: DataMode
+  var lastUpdated: Date
+}
+
+struct SwapContributor: Identifiable {
+  var id: Int32 { pid }
+  var pid: Int32
+  var processName: String
+  var observedMemoryBytes: UInt64
+  var residentMemoryBytes: UInt64
+  var physicalFootprintBytes: UInt64?
+  var pageIns: UInt64
+  var memoryGrowthBytes: Int64
+  var confidence: String
+  var dataMode: DataMode = .live
+}
+
 struct SystemMemoryReading {
   var physicalBytes: UInt64
   var usedBytes: UInt64
@@ -249,11 +307,17 @@ struct SystemMemoryReading {
   var cachedFilesBytes: UInt64
   var wiredBytes: UInt64
   var compressedBytes: UInt64
-  var swapUsedBytes: UInt64?
+  var swap: SwapReading?
   var dataMode: DataMode = .unavailable
   var source: String
   var confidence: String
   var lastUpdated: Date
+}
+
+extension SystemMemoryReading {
+  var swapUsedBytes: UInt64? {
+    swap?.usedBytes
+  }
 }
 
 struct ProcessObservation: Identifiable {
@@ -269,6 +333,7 @@ struct ProcessObservation: Identifiable {
   var threadCount: Int32
   var residentMemoryBytes: UInt64
   var physicalFootprintBytes: UInt64?
+  var pageIns: UInt64
   var dataMode: DataMode = .unavailable
   var status: FindingSeverity
   var severityScore: Int

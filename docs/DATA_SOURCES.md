@@ -20,6 +20,7 @@ Statuses:
 | Overall status | Planned | Corewise scoring model | High | Overview leads with coverage and live signals until real scoring exists. |
 | CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | 1 second sample; not a sysmond clone. |
 | RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Corewise VM view based on app memory, wired memory, and compressed pages; not a private Activity Monitor clone. |
+| Swap used and trend | Implemented | `sysctl vm.swapusage`, `host_statistics64`, `PerformanceHistoryTracker` | Medium | Shows system swap context only; it does not attribute exact swap ownership to processes. |
 | System power watts | Unavailable | Safe public API check | High | No reliable whole-system wattage through safe public APIs in this MVP. |
 | Main attention area | Unavailable | Corewise scoring model | High | Cross-section prioritization is not implemented. |
 | Data access capabilities | Implemented | Static capability matrix plus scan state | High | Explains access state; it is not a device-health signal. |
@@ -72,7 +73,14 @@ Statuses:
 | Process identity | Implemented | `proc_pidpath`, `proc_name`, short BSD info | Medium | Provides path, app bundle, PID, user, and thread count where readable. |
 | App grouping | Implemented | Derived from live process rows and `.app` bundle paths | Medium | Separate from individual process rows so helper aggregation is explicit. |
 | Memory pressure | Unavailable | No selected public parity source | High | Corewise does not show an estimated pressure value as live. |
-| Swap used | Implemented | `sysctl vm.swapusage` | Medium | Available when macOS returns swap usage. |
+| Swap used | Implemented | `sysctl vm.swapusage` / `xsw_usage` | Medium | Available when macOS returns swap usage. |
+| Swap total | Implemented | `sysctl vm.swapusage` / `xsw_usage.xsu_total` | Medium | System-level configured swap, not process-level data. |
+| Swap available | Implemented | `sysctl vm.swapusage` / `xsw_usage.xsu_avail` | Medium | System-level remaining swap. |
+| Swap encryption state | Implemented | `sysctl vm.swapusage` / `xsw_usage.xsu_encrypted` | Medium | Boolean flag from the current system snapshot. |
+| Swapped VM pages | Implemented | `host_statistics64` / `vm_statistics64.swapped_count` | Medium | System-level VM pages; not process ownership. |
+| Swap in/out rates | Implemented | Delta of `vm_statistics64.swapins` and `swapouts` over short in-memory history | Medium | Unavailable until at least two valid samples exist; not persisted. |
+| Process page-ins | Implemented when present | `proc_pid_rusage(RUSAGE_INFO_V4)` / `ri_pageins` | Medium | Page-ins are pressure context, not proof that the process owns swap. |
+| Likely swap contributors | Implemented | Derived from observed memory, RSS/footprint, page-ins, and memory growth | Medium inferred | Ranked as likely memory-pressure contributors only; Corewise does not show exact per-process swap ownership. |
 | Uptime | Implemented | `ProcessInfo.systemUptime` | High | Local process uptime signal; not a performance diagnosis by itself. |
 | Sustained high CPU | Implemented | In-memory recent process history | Medium | Unavailable until enough samples are collected; not persisted. |
 | WindowServer impact | Planned | Process sample plus explanation | Low | Needs careful wording because high usage can be normal. |
@@ -122,6 +130,7 @@ Statuses:
 | Notable findings | Implemented | Existing section findings already present in `HealthSnapshot` | Medium | Reuses current findings; does not inspect additional files or logs. |
 | Manual next steps | Implemented | Existing safe actions already present in `HealthSnapshot` | Medium | Manual review only; no cleanup or process termination. |
 | Top CPU and memory rows | Implemented | Live process rows already present in the snapshot | Medium | Uses the same public API semantics as Performance. |
+| Swap insight | Implemented | Current `HealthSnapshot` swap insight | Medium | Includes system swap context and limits; no per-process swap ownership claim. |
 | Storage scan summary | Implemented after selection | User-selected folder scan results | Medium | Empty when no manual scan exists. |
 | Crash summary | Implemented after selection | User-selected report folder metadata | Medium | Counts only; no stack traces or raw report contents. |
 | Global score in report | Planned | Corewise scoring model | High | Report states that global scoring is planned, not calculated. |

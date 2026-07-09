@@ -14,7 +14,7 @@ struct DiagnosticReportBuilder {
 
     Current live signals
     - CPU: \(percent(snapshot.performance.cpu.totalPercent)) total, \(percent(snapshot.performance.cpu.userPercent)) user, \(percent(snapshot.performance.cpu.systemPercent)) system
-    - Memory: \(bytes(snapshot.performance.memory.usedBytes)) used of \(bytes(snapshot.performance.memory.physicalBytes)); swap \(snapshot.performance.memory.swapUsedBytes.map(bytes) ?? "Unavailable")
+    - Memory: \(bytes(snapshot.performance.memory.usedBytes)) used of \(bytes(snapshot.performance.memory.physicalBytes)); swap \(swapInsightSummary(snapshot.performance.swapInsight))
     - Storage: \(number(snapshot.storage.availableGB)) GB free of \(number(snapshot.storage.totalGB)) GB
     - Battery: \(displayValue(snapshot.battery.summary))
     - Thermal: \(displayValue(snapshot.thermal.summary))
@@ -25,6 +25,7 @@ struct DiagnosticReportBuilder {
     Limits
     - Global score is planned, not calculated.
     - Storage folder and crash report details require manual selection.
+    - Swap insight shows system swap context and likely memory pressure contributors, not exact per-process swap ownership.
     - This report is local clipboard text only.
     """
   }
@@ -43,6 +44,7 @@ struct DiagnosticReportBuilder {
     let storageScan = storageScanMarkdown(snapshot, options: options)
     let startupRows = snapshot.startup.launchAgents.count + snapshot.startup.launchDaemons.count
     let crashSummary = crashSummaryMarkdown(snapshot, options: options)
+    let swapInsight = swapInsightMarkdown(snapshot.performance.swapInsight)
 
     return """
     # Corewise Diagnostic Report
@@ -53,7 +55,7 @@ struct DiagnosticReportBuilder {
     ## Summary
     - CPU: \(percent(snapshot.performance.cpu.totalPercent)) total, \(percent(snapshot.performance.cpu.userPercent)) user, \(percent(snapshot.performance.cpu.systemPercent)) system, \(percent(snapshot.performance.cpu.idlePercent)) idle
     - Memory used: \(bytes(snapshot.performance.memory.usedBytes)) of \(bytes(snapshot.performance.memory.physicalBytes))
-    - Swap used: \(snapshot.performance.memory.swapUsedBytes.map(bytes) ?? "Unavailable")
+    - Swap: \(swapInsightSummary(snapshot.performance.swapInsight))
     - Storage free: \(number(snapshot.storage.availableGB)) GB of \(number(snapshot.storage.totalGB)) GB
     - Battery: \(displayValue(snapshot.battery.summary))
     - Thermal: \(displayValue(snapshot.thermal.summary))
@@ -75,6 +77,9 @@ struct DiagnosticReportBuilder {
 
     Top memory processes:
     \(memoryProcesses.isEmpty ? "No readable process rows in this snapshot." : memoryProcesses)
+
+    Swap insight:
+    \(swapInsight)
 
     ## Storage
     Source: \(snapshot.storage.summary.source)
@@ -110,6 +115,7 @@ struct DiagnosticReportBuilder {
     ## Limits
     - Global score is planned, not calculated.
     - Memory values use public macOS APIs and are not a private Activity Monitor clone.
+    - macOS does not expose exact per-process swap ownership through public APIs.
     - Storage and crash details appear only after user-selected scans.
     """
   }
@@ -180,6 +186,48 @@ struct DiagnosticReportBuilder {
     return snapshot.appIssues.crashes.isEmpty
       ? "No diagnostic reports selected in this snapshot."
       : snapshot.appIssues.crashes.prefix(5).map { "- \($0.appName): \($0.crashesLast7Days) in 7 days, \($0.crashesLast30Days) in 30 days" }.joined(separator: "\n")
+  }
+
+  private func swapInsightSummary(_ insight: SwapInsight) -> String {
+    guard let reading = insight.reading else {
+      return "Unavailable"
+    }
+
+    return "\(bytes(reading.usedBytes)) used of \(bytes(reading.totalBytes)); \(insight.trend.title.lowercased())"
+  }
+
+  private func swapInsightMarkdown(_ insight: SwapInsight) -> String {
+    guard let reading = insight.reading else {
+      return "Unavailable in this snapshot."
+    }
+
+    let contributors = insight.contributors.isEmpty
+      ? "No likely contributors ranked yet."
+      : insight.contributors.prefix(5).map {
+        "- \($0.processName): \(bytes($0.observedMemoryBytes)) observed memory, \(bytes($0.residentMemoryBytes)) RSS, \($0.pageIns) page-ins"
+      }.joined(separator: "\n")
+
+    return """
+    - Used: \(bytes(reading.usedBytes))
+    - Total: \(bytes(reading.totalBytes))
+    - Available: \(bytes(reading.availableBytes))
+    - Trend: \(insight.trend.title)
+    - Swap in rate: \(rate(insight.swapInRateBytesPerSecond))
+    - Swap out rate: \(rate(insight.swapOutRateBytesPerSecond))
+    - Swapped VM pages: \(bytes(reading.swappedBytes))
+    - Encrypted: \(reading.isEncrypted ? "Yes" : "No")
+    - Limit: macOS does not expose exact per-process swap ownership through public APIs. Contributors are likely memory pressure contributors based on live memory, page-ins, and growth.
+
+    Likely contributors:
+    \(contributors)
+    """
+  }
+
+  private func rate(_ bytesPerSecond: Double?) -> String {
+    guard let bytesPerSecond else {
+      return "Unavailable"
+    }
+    return "\(bytes(UInt64(max(0, bytesPerSecond * 60))))/min"
   }
 
   private func displayValue(_ metric: DiagnosticMetric) -> String {

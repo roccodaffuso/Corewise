@@ -49,6 +49,111 @@ import Testing
   #expect(summary.repeatedHighCPUProcesses.isEmpty)
 }
 
+@Test func swapInsightTrendIsUnavailableWithOneSample() {
+  let start = Date()
+  let sample = PerformanceHistorySample(
+    timestamp: start,
+    cpuPercent: 20,
+    memoryUsedPercent: 50,
+    swap: swap(usedMB: 1_024, swapIns: 10, swapOuts: 20),
+    processes: [process("Renderer", cpu: 1, residentMB: 700, footprintMB: 900, pageIns: 42)]
+  )
+
+  let insight = SwapInsightCalculator.insight(samples: [sample], now: start)
+
+  #expect(insight.trend == .unavailable)
+  #expect(insight.swapInRateBytesPerSecond == nil)
+  #expect(insight.swapOutRateBytesPerSecond == nil)
+  #expect(insight.reading?.usedBytes == 1_024 * 1024 * 1024)
+}
+
+@Test func swapInsightDetectsRisingStableAndFallingTrends() {
+  let start = Date()
+  let rising = SwapInsightCalculator.insight(
+    samples: [
+      historySample(at: start, swap: swap(usedMB: 1_000, swapOuts: 0)),
+      historySample(at: start.addingTimeInterval(60), swap: swap(usedMB: 1_300, swapOuts: 10))
+    ],
+    now: start.addingTimeInterval(60)
+  )
+  let stable = SwapInsightCalculator.insight(
+    samples: [
+      historySample(at: start, swap: swap(usedMB: 1_000, swapOuts: 0)),
+      historySample(at: start.addingTimeInterval(60), swap: swap(usedMB: 1_100, swapOuts: 10))
+    ],
+    now: start.addingTimeInterval(60)
+  )
+  let falling = SwapInsightCalculator.insight(
+    samples: [
+      historySample(at: start, swap: swap(usedMB: 1_400, swapOuts: 10)),
+      historySample(at: start.addingTimeInterval(60), swap: swap(usedMB: 1_000, swapOuts: 10))
+    ],
+    now: start.addingTimeInterval(60)
+  )
+
+  #expect(rising.trend == .rising)
+  #expect(stable.trend == .stable)
+  #expect(falling.trend == .falling)
+}
+
+@Test func swapInsightCalculatesRatesFromPageDeltas() throws {
+  let start = Date()
+  let pageSize = UInt64(4_096)
+  let insight = SwapInsightCalculator.insight(
+    samples: [
+      historySample(at: start, swap: swap(pageSize: pageSize, swapIns: 10, swapOuts: 20)),
+      historySample(at: start.addingTimeInterval(10), swap: swap(pageSize: pageSize, swapIns: 20, swapOuts: 50))
+    ],
+    now: start.addingTimeInterval(10)
+  )
+
+  #expect(try #require(insight.swapInRateBytesPerSecond) == Double(10 * pageSize) / 10)
+  #expect(try #require(insight.swapOutRateBytesPerSecond) == Double(30 * pageSize) / 10)
+}
+
+@Test func swapInsightRanksLikelyContributorsWithoutOwnershipClaim() throws {
+  let start = Date()
+  let previous = historySample(
+    at: start,
+    swap: swap(usedMB: 1_000),
+    processes: [
+      process("Small", cpu: 1, residentMB: 200, footprintMB: 220, pageIns: 1),
+      process("Grew", cpu: 1, residentMB: 300, footprintMB: 300, pageIns: 10)
+    ]
+  )
+  let latest = historySample(
+    at: start.addingTimeInterval(30),
+    swap: swap(usedMB: 1_200),
+    processes: [
+      process("Small", cpu: 1, residentMB: 210, footprintMB: 230, pageIns: 1),
+      process("Grew", cpu: 1, residentMB: 900, footprintMB: 1_000, pageIns: 80)
+    ]
+  )
+
+  let insight = SwapInsightCalculator.insight(samples: [previous, latest], now: latest.timestamp)
+
+  #expect(try #require(insight.contributors.first).processName == "Grew")
+  #expect(insight.explanation.contains("does not expose exact per-process swap ownership"))
+}
+
+@Test func swapUsedBytesComputedCompatibilityUsesSwapReading() {
+  let memory = memoryReading(swap: swap(usedMB: 768))
+
+  #expect(memory.swapUsedBytes == 768 * 1024 * 1024)
+  #expect(memory.swapUsedGB == 0.75)
+}
+
+@Test func swapInsightHandlesMissingSwapAsUnavailable() {
+  let insight = SwapInsightCalculator.insight(
+    samples: [historySample(at: Date(), swap: nil)],
+    now: Date()
+  )
+
+  #expect(insight.dataMode == .unavailable)
+  #expect(insight.reading == nil)
+  #expect(insight.contributors.isEmpty)
+}
+
 @Test func processObservedMemoryDoesNotUnderreportResidentMemory() {
   let observation = process("Renderer", cpu: 1, residentMB: 800, footprintMB: 120)
 
@@ -248,24 +353,68 @@ private func instant(processes: [ProcessObservation]) -> InstantSystemMetrics {
       confidence: "Live / high",
       lastUpdated: now
     ),
-    memory: SystemMemoryReading(
-      physicalBytes: 16 * 1024 * 1024 * 1024,
-      usedBytes: 4 * 1024 * 1024 * 1024,
-      freeBytes: 12 * 1024 * 1024 * 1024,
-      appMemoryBytes: 2 * 1024 * 1024 * 1024,
-      cachedFilesBytes: 1 * 1024 * 1024 * 1024,
-      wiredBytes: 1 * 1024 * 1024 * 1024,
-      compressedBytes: 512 * 1024 * 1024,
-      swapUsedBytes: 0,
-      dataMode: .live,
-      source: "Unit test",
-      confidence: "Live / high",
-      lastUpdated: now
-    ),
+    memory: memoryReading(swap: swap(usedMB: 0, now: now), now: now),
     processes: processes,
     appGroups: [],
     systemWatts: nil,
     powerSourceNote: "Unavailable"
+  )
+}
+
+private func historySample(
+  at timestamp: Date,
+  swap: SwapReading?,
+  processes: [ProcessObservation] = []
+) -> PerformanceHistorySample {
+  PerformanceHistorySample(
+    timestamp: timestamp,
+    cpuPercent: 20,
+    memoryUsedPercent: 50,
+    swap: swap,
+    processes: processes
+  )
+}
+
+private func memoryReading(swap: SwapReading?, now: Date = Date()) -> SystemMemoryReading {
+  SystemMemoryReading(
+    physicalBytes: 16 * 1024 * 1024 * 1024,
+    usedBytes: 4 * 1024 * 1024 * 1024,
+    freeBytes: 12 * 1024 * 1024 * 1024,
+    appMemoryBytes: 2 * 1024 * 1024 * 1024,
+    cachedFilesBytes: 1 * 1024 * 1024 * 1024,
+    wiredBytes: 1 * 1024 * 1024 * 1024,
+    compressedBytes: 512 * 1024 * 1024,
+    swap: swap,
+    dataMode: .live,
+    source: "Unit test",
+    confidence: "Live / high",
+    lastUpdated: now
+  )
+}
+
+private func swap(
+  usedMB: UInt64 = 512,
+  totalMB: UInt64 = 4_096,
+  availableMB: UInt64 = 3_584,
+  pageSize: UInt64 = 4_096,
+  swapIns: UInt64 = 0,
+  swapOuts: UInt64 = 0,
+  swappedMB: UInt64 = 0,
+  now: Date = Date()
+) -> SwapReading {
+  SwapReading(
+    usedBytes: usedMB * 1024 * 1024,
+    totalBytes: totalMB * 1024 * 1024,
+    availableBytes: availableMB * 1024 * 1024,
+    pageSize: pageSize,
+    isEncrypted: true,
+    swappedBytes: swappedMB * 1024 * 1024,
+    swapIns: swapIns,
+    swapOuts: swapOuts,
+    dataMode: .live,
+    source: "Unit test",
+    confidence: "Live / medium",
+    lastUpdated: now
   )
 }
 
@@ -274,6 +423,7 @@ private func process(
   cpu: Double,
   residentMB: UInt64 = 128,
   footprintMB: UInt64 = 160,
+  pageIns: UInt64 = 0,
   appName: String? = nil,
   path: String? = nil
 ) -> ProcessObservation {
@@ -289,6 +439,7 @@ private func process(
     threadCount: 4,
     residentMemoryBytes: residentMB * 1024 * 1024,
     physicalFootprintBytes: footprintMB * 1024 * 1024,
+    pageIns: pageIns,
     dataMode: .live,
     status: .info,
     severityScore: Int(cpu),

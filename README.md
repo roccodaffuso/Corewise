@@ -13,6 +13,7 @@ Implemented live signals:
 - System CPU load and user/system/idle split from macOS CPU ticks.
 - System RAM fields from VM statistics: used, app memory, cached files, wired, compressed, and swap.
 - Live process table with PID, user, thread count, CPU %, observed memory, RSS, and physical footprint when macOS returns it.
+- Swap Insight in `Performance > Memory`: real swap used/total/available, trend, swap in/out rates, swapped VM pages, encryption state, and likely memory-pressure contributors.
 - Performance page optimized around the question "what is slowing my Mac right now", with compact top pressure rows and a dense process table.
 - App grouping derived from real process rows, kept separate from individual process rows.
 - Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
@@ -21,7 +22,7 @@ Implemented live signals:
 - Startup volume breakdown as used vs available space.
 - User-selected storage folder scan for largest folders/files, item count, unreadable count, and scan size.
 - Short local performance history for sustained CPU interpretation.
-- Live swap usage. Memory pressure remains unavailable until Corewise has a reliable public parity source.
+- Live swap usage and Swap Insight. Corewise does not show exact per-process swap ownership because macOS does not expose that through reliable public APIs. Memory pressure remains unavailable until Corewise has a reliable public parity source.
 - Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
 - High-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report folder parsing for app crash counts and repeated-crash patterns.
@@ -57,6 +58,8 @@ The app target is defined in `Package.swift` and requires macOS 14 or newer.
 
 Corewise uses public macOS APIs, not private `sysmond` internals. Process rows are real, but they are not promised to match Monitoraggio Attività bit-for-bit. The primary memory value is `observed memory`: the larger public value between physical footprint and resident memory, with RSS still shown separately. System memory used is derived from app memory, wired memory, and compressed memory; cached files are shown separately because macOS can reclaim much of that memory.
 
+Swap Insight explains the system swap context from `vm.swapusage`, VM statistics, and process page-in/memory signals. It ranks likely memory-pressure contributors, but it never says that a process owns a specific amount of swap.
+
 ## Product Workflows
 
 Corewise is organized around three trustworthy workflows:
@@ -78,6 +81,7 @@ Corewise is organized around three trustworthy workflows:
 - `docs/ROADMAP.md` orders the next implementation phases.
 - `docs/DECISIONS.md` records product and technical decisions.
 - `docs/SETTINGS_PLAN.md` defines how Corewise should mature its native macOS Settings window without turning it into another diagnostic page.
+- `docs/SWAP_INSIGHT.md` documents swap sources, limits, and allowed wording.
 
 ## Operating Rule
 

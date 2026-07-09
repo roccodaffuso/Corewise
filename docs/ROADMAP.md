@@ -36,7 +36,8 @@
 - Implemented: app groups are derived from process rows and kept separate from the process table.
 - Implemented: short local in-memory history for sustained CPU and repeated high process usage.
 - Implemented: uptime from `ProcessInfo.systemUptime`.
-- Implemented: swap usage from safe local VM signals.
+- Implemented: swap usage, total, available, encryption state, swapped VM pages, trend, and swap in/out rates from safe local VM signals.
+- Implemented: likely memory-pressure contributors based on live process memory, page-ins, and memory growth, without claiming exact per-process swap ownership.
 - Unavailable: memory pressure until a reliable public parity source is selected.
 - Keep WindowServer interpretation planned until there is enough context.
 
@@ -46,6 +47,7 @@
 - Implemented: Report page copies Summary or Markdown to the clipboard only.
 - Implemented: notable findings, manual next steps, and source/confidence notes derived from existing snapshot data.
 - Implemented: report excludes stack traces, raw crash contents, file contents, uploads, and cleanup actions.
+- Implemented: report includes Swap Insight with real values and source limits.
 - Planned: refine report grouping after real user review.
 
 ## Phase 5: Startup Inventory

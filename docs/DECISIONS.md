@@ -215,3 +215,9 @@ Reason: The sidebar is for diagnostic workflows. Settings is configuration, priv
 Decision: Settings V1 may persist Performance default focus, Report defaults, optional report summary inclusion, and visible Menu Bar rows. It must not change data collection scope.
 
 Reason: These controls are useful and low-risk. Launch at login, refresh interval, remembered folders, and broad scan controls need separate safety decisions before implementation.
+
+## 2026-07-09: Swap Insight, Not Swap Ownership
+
+Decision: Corewise shows system swap context, swap trend, swap in/out rates, swapped VM pages, encryption state, and likely memory-pressure contributors. It must not say that a process owns a specific amount of swap.
+
+Reason: Public macOS APIs expose useful system swap and process memory/page-in signals, but they do not provide reliable exact per-process swap ownership. Showing contributors as inference preserves usefulness without inventing certainty.

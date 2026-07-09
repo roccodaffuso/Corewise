@@ -166,7 +166,7 @@ enum SystemMetricsSampler {
         cachedFilesBytes: 0,
         wiredBytes: 0,
         compressedBytes: 0,
-        swapUsedBytes: sampleSwapUsedBytes(),
+        swap: sampleSwapReading(stats: nil, pageSize: pageSize, now: now),
         dataMode: .unavailable,
         source: "host_statistics64 HOST_VM_INFO64",
         confidence: "Unavailable / medium",
@@ -189,7 +189,7 @@ enum SystemMetricsSampler {
       cachedFilesBytes: cachedFilesBytes,
       wiredBytes: wiredBytes,
       compressedBytes: compressedBytes,
-      swapUsedBytes: sampleSwapUsedBytes(),
+      swap: sampleSwapReading(stats: stats, pageSize: pageSize, now: now),
       dataMode: .live,
       source: "host_statistics64 HOST_VM_INFO64",
       confidence: "Live / medium",
@@ -197,7 +197,7 @@ enum SystemMetricsSampler {
     )
   }
 
-  private static func sampleSwapUsedBytes() -> UInt64? {
+  private static func sampleSwapReading(stats: vm_statistics64_data_t?, pageSize: UInt64, now: Date) -> SwapReading? {
     var usage = xsw_usage()
     var size = MemoryLayout<xsw_usage>.stride
     let result = sysctlbyname("vm.swapusage", &usage, &size, nil, 0)
@@ -206,7 +206,21 @@ enum SystemMetricsSampler {
       return nil
     }
 
-    return UInt64(usage.xsu_used)
+    let swappedBytes = stats.map { UInt64($0.swapped_count) * pageSize } ?? 0
+    return SwapReading(
+      usedBytes: UInt64(usage.xsu_used),
+      totalBytes: UInt64(usage.xsu_total),
+      availableBytes: UInt64(usage.xsu_avail),
+      pageSize: UInt64(usage.xsu_pagesize),
+      isEncrypted: usage.xsu_encrypted != 0,
+      swappedBytes: swappedBytes,
+      swapIns: stats?.swapins ?? 0,
+      swapOuts: stats?.swapouts ?? 0,
+      dataMode: .live,
+      source: "sysctl vm.swapusage + host_statistics64 HOST_VM_INFO64",
+      confidence: "Live / medium",
+      lastUpdated: now
+    )
   }
 
   private static func sampleProcesses() async -> (processes: [ProcessObservation], now: Date) {
@@ -246,6 +260,7 @@ enum SystemMetricsSampler {
         threadCount: current.threadCount,
         residentMemoryBytes: current.residentBytes,
         physicalFootprintBytes: footprint,
+        pageIns: current.pageIns,
         dataMode: .live,
         status: status,
         severityScore: severity,
@@ -298,6 +313,7 @@ enum SystemMetricsSampler {
       let path = processPath(pid: pid)
       let user = userName(pid: pid)
       let cpuNanoseconds = machTicksToNanoseconds(taskInfo.pti_total_user + taskInfo.pti_total_system)
+      let usage = resourceUsage(pid: pid)
 
       stats[pid] = ProcessStat(
         pid: pid,
@@ -307,7 +323,8 @@ enum SystemMetricsSampler {
         cpuNanoseconds: cpuNanoseconds,
         threadCount: taskInfo.pti_threadnum,
         residentBytes: UInt64(taskInfo.pti_resident_size),
-        physicalFootprintBytes: physicalFootprint(pid: pid)
+        physicalFootprintBytes: usage?.physicalFootprintBytes,
+        pageIns: usage?.pageIns ?? 0
       )
     }
 
@@ -397,7 +414,7 @@ enum SystemMetricsSampler {
     return UInt64(converted)
   }
 
-  private static func physicalFootprint(pid: pid_t) -> UInt64? {
+  private static func resourceUsage(pid: pid_t) -> ProcessResourceUsage? {
     guard pid > 0 else {
       return nil
     }
@@ -409,11 +426,14 @@ enum SystemMetricsSampler {
       }
     }
 
-    guard result == 0, info.ri_phys_footprint > 0 else {
+    guard result == 0 else {
       return nil
     }
 
-    return info.ri_phys_footprint
+    return ProcessResourceUsage(
+      physicalFootprintBytes: info.ri_phys_footprint > 0 ? info.ri_phys_footprint : nil,
+      pageIns: info.ri_pageins
+    )
   }
 
   private static func userName(pid: pid_t) -> String {
@@ -539,4 +559,10 @@ private struct ProcessStat {
   var threadCount: Int32
   var residentBytes: UInt64
   var physicalFootprintBytes: UInt64?
+  var pageIns: UInt64
+}
+
+private struct ProcessResourceUsage {
+  var physicalFootprintBytes: UInt64?
+  var pageIns: UInt64
 }

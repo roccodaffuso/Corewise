@@ -7,6 +7,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
     let now = Date()
     let instant = await SystemMetricsSampler.sample()
     let historySummary = performanceHistory.record(instant: instant, now: now)
+    let swapInsight = historySummary.swapInsight
     let cpuValue = instant.cpu.totalPercent.map { number($0) } ?? "N/A"
     let memoryUsedValue = number(instant.memory.usedGB)
     let memoryTotalValue = number(instant.memory.physicalGB)
@@ -35,7 +36,10 @@ struct SystemHealthCollector: SystemHealthCollecting {
       metric("Compressed Memory", number(instant.memory.compressedGB), "GB", .info, 0, "Compressed memory reported by macOS VM statistics.", instant.memory.source, instant.memory.confidence, "Compression is normal; interpret it together with swap and symptoms.", now, dataMode: instant.memory.dataMode),
       metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Use wattage later only if Corewise can obtain it through a safe, user-approved path.", now, dataMode: .unavailable),
       SystemMetricsSampler.memoryPressureEstimate(memoryPercent: instant.memory.usedPercent, swapUsedGB: instant.memory.swapUsedGB),
-      swapMetric(instant.memory.swapUsedGB, now: now),
+      swapMetric(instant.memory.swap, now: now),
+      swapTotalMetric(instant.memory.swap, now: now),
+      swapAvailableMetric(instant.memory.swap, now: now),
+      swapTrendMetric(swapInsight, now: now),
       metric("Uptime", number(uptimeDays), "days", .info, min(max(Int(uptimeDays.rounded()), 0), 100), "Current system uptime reported by ProcessInfo.", "ProcessInfo.systemUptime", "Live / high", "Restart only if performance symptoms persist.", now, dataMode: .live),
       sustainedCPU,
       metric("WindowServer Impact", "Planned", "", .info, 0, "WindowServer interpretation needs careful live process context before Corewise can present it.", "Process interpretation", "Planned / low", "Use live CPU rows as context, not a WindowServer diagnosis.", now, dataMode: .planned)
@@ -89,6 +93,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
         summary: performanceMetrics[0],
         cpu: instant.cpu,
         memory: instant.memory,
+        swapInsight: swapInsight,
         metrics: performanceMetrics,
         processes: cpuProcesses,
         appGroups: appGroups,
@@ -98,7 +103,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
           SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
-        sourceNote: "Live data. CPU split, process rows, thread count, resident memory, physical footprint when macOS returns it, observed memory, system VM memory, uptime, swap, and sustained CPU history are read locally. Observed memory is the larger public value between footprint and resident memory to avoid under-reporting. Memory pressure and WindowServer interpretation remain unavailable/planned until a reliable public source is selected."
+        sourceNote: "Live data. CPU split, process rows, thread count, resident memory, physical footprint when macOS returns it, page-ins, observed memory, system VM memory, uptime, swap totals, swap trend, and sustained CPU history are read locally. Swap contributors are inferred from public memory signals and are not per-process swap ownership. Memory pressure and WindowServer interpretation remain unavailable/planned until a reliable public source is selected."
       ),
       startup: startupHealth,
       thermal: ThermalHealth(
@@ -172,8 +177,8 @@ struct SystemHealthCollector: SystemHealthCollecting {
     )
   }
 
-  private func swapMetric(_ swapUsedGB: Double?, now: Date) -> DiagnosticMetric {
-    guard let swapUsedGB else {
+  private func swapMetric(_ swap: SwapReading?, now: Date) -> DiagnosticMetric {
+    guard let swap else {
       return metric(
         "Swap Used",
         "Unavailable",
@@ -189,6 +194,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
       )
     }
 
+    let swapUsedGB = Double(swap.usedBytes) / SystemMetricsSampler.bytesPerGB
     return metric(
       "Swap Used",
       number(swapUsedGB),
@@ -202,6 +208,95 @@ struct SystemHealthCollector: SystemHealthCollecting {
       now,
       dataMode: .live
     )
+  }
+
+  private func swapTotalMetric(_ swap: SwapReading?, now: Date) -> DiagnosticMetric {
+    guard let swap else {
+      return unavailableSwapMetric("Swap Total", now: now)
+    }
+
+    return metric(
+      "Swap Total",
+      number(Double(swap.totalBytes) / SystemMetricsSampler.bytesPerGB),
+      "GB",
+      .info,
+      0,
+      "Total swap space reported by macOS through vm.swapusage.",
+      swap.source,
+      swap.confidence,
+      "Use total only as context; used and trend are more important.",
+      now,
+      dataMode: swap.dataMode
+    )
+  }
+
+  private func swapAvailableMetric(_ swap: SwapReading?, now: Date) -> DiagnosticMetric {
+    guard let swap else {
+      return unavailableSwapMetric("Swap Available", now: now)
+    }
+
+    return metric(
+      "Swap Available",
+      number(Double(swap.availableBytes) / SystemMetricsSampler.bytesPerGB),
+      "GB",
+      .info,
+      0,
+      "Available swap space reported by macOS through vm.swapusage.",
+      swap.source,
+      swap.confidence,
+      "Available swap is context, not a cleanup target.",
+      now,
+      dataMode: swap.dataMode
+    )
+  }
+
+  private func swapTrendMetric(_ insight: SwapInsight, now: Date) -> DiagnosticMetric {
+    metric(
+      "Swap Trend",
+      insight.trend.title,
+      "",
+      swapTrendStatus(insight.trend),
+      swapTrendSeverity(insight.trend),
+      "Trend is calculated from recent local swap samples. It does not identify exact per-process swap ownership.",
+      insight.source,
+      insight.confidence,
+      "If swap is rising, inspect high-memory live process rows before changing anything.",
+      now,
+      dataMode: insight.dataMode
+    )
+  }
+
+  private func unavailableSwapMetric(_ title: String, now: Date) -> DiagnosticMetric {
+    metric(
+      title,
+      "Unavailable",
+      "GB",
+      .info,
+      0,
+      "Swap data was not returned by the safe VM query on this Mac.",
+      "sysctl vm.swapusage",
+      "Unavailable / medium",
+      "Do not infer swap pressure from resident memory alone.",
+      now,
+      dataMode: .unavailable
+    )
+  }
+
+  private func swapTrendStatus(_ trend: SwapTrend) -> FindingSeverity {
+    switch trend {
+    case .rising: .warning
+    case .stable, .falling: .good
+    case .unavailable: .info
+    }
+  }
+
+  private func swapTrendSeverity(_ trend: SwapTrend) -> Int {
+    switch trend {
+    case .rising: 54
+    case .stable: 12
+    case .falling: 8
+    case .unavailable: 0
+    }
   }
 
   private func dataAccessCapabilities() -> [DataAccessCapability] {
