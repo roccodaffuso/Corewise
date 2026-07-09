@@ -33,7 +33,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Startup inventory should use a compact table for plist rows instead of stacked diagnostic cards, with Finder reveal as the only row action.
 - App Issues should lead with an empty/manual-access state until the user chooses reports; repeated crash counts should appear only after selection.
 - Menu bar content should use a compact window-style popover, not a plain text menu, with CPU, memory, swap, top CPU process, top memory process, and one Open Corewise action.
-- Settings uses a native macOS Settings scene: compact, form-based, tabbed, and visually quieter than diagnostic pages. Do not add Settings as another source-list item in the main diagnostic sidebar.
+- Settings uses a native macOS Settings scene: compact, form-based, tabbed, and visually quieter than diagnostic pages. Expose it through the macOS Settings command and one subtle toolbar gear; do not add Settings as another source-list item in the main diagnostic sidebar.
 
 ## Status Language
 

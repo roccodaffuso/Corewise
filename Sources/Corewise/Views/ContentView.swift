@@ -85,6 +85,15 @@ struct ContentView: View {
         }
       }
     }
+    .toolbar {
+      ToolbarItem(placement: .primaryAction) {
+        SettingsLink {
+          Label("Settings", systemImage: "gearshape")
+        }
+        .labelStyle(.iconOnly)
+        .help("Open Corewise Settings")
+      }
+    }
   }
 }
 

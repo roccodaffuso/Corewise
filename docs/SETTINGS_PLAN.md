@@ -39,6 +39,7 @@ Implemented:
 - `SettingsView` lives in its own view file.
 - Settings uses a compact `TabView` with native `Form`, `Section`, `Picker`, and `Toggle` controls.
 - Settings contains General, Privacy & Data, Performance, Report, and Menu Bar tabs.
+- The main window toolbar exposes a small native `SettingsLink` gear so Settings is discoverable without adding it to the diagnostic sidebar.
 
 Planned:
 
@@ -172,7 +173,7 @@ Implementation status:
 - Keep `Settings` scene in `CorewiseApp`.
 - Keep `SettingsView` out of `DashboardViews.swift` in a dedicated settings view file.
 - Use `@AppStorage` only for real user preferences.
-- Use `SettingsLink` from small entry points only if needed later, such as menu bar or Data Access copy.
+- Use `SettingsLink` only from small entry points, currently the main window toolbar gear.
 - Keep settings rows simple: label, short explanatory text, control.
 - Prefer system controls: `Toggle`, `Picker`, `Stepper`, `Button`, and `Form`.
 - Avoid custom card-heavy settings UI.
@@ -189,7 +190,7 @@ Implementation status:
 
 ## Success Criteria
 
-- Settings opens through the native macOS Settings command.
+- Settings opens through the native macOS Settings command and the main window toolbar gear.
 - Settings does not appear as a diagnostic sidebar item.
 - Every setting has a visible user benefit.
 - Every persisted setting uses a documented `@AppStorage` key.
