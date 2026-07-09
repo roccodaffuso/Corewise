@@ -154,8 +154,12 @@ struct PerformanceView: View {
         }
         .labelsHidden()
         .pickerStyle(.segmented)
-        .frame(width: 190)
+        .frame(maxWidth: 220)
       }
+      .padding(.horizontal, 12)
+      .padding(.vertical, 10)
+      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous))
+      .frame(maxWidth: .infinity, alignment: .leading)
 
       if selectedMode == .memory {
         SwapInsightPanel(insight: performance.swapInsight)
@@ -425,25 +429,25 @@ private struct CommandCenterHeader: View {
 
   var body: some View {
     PremiumPanel {
-      HStack(alignment: .center, spacing: 24) {
+      HStack(alignment: .center, spacing: 22) {
         CoverageRing(summary: snapshot.coverageSummary)
-          .frame(width: 132, height: 132)
+          .frame(width: 112, height: 112)
 
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
           HStack(spacing: 10) {
             Image(systemName: "waveform.path.ecg")
               .foregroundStyle(color(for: FindingSeverity.good))
             Text("Live Signals")
-              .font(.system(size: 30, weight: .semibold))
+              .font(.system(size: 28, weight: .semibold))
           }
 
           Text("Corewise is reading real local system signals.")
-            .font(.title3.weight(.medium))
+            .font(.title3.weight(.semibold))
 
           Text("Performance, storage volume, battery basics, thermal state, and startup plist data are live where macOS exposes them. Global scoring remains planned.")
             .font(.callout)
             .foregroundStyle(.secondary)
-            .lineLimit(3)
+            .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
 
           HStack(spacing: 8) {
@@ -479,7 +483,7 @@ private struct SectionHero: View {
 
         VStack(alignment: .leading, spacing: 7) {
           Text(title)
-            .font(.system(size: 28, weight: .semibold))
+            .font(.system(size: 27, weight: .semibold))
           Text(subtitle)
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -490,7 +494,10 @@ private struct SectionHero: View {
 
         VStack(alignment: .trailing, spacing: 6) {
           Text(displayValue(metric))
-            .font(.system(size: 30, weight: .semibold, design: .rounded))
+            .font(.system(size: 29, weight: .semibold, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
           HStack(spacing: 6) {
             DataModeBadge(dataMode: metric.dataMode)
             StatusBadge(status: metric.status, score: metric.severityScore)
@@ -599,9 +606,9 @@ private struct DataAccessPanel: View {
           }
           .padding(10)
           .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
-          .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+          .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous))
           .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous)
               .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
           }
         }
@@ -627,6 +634,7 @@ private struct ManualScanPanel: View {
           Label(primaryTitle, systemImage: "folder")
         }
         .buttonStyle(.borderedProminent)
+        .controlSize(.small)
         .disabled(isRunning)
 
         ForEach(Array(secondaryActions.enumerated()), id: \.offset) { _, action in
@@ -636,6 +644,7 @@ private struct ManualScanPanel: View {
             Text(action.0)
           }
           .buttonStyle(.bordered)
+          .controlSize(.small)
           .disabled(isRunning)
         }
 
@@ -731,7 +740,7 @@ private struct MetricTile: View {
   @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 9) {
+    VStack(alignment: .leading, spacing: 8) {
       HStack(alignment: .firstTextBaseline) {
         Text(metric.title)
           .font(.caption.weight(.semibold))
@@ -743,6 +752,7 @@ private struct MetricTile: View {
 
       Text(displayValue(metric))
         .font(.system(size: 22, weight: .semibold, design: .rounded))
+        .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.82)
 
@@ -763,10 +773,10 @@ private struct MetricTile: View {
       }
     }
     .padding(12)
-    .frame(maxWidth: .infinity, minHeight: 142, alignment: .topLeading)
-    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .frame(maxWidth: .infinity, minHeight: CorewiseLayout.metricDetailMinHeight, alignment: .topLeading)
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous))
     .overlay {
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
+      RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous)
         .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
     }
   }
@@ -815,19 +825,20 @@ private struct PremiumPanel<Content: View>: View {
       content
     }
     .padding(16)
-    .frame(maxWidth: .infinity, alignment: .topLeading)
+    .frame(maxWidth: .infinity, minHeight: title == nil ? CorewiseLayout.heroMinHeight : nil, alignment: .topLeading)
     .background {
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
+      RoundedRectangle(cornerRadius: title == nil ? CorewiseVisual.heroRadius : CorewiseVisual.panelRadius, style: .continuous)
         .fill(.regularMaterial)
         .overlay {
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(CorewiseVisual.panelFill(colorScheme: colorScheme))
+          RoundedRectangle(cornerRadius: title == nil ? CorewiseVisual.heroRadius : CorewiseVisual.panelRadius, style: .continuous)
+            .fill(title == nil ? CorewiseVisual.heroFill(colorScheme: colorScheme) : CorewiseVisual.panelFill(colorScheme: colorScheme))
         }
     }
     .overlay {
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
+      RoundedRectangle(cornerRadius: title == nil ? CorewiseVisual.heroRadius : CorewiseVisual.panelRadius, style: .continuous)
         .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
     }
+    .shadow(color: CorewiseVisual.softShadow(colorScheme: colorScheme), radius: title == nil ? 10 : 4, y: title == nil ? 5 : 2)
   }
 }
 
@@ -998,12 +1009,12 @@ private struct CompactStat: View {
   @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: 5) {
       Text(title)
         .font(.caption.weight(.semibold))
         .foregroundStyle(.secondary)
       Text(value)
-        .font(.system(size: 18, weight: .semibold, design: .rounded))
+        .font(.system(size: 19, weight: .semibold, design: .rounded))
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.8)
@@ -1011,11 +1022,12 @@ private struct CompactStat: View {
         .font(.caption2)
         .foregroundStyle(.tertiary)
     }
-    .padding(11)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .padding(.horizontal, 12)
+    .padding(.vertical, 11)
+    .frame(maxWidth: .infinity, minHeight: CorewiseLayout.metricMinHeight, alignment: .leading)
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous))
     .overlay {
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
+      RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous)
         .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
     }
   }
@@ -1123,7 +1135,7 @@ private struct SwapContributorHeader: View {
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 7)
-    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: CorewiseVisual.tableRadius, style: .continuous))
   }
 
   private func header(_ title: String) -> some View {
@@ -1177,7 +1189,7 @@ private struct SwapContributorRow: View {
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 9)
-    .background(CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(0.45), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    .background(CorewiseVisual.tableRowFill(colorScheme: colorScheme, isAlternating: true), in: RoundedRectangle(cornerRadius: CorewiseVisual.tableRadius, style: .continuous))
   }
 
   private var growthValue: String {
@@ -1312,14 +1324,14 @@ private struct AppGroupUsageRow: View {
 
       GeometryReader { proxy in
         ZStack(alignment: .leading) {
-          RoundedRectangle(cornerRadius: 4)
-            .fill(.quaternary)
-          RoundedRectangle(cornerRadius: 4)
+          Capsule()
+            .fill(.quaternary.opacity(0.82))
+          Capsule()
             .fill(color(for: group.status))
             .frame(width: max(proxy.size.width * fraction, currentValue > 0 ? 4 : 0))
         }
       }
-      .frame(height: 9)
+      .frame(height: 7)
     }
   }
 }
@@ -1406,14 +1418,14 @@ private struct ProcessUsageRow: View {
 
       GeometryReader { proxy in
         ZStack(alignment: .leading) {
-          RoundedRectangle(cornerRadius: 4)
-            .fill(.quaternary)
-          RoundedRectangle(cornerRadius: 4)
+          Capsule()
+            .fill(.quaternary.opacity(0.82))
+          Capsule()
             .fill(color(for: process.status))
             .frame(width: max(proxy.size.width * fraction, currentValue > 0 ? 4 : 0))
         }
       }
-      .frame(height: 9)
+      .frame(height: 7)
     }
   }
 }
@@ -1438,11 +1450,11 @@ private struct ProcessObservationTable: View {
           )
 
           VStack(spacing: 0) {
-          ProcessTableHeader(mode: mode)
+            ProcessTableHeader(mode: mode)
             ForEach(Array(processes.prefix(24).enumerated()), id: \.element.id) { index, process in
               ProcessTableRow(process: process, mode: mode, index: index)
               if index < min(processes.count, 24) - 1 {
-                Divider()
+                Divider().opacity(0.55)
               }
             }
           }
@@ -1470,7 +1482,7 @@ private struct ProcessTableHeader: View {
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 7)
-    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: CorewiseVisual.tableRadius, style: .continuous))
   }
 
   private func header(_ title: String) -> some View {
@@ -1525,8 +1537,9 @@ private struct ProcessTableRow: View {
         .frame(width: 58, alignment: .trailing)
     }
     .padding(.horizontal, 12)
-    .padding(.vertical, 9)
-    .background(rowFill, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    .padding(.vertical, 8)
+    .frame(minHeight: CorewiseLayout.tableRowHeight)
+    .background(rowFill, in: RoundedRectangle(cornerRadius: CorewiseVisual.tableRadius, style: .continuous))
   }
 
   private var primaryValue: String {
@@ -1566,7 +1579,7 @@ private struct ProcessTableRow: View {
   }
 
   private var rowFill: Color {
-    index.isMultiple(of: 2) ? CorewiseVisual.tileFill(colorScheme: colorScheme) : .clear
+    CorewiseVisual.tableRowFill(colorScheme: colorScheme, isAlternating: index.isMultiple(of: 2))
   }
 }
 
@@ -1712,7 +1725,7 @@ private struct StorageExplorerList: View {
       }
     }
     .padding(12)
-    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous))
   }
 }
 
@@ -1975,6 +1988,7 @@ private struct EmptyDiagnosticState: View {
   var title: String
   var message: String
   var dataMode: DataMode
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -1990,7 +2004,7 @@ private struct EmptyDiagnosticState: View {
     }
     .padding(12)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(0.82), in: RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous))
   }
 }
 
@@ -2123,7 +2137,7 @@ private struct IconPlate: View {
       .frame(width: 46, height: 46)
       .background(
         LinearGradient(
-          colors: [color(for: status).opacity(0.18), CorewiseVisual.accentSoft.opacity(0.08)],
+          colors: [color(for: status).opacity(0.16), CorewiseVisual.accentSoft.opacity(0.055)],
           startPoint: .topLeading,
           endPoint: .bottomTrailing
         ),
@@ -2224,9 +2238,9 @@ private struct SourceNote: View {
     }
     .padding(12)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .background(CorewiseVisual.tileFill(colorScheme: colorScheme), in: RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous))
     .overlay {
-      RoundedRectangle(cornerRadius: 8, style: .continuous)
+      RoundedRectangle(cornerRadius: CorewiseVisual.tileRadius, style: .continuous)
         .stroke(CorewiseVisual.hairline(colorScheme: colorScheme), lineWidth: 1)
     }
   }
@@ -2311,7 +2325,7 @@ private func color(for status: OverallStatus) -> Color {
   case .needsAttention:
     CorewiseVisual.amber
   case .critical:
-    Color(nsColor: .systemRed)
+    CorewiseVisual.critical
   }
 }
 
@@ -2324,7 +2338,7 @@ private func color(for severity: FindingSeverity) -> Color {
   case .warning:
     CorewiseVisual.amber
   case .critical:
-    Color(nsColor: .systemRed)
+    CorewiseVisual.critical
   }
 }
 
@@ -2337,7 +2351,7 @@ private func color(for dataMode: DataMode) -> Color {
   case .unavailable:
     Color(nsColor: .tertiaryLabelColor)
   case .avoided:
-    Color(nsColor: .systemRed)
+    CorewiseVisual.critical
   }
 }
 
@@ -2346,7 +2360,7 @@ private func storageBreakdownColor(for item: ChartDatum) -> Color {
   case "Available":
     CorewiseVisual.moss
   case "Used":
-    Color(nsColor: .systemRed)
+    CorewiseVisual.critical.opacity(0.82)
   default:
     color(for: item.status)
   }

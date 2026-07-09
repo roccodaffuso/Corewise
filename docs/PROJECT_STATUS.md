@@ -15,6 +15,7 @@ Current state: real-data acquisition started; Performance parity is partially im
 Product realignment: after last30days research, Corewise is positioned as local diagnostics and explanation, not automatic cleanup or Activity Monitor exact parity.
 Remaining last30days work batch completed locally through `fa4e241`: Performance explanations, Storage exploration, Report quality, Startup/App Issues readability, and a light menu bar monitor are implemented. Score remains gated.
 Swap Insight baseline: committed as `Add Swap Insight diagnostics`.
+Premium redesign baseline: visual foundation, sidebar, shared panels, process tables, storage colors, source notes, and menu bar styling were updated to follow the researched Apple-native redesign direction. No new diagnostic collectors or data claims were added.
 
 ## Implemented
 
@@ -39,6 +40,7 @@ Swap Insight baseline: committed as `Add Swap Insight diagnostics`.
 - User-selected crash report metadata parsing for crash counts and repeated app patterns, with a strong empty state before reports are selected.
 - Local Diagnostic Report page with `Summary / Markdown` views, notable findings, manual next steps, source/confidence notes, and clipboard-only copy without stack traces, uploads, file contents, or cleanup actions.
 - Native SwiftUI Settings scene has compact General, Privacy & Data, Performance, Report, and Menu Bar tabs, reachable from the macOS Settings command and a footer link below the diagnostic sidebar navigation. Settings controls display/report preferences only and does not change automatic data collection.
+- Premium visual system foundations: shared semantic colors, surface roles, page wash, sidebar selection/hover fills, hero/panel/tile/table radii, stable hero and metric heights, table row styling, softer menu bar glass, and muted storage used/available colors.
 - Read-only, manual-action product stance.
 
 ## Planned
@@ -74,3 +76,4 @@ Swap Insight baseline: committed as `Add Swap Insight diagnostics`.
 - Crash report details depend on a user-selected folder and may miss reports outside that folder.
 - Health score is not calculated yet and must not be presented as a final diagnostic score; Overview should continue emphasizing live signals and coverage.
 - Report copy is a current-snapshot summary, not a full support bundle or persistent diagnostic archive. It now has a short summary view and a fuller Markdown view, both generated from the same snapshot.
+- Premium visual polish still needs manual screenshot QA across light/dark and narrow/wide windows before treating the redesign as final.

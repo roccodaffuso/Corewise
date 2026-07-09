@@ -82,6 +82,16 @@ Before calling the MVP trustworthy, Corewise must show provenance for every metr
 - Avoid: adding Settings as a main diagnostic sidebar destination.
 - Avoid: any setting that enables automatic cleanup, broad background scans, private APIs, sudo-only data collection, process killing, accounts, backend services, telemetry, or tracking.
 
+## Phase 8: Premium Visual System
+
+- Implemented: shared `CorewiseVisual` semantic colors and surface roles for page wash, panels, tiles, table rows, sidebar states, and soft shadows.
+- Implemented: shared `CorewiseLayout` heights for heroes, metric tiles, sidebar rows, and process table rows to reduce cross-page stepping.
+- Implemented: sidebar selection changed to a restrained source-list treatment with subtle translucent fill and accent indicator instead of saturated full-row selection.
+- Implemented: hero, metric, panel, source-note, empty-state, process-table, and menu bar surfaces use the same softened material language.
+- Implemented: storage breakdown uses muted red for used space and moss green for available space.
+- Planned: manual screenshot QA for dark/light, narrow/wide windows, and first-viewport alignment.
+- Planned: further page-specific polish only after visual QA identifies concrete issues.
+
 ## Later Ideas
 
 - Health score only after real data coverage and a documented formula are stable.

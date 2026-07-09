@@ -66,7 +66,7 @@ private struct MenuBarMonitorView: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
               .stroke(.white.opacity(0.14), lineWidth: 1)
           }
-          .shadow(color: CorewiseVisual.moss.opacity(0.18), radius: 14, y: 6)
+          .shadow(color: CorewiseVisual.moss.opacity(0.12), radius: 8, y: 3)
 
         VStack(alignment: .leading, spacing: 1) {
           Text("Corewise")
@@ -188,7 +188,7 @@ private struct MenuBarMonitorView: View {
         RoundedRectangle(cornerRadius: 10, style: .continuous)
           .stroke(.white.opacity(0.18), lineWidth: 1)
       }
-      .shadow(color: CorewiseVisual.accent.opacity(0.22), radius: 16, y: 8)
+      .shadow(color: CorewiseVisual.accent.opacity(0.14), radius: 8, y: 4)
     }
     .padding(18)
     .frame(width: 344)
@@ -315,7 +315,7 @@ private struct MenuUsageBar: View {
               .frame(height: 1)
               .padding(.horizontal, 1)
           }
-          .shadow(color: tint.opacity(0.24), radius: 7, y: 1)
+          .shadow(color: tint.opacity(0.18), radius: 5, y: 1)
       }
     }
     .frame(height: 6)
@@ -353,8 +353,8 @@ private extension View {
             )
         }
     }
-    .shadow(color: .black.opacity(colorScheme == .dark ? 0.22 : 0.10), radius: 18, y: 9)
-    .shadow(color: tint.opacity(colorScheme == .dark ? 0.10 : 0.07), radius: 14, y: 5)
+    .shadow(color: .black.opacity(colorScheme == .dark ? 0.18 : 0.08), radius: 8, y: 4)
+    .shadow(color: tint.opacity(colorScheme == .dark ? 0.08 : 0.05), radius: 6, y: 2)
   }
 }
 

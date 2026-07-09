@@ -55,6 +55,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
 struct ContentView: View {
   @ObservedObject var store: HealthDashboardStore
   @SceneStorage("selectedSection") private var selectedSectionID = DashboardSection.overview.rawValue
+  @Environment(\.colorScheme) private var colorScheme
 
   private var selectedSection: DashboardSection {
     DashboardSection(rawValue: selectedSectionID) ?? .overview
@@ -69,7 +70,7 @@ struct ContentView: View {
         MacWindowMaterialView()
           .ignoresSafeArea()
         Rectangle()
-          .fill(CorewiseVisual.appBackground)
+          .fill(CorewiseVisual.pageWash(colorScheme: colorScheme))
           .ignoresSafeArea()
           .allowsHitTesting(false)
         WindowTransparencyConfigurator()
@@ -92,7 +93,7 @@ private struct SidebarView: View {
   @Binding var selectedSectionID: DashboardSection.RawValue
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading, spacing: 16) {
       SidebarHeader()
         .padding(.horizontal, 14)
 
@@ -113,7 +114,7 @@ private struct SidebarView: View {
       SidebarSettingsLink()
         .padding(.horizontal, 10)
     }
-    .padding(.top, 14)
+    .padding(.top, 16)
     .padding(.bottom, 12)
   }
 }
@@ -125,7 +126,7 @@ private struct SidebarSettingsLink: View {
   var body: some View {
     SettingsLink {
       HStack(spacing: 11) {
-        Capsule()
+        RoundedRectangle(cornerRadius: 2, style: .continuous)
           .fill(Color.clear)
           .frame(width: 3, height: 24)
 
@@ -149,6 +150,7 @@ private struct SidebarSettingsLink: View {
       }
       .padding(.horizontal, 8)
       .padding(.vertical, 6)
+      .frame(minHeight: CorewiseLayout.sidebarRowHeight)
       .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
       .background(rowFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
     }
@@ -158,7 +160,7 @@ private struct SidebarSettingsLink: View {
   }
 
   private var rowFill: Color {
-    isHovering ? CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(0.72) : .clear
+    isHovering ? CorewiseVisual.sidebarHoverFill(colorScheme: colorScheme) : .clear
   }
 }
 
@@ -167,7 +169,7 @@ private struct SidebarHeader: View {
     VStack(alignment: .leading, spacing: 6) {
       HStack(spacing: 8) {
         Image(systemName: "waveform.path.ecg")
-          .font(.caption.weight(.bold))
+          .font(.caption.weight(.semibold))
           .foregroundStyle(CorewiseVisual.accent)
         Text("Corewise")
           .font(.headline.weight(.semibold))
@@ -195,23 +197,23 @@ private struct SidebarSectionRow: View {
   var body: some View {
     Button(action: select) {
       HStack(spacing: 11) {
-        Capsule()
+        RoundedRectangle(cornerRadius: 2, style: .continuous)
           .fill(isSelected ? CorewiseVisual.accentSoft : Color.clear)
-          .frame(width: 3, height: 24)
+          .frame(width: 3, height: 22)
 
         Image(systemName: section.systemImage)
           .font(.system(size: 13, weight: .semibold))
           .symbolRenderingMode(.hierarchical)
-          .foregroundStyle(isSelected ? CorewiseVisual.accentSoft : .secondary)
+          .foregroundStyle(isSelected ? CorewiseVisual.accentSoft : Color.secondary.opacity(0.68))
           .frame(width: 23, height: 23)
 
         VStack(alignment: .leading, spacing: 1) {
           Text(section.title)
             .font(.callout.weight(isSelected ? .semibold : .medium))
-            .foregroundStyle(.primary)
+            .foregroundStyle(isSelected ? .primary : .secondary)
           Text(section.detail)
             .font(.caption2)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(isSelected ? .secondary : .tertiary)
             .lineLimit(1)
         }
 
@@ -219,6 +221,7 @@ private struct SidebarSectionRow: View {
       }
       .padding(.horizontal, 8)
       .padding(.vertical, 6)
+      .frame(minHeight: CorewiseLayout.sidebarRowHeight)
       .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
       .background(rowFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
       .overlay {
@@ -234,10 +237,10 @@ private struct SidebarSectionRow: View {
 
   private var rowFill: Color {
     if isSelected {
-      return CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(colorScheme == .dark ? 0.72 : 0.88)
+      return CorewiseVisual.sidebarSelectionFill(colorScheme: colorScheme)
     }
     if isHovering {
-      return CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(0.72)
+      return CorewiseVisual.sidebarHoverFill(colorScheme: colorScheme)
     }
     return .clear
   }

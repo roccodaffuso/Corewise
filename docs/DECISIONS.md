@@ -221,3 +221,21 @@ Reason: These controls are useful and low-risk. Launch at login, refresh interva
 Decision: Corewise shows system swap context, swap trend, swap in/out rates, swapped VM pages, encryption state, and likely memory-pressure contributors. It must not say that a process owns a specific amount of swap.
 
 Reason: Public macOS APIs expose useful system swap and process memory/page-in signals, but they do not provide reliable exact per-process swap ownership. Showing contributors as inference preserves usefulness without inventing certainty.
+
+## 2026-07-09: System Materials Before Custom Glass
+
+Decision: Corewise uses native macOS material as the base and applies custom translucent surfaces only through shared UI roles such as hero, panel, tile, table row, source note, and menu bar tile.
+
+Reason: Premium transparency should clarify hierarchy and trust. Applying decorative glass everywhere would reduce legibility and make Corewise feel less native.
+
+## 2026-07-09: Performance Is The Flagship Diagnostic Page
+
+Decision: Performance gets the strongest operational hierarchy: summary strip, CPU/Memory focus control, pressure panel, dense process table, table-level source note, and Swap Insight in Memory mode.
+
+Reason: The user’s trust concern centered on real CPU/RAM numbers. A serious Corewise redesign must make live process data easier to scan than the surrounding explanatory panels.
+
+## 2026-07-09: Data Access Supports Trust But Does Not Lead The First Viewport
+
+Decision: Data Access remains visible but secondary to live signals and operational data.
+
+Reason: Provenance matters, but leading with missing/planned access made Corewise feel incomplete. The first viewport should show what Corewise can currently read.

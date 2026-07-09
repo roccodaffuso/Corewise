@@ -48,11 +48,11 @@ Applicazioni per Corewise:
 
 ### Competitive Utility Signals
 
-Le utility Mac premium vincono quando riducono ansia e aumentano controllo. Le cleaner app piu note spesso sono molto levigate, ma il loro rischio e sembrare aggressive: linguaggio di fix, promesse di pulizia, file "offenders", urgenza visiva. Corewise deve prendere solo la cura visuale, non il posizionamento.
+Le utility Mac premium vincono quando riducono ansia e aumentano controllo. Le cleaner app piu note spesso sono molto levigate, ma il loro rischio e sembrare aggressive: linguaggio di fix, promesse di pulizia, classifiche giudicanti dei file, urgenza visiva. Corewise deve prendere solo la cura visuale, non il posizionamento.
 
 Applicazioni per Corewise:
 
-- evitare parole come "offenders" quando non c'e una diagnosi certa;
+- evitare parole giudicanti quando non c'e una diagnosi certa;
 - preferire "selected scan", "review", "inspect", "open in Finder";
 - mostrare la fonte del dato in modo calmo;
 - dare priorita a Performance, Storage Scan e Report come workflow, non a completezza apparente della sidebar.
@@ -318,7 +318,7 @@ Struttura proposta:
 
 Da cambiare:
 
-- "Largest offenders" diventa "Largest items from selected scan";
+- il vecchio linguaggio giudicante diventa "Largest items from selected scan";
 - empty state piu elegante e meno largo;
 - used rosso/muted red, available verde;
 - scan controls come toolbar locale, non bottoni sparsi.
@@ -603,6 +603,19 @@ Quando il redesign viene implementato, aggiornare:
 - `docs/ROADMAP.md`: fasi completate e prossimi polish gate.
 - `docs/DECISIONS.md`: decisioni su materiali, sidebar, Performance flagship e score secondario.
 - `README.md`: breve nota se il redesign cambia i workflow visibili.
+
+## Implemented Notes
+
+2026-07-09:
+
+- Implemented shared visual tokens in `CorewiseVisual` for semantic colors, page wash, surface fills, sidebar state fills, hairline, radii, soft shadows, and table row fills.
+- Implemented shared layout constants for hero height, metric tile height, sidebar row height, and table row height.
+- Updated sidebar selection to a subdued source-list treatment with translucent fill and accent indicator.
+- Updated page background to use a softer material wash instead of a heavier grey/gradient feel.
+- Updated shared hero, panel, metric tile, source note, empty state, process table, and menu bar surfaces to use the same premium material language.
+- Updated storage used/available color treatment to muted red and moss green.
+- Updated Performance table styling and process bars to reduce visual noise while preserving live data readability.
+- Build passes after the visual changes. Manual screenshot QA remains the next visual gate.
 
 ## Source Links
 

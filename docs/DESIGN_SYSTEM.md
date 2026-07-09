@@ -4,6 +4,14 @@
 
 Corewise should feel like a serious Apple-native diagnostic utility: calm, precise, softly premium, dense enough to be useful, and never alarmist.
 
+## Implemented Visual Tokens
+
+- `CorewiseVisual` owns semantic colors for live/good, info/planned, warning/swap, critical/used, graphite/stone neutrals, and shared app accent colors.
+- `CorewiseVisual` owns surface roles for page wash, hero fill, panel fill, tile fill, table row fill, sidebar selection, sidebar hover, hairline, and soft shadow.
+- `CorewiseLayout` owns shared rails for content width, content padding, page spacing, panel spacing, tile spacing, hero minimum height, metric tile heights, sidebar row height, and table row height.
+- Local first-viewport widths should not be introduced unless a native control requires a bounded width. Prefer shared adaptive grids and tokenized heights.
+- Hero panels, metric tiles, source notes, table rows, and menu bar tiles should use the shared radii rather than local corner values.
+
 ## Visual Principles
 
 - Use native SwiftUI controls, system materials, soft transparency, and SF Symbols.
@@ -29,11 +37,13 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Performance pages should lead with summary pressure and a compact top list. Full process rows should hide long filesystem paths behind short context labels unless the user asks for raw detail.
 - Process tables should use stable right-aligned numeric columns, monospaced digits, subtle alternating row fills, and a single table-level source note instead of per-row provenance noise.
 - Dense process rows should not repeat `Live` badges on every row when the whole table has a source note.
+- Performance is the visual flagship: it may be denser than other pages, but it must stay table-first and source-note driven.
 - Performance explanations should be phrased as context from live process names, not causal proof. Use "may", "usually", and "can be normal" for system processes and helpers.
 - Swap Insight should be shown as pressure context in `Performance > Memory`: system swap totals/rates first, likely contributors second, and a visible note that Corewise does not show exact per-process swap ownership.
 - Startup inventory should use a compact table for plist rows instead of stacked diagnostic cards, with Finder reveal as the only row action.
 - App Issues should lead with an empty/manual-access state until the user chooses reports; repeated crash counts should appear only after selection.
 - Menu bar content should use a compact window-style popover, not a plain text menu, with CPU, memory, swap, top CPU process, top memory process, and one Open Corewise action.
+- Menu bar metric tiles use compact progress bars and restrained shadows. Avoid glow-heavy button styling.
 - Settings uses a native macOS Settings scene: compact, form-based, tabbed, and visually quieter than diagnostic pages. Expose it through the macOS Settings command and one subtle footer link below the sidebar navigation; do not add Settings as another diagnostic source-list item.
 
 ## Status Language
@@ -76,9 +86,9 @@ Every diagnostic page should include:
 ## Chart Rules
 
 - Charts should answer one question quickly.
-- Use tables for process diagnostics; use horizontal bars only for compact app-group summaries and storage offenders.
+- Use tables for process diagnostics; use horizontal bars only for compact app-group summaries and selected storage items.
 - Use compact breakdown charts for storage.
-- Label storage scan charts as selected-folder results, not whole-disk offenders.
+- Label storage scan charts as selected-folder results, not whole-disk rankings.
 - Keep unit labels visible.
 - Avoid random colors; use status colors.
 - In narrow windows, prioritize readable labels over dense plotting.

@@ -33,7 +33,7 @@ Planned or unavailable areas:
 
 - Overall health score and cross-section prioritization. The Overview does not present this as a primary diagnosis until the scoring model is real.
 - Battery energy impact and risk scoring.
-- Automatic detailed storage folder scans, caches, Trash, and personal folder offenders.
+- Automatic detailed storage folder scans, caches, Trash, and personal folder rankings.
 - Modern login items, background items, privileged helpers, and startup code signing checks.
 - WindowServer interpretation.
 - Thermal contributors beyond high-level public thermal state.
