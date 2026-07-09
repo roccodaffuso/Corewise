@@ -147,8 +147,8 @@ Statuses:
 | CPU total | Implemented | Current `HealthSnapshot` performance CPU reading | Medium | At-a-glance value only; open Corewise for detail. |
 | Memory used | Implemented | Current `HealthSnapshot` system memory reading | Medium | Uses Corewise memory semantics, not private Activity Monitor internals. |
 | Swap used | Implemented when available | Current `HealthSnapshot` swap reading | Medium | Shows `N/A` when the snapshot does not contain swap. |
-| Top CPU process | Implemented | Current live process rows | Medium | Snapshot sample only; not a persistent monitor. |
-| Top memory process | Implemented | Current live process rows | Medium | Uses observed memory from the existing Performance model. |
+| Top CPU rows | Implemented | Current live process rows | Medium | Shows up to three rows from the current snapshot sample; not a persistent monitor. |
+| Top memory rows | Implemented | Current live process rows | Medium | Shows up to three rows using observed memory from the existing Performance model. |
 
 ## Privacy Notes
 

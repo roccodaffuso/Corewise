@@ -41,7 +41,7 @@ Premium redesign baseline: visual foundation, sidebar, shared panels, process ta
 - User-selected crash report metadata parsing for crash counts and repeated app patterns, with a strong empty state before reports are selected.
 - Local Diagnostic Report page with `Summary / Markdown` views, notable findings, manual next steps, source/confidence notes, and clipboard-only copy without stack traces, uploads, file contents, or cleanup actions.
 - Native SwiftUI Settings scene has compact General, Privacy & Data, Performance, Report, and Menu Bar tabs, reachable from the macOS Settings command and a footer link below the diagnostic sidebar navigation. Settings controls display/report preferences only and does not change automatic data collection.
-- Premium visual system foundations: shared semantic colors, surface roles, page wash, sidebar selection/hover fills, hero/panel/tile/table radii, stable hero and metric heights, table row styling, softer menu bar glass, and muted storage used/available colors.
+- Premium visual system foundations: shared semantic colors, surface roles, page wash, sidebar selection/hover fills, hero/panel/tile/table radii, stable hero and metric heights, table row styling, softer menu bar glass, top-three menu bar process rows, and muted storage used/available colors.
 - Read-only, manual-action product stance.
 
 ## Planned

@@ -126,8 +126,8 @@ private struct MenuBarSettingsPane: View {
       }
 
       Section("Process rows") {
-        Toggle("Show Top CPU process", isOn: $showTopCPU)
-        Toggle("Show Top Memory process", isOn: $showTopMemory)
+        Toggle("Show Top CPU rows", isOn: $showTopCPU)
+        Toggle("Show Top Memory rows", isOn: $showTopMemory)
         Text("The menu bar monitor reuses the current Corewise snapshot and does not start another collector.")
           .foregroundStyle(.secondary)
       }

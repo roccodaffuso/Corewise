@@ -42,7 +42,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Swap Insight should be shown as pressure context in `Performance > Memory`: system swap totals/rates first, likely contributors second, and a visible note that Corewise does not show exact per-process swap ownership.
 - Startup inventory should use a compact table for plist rows instead of stacked diagnostic cards, with Finder reveal as the only row action.
 - App Issues should lead with an empty/manual-access state until the user chooses reports; repeated crash counts should appear only after selection.
-- Menu bar content should use a compact window-style popover, not a plain text menu, with CPU, memory, swap, top CPU process, top memory process, and one Open Corewise action.
+- Menu bar content should use a compact window-style popover, not a plain text menu, with CPU, memory, swap, top-three CPU rows, top-three memory rows, and one Open Corewise action.
 - Menu bar metric tiles use compact progress bars and restrained shadows. Avoid glow-heavy button styling.
 - Settings uses a native macOS Settings scene: compact, form-based, tabbed, and visually quieter than diagnostic pages. Expose it through the macOS Settings command and one subtle footer link below the sidebar navigation; do not add Settings as another diagnostic source-list item.
 

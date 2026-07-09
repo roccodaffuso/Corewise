@@ -42,12 +42,16 @@ private struct MenuBarMonitorView: View {
     store.snapshot
   }
 
-  private var topCPUProcess: ProcessObservation? {
-    snapshot?.performance.processes.max { $0.cpuPercent < $1.cpuPercent }
+  private var topCPUProcesses: [ProcessObservation] {
+    Array((snapshot?.performance.processes ?? [])
+      .sorted { $0.cpuPercent > $1.cpuPercent }
+      .prefix(3))
   }
 
-  private var topMemoryProcess: ProcessObservation? {
-    snapshot?.performance.processes.max { $0.observedMemoryBytes < $1.observedMemoryBytes }
+  private var topMemoryProcesses: [ProcessObservation] {
+    Array((snapshot?.performance.processes ?? [])
+      .sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }
+      .prefix(3))
   }
 
   var body: some View {
@@ -125,21 +129,28 @@ private struct MenuBarMonitorView: View {
         if showTopCPU || showTopMemory {
           VStack(spacing: 8) {
             if showTopCPU {
-              MenuProcessRow(
+              MenuProcessGroup(
                 title: "Top CPU",
-                name: topCPUProcess?.displayName ?? "N/A",
-                value: topCPUProcess.map { "\(number($0.cpuPercent))%" } ?? "N/A",
-                progress: topCPUProcess.map { normalized($0.cpuPercent, max: 100) } ?? 0,
-                tint: CorewiseVisual.accent
+                subtitle: "1 second live sample",
+                processes: topCPUProcesses,
+                tint: CorewiseVisual.accent,
+                value: { "\(number($0.cpuPercent))%" },
+                scaleValue: { $0.cpuPercent },
+                progress: { process, maxValue in normalized(process.cpuPercent, max: maxValue) }
               )
             }
             if showTopMemory {
-              MenuProcessRow(
+              MenuProcessGroup(
                 title: "Top Memory",
-                name: topMemoryProcess?.displayName ?? "N/A",
-                value: topMemoryProcess.map { menuBytes($0.observedMemoryBytes) } ?? "N/A",
-                progress: topMemoryProcess.map { fraction($0.observedMemoryBytes, of: snapshot.performance.memory.physicalBytes) } ?? 0,
-                tint: CorewiseVisual.moss
+                subtitle: "Observed memory",
+                processes: topMemoryProcesses,
+                tint: CorewiseVisual.moss,
+                value: { menuBytes($0.observedMemoryBytes) },
+                scaleValue: { Double($0.observedMemoryBytes) },
+                progress: { process, maxValue in
+                  let value = Double(process.observedMemoryBytes)
+                  return maxValue > 0 ? min(Swift.max(value / maxValue, 0), 1) : 0
+                }
               )
             }
           }
@@ -244,40 +255,93 @@ private struct MenuMetricCard: View {
   }
 }
 
-private struct MenuProcessRow: View {
+private struct MenuProcessGroup: View {
   var title: String
-  var name: String
-  var value: String
-  var progress: Double
+  var subtitle: String
+  var processes: [ProcessObservation]
   var tint: Color
+  var value: (ProcessObservation) -> String
+  var scaleValue: (ProcessObservation) -> Double
+  var progress: (ProcessObservation, Double) -> Double
   @Environment(\.colorScheme) private var colorScheme
 
+  private var maxValue: Double {
+    processes
+      .map(scaleValue)
+      .max() ?? 0
+  }
+
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 10) {
       HStack(alignment: .firstTextBaseline, spacing: 10) {
         VStack(alignment: .leading, spacing: 2) {
           Text(title)
             .font(.caption2.weight(.semibold))
             .foregroundStyle(.secondary)
-          Text(shortName(name))
-            .font(.callout.weight(.semibold))
-            .lineLimit(1)
+          Text(subtitle)
+            .font(.system(size: 9, weight: .medium, design: .rounded))
+            .foregroundStyle(.tertiary)
         }
+
+        Spacer(minLength: 0)
+      }
+
+      if processes.isEmpty {
+        Text("No readable process rows")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, minHeight: 36, alignment: .leading)
+      } else {
+        VStack(spacing: 7) {
+          ForEach(Array(processes.enumerated()), id: \.element.id) { index, process in
+            MenuProcessRankRow(
+              rank: index + 1,
+              name: process.displayName,
+              value: value(process),
+              progress: progress(process, maxValue),
+              tint: tint
+            )
+          }
+        }
+      }
+    }
+    .padding(12)
+    .glassSurface(tint: tint.opacity(0.55), colorScheme: colorScheme)
+  }
+}
+
+private struct MenuProcessRankRow: View {
+  var rank: Int
+  var name: String
+  var value: String
+  var progress: Double
+  var tint: Color
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 5) {
+      HStack(alignment: .firstTextBaseline, spacing: 8) {
+        Text("\(rank)")
+          .font(.system(size: 10, weight: .semibold, design: .rounded))
+          .foregroundStyle(tint)
+          .frame(width: 16, height: 16)
+          .background(tint.opacity(0.12), in: Circle())
+
+        Text(shortName(name))
+          .font(.caption.weight(.semibold))
+          .lineLimit(1)
 
         Spacer(minLength: 8)
 
         Text(value)
-          .font(.callout.weight(.semibold))
+          .font(.caption.weight(.semibold))
           .monospacedDigit()
           .foregroundStyle(.secondary)
           .lineLimit(1)
       }
 
       MenuUsageBar(progress: progress, tint: tint)
+        .padding(.leading, 24)
     }
-    .padding(.horizontal, 10)
-    .padding(.vertical, 10)
-    .glassSurface(tint: tint.opacity(0.55), colorScheme: colorScheme)
   }
 
   private func shortName(_ value: String) -> String {

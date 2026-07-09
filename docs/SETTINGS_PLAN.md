@@ -156,8 +156,8 @@ Possible preferences:
 - Show CPU in menu bar popover: implemented.
 - Show memory in menu bar popover: implemented.
 - Show swap in menu bar popover: implemented.
-- Show top CPU process row: implemented.
-- Show top memory process row: implemented.
+- Show top CPU rows: implemented.
+- Show top memory rows: implemented.
 - Keep popover compact: always on.
 - Open Corewise from menu bar: implemented behavior should remain.
 

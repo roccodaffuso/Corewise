@@ -73,7 +73,7 @@ Before calling the MVP trustworthy, Corewise must show provenance for every metr
 
 ## Phase 7: Menu Bar Monitor
 
-- Implemented: lightweight menu bar monitor for at-a-glance CPU, memory, swap, top CPU process, top memory process, and Open Corewise.
+- Implemented: lightweight menu bar monitor for at-a-glance CPU, memory, swap, top three CPU rows, top three memory rows, and Open Corewise.
 - Planned: refine menu bar behavior after manual QA.
 
 ## Phase 7.5: Settings
