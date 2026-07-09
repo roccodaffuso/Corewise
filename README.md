@@ -76,6 +76,7 @@ Corewise is organized around three trustworthy workflows:
 - `docs/DESIGN_SYSTEM.md` captures the intended Apple-native diagnostic UI.
 - `docs/ROADMAP.md` orders the next implementation phases.
 - `docs/DECISIONS.md` records product and technical decisions.
+- `docs/SETTINGS_PLAN.md` defines how Corewise should mature its native macOS Settings window without turning it into another diagnostic page.
 
 ## Operating Rule
 

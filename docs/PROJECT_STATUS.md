@@ -18,7 +18,7 @@ Remaining last30days work batch completed locally through `fa4e241`: Performance
 ## Implemented
 
 - SwiftPM macOS app target named `Corewise`.
-- SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, Report, Settings, and a lightweight menu bar monitor.
+- SwiftUI navigation shell with sections for Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, and Report, plus a native Settings scene and lightweight menu bar monitor.
 - Diagnostic data model with title, value, unit, status, severity score, explanation, source, confidence, recommended action, and last updated.
 - Overview leads with `Live Signals`, concrete first-viewport system signals, and signal-family coverage instead of a placeholder health score. Coverage intentionally does not count every process or table row.
 - Live sampler for system CPU split, system VM memory fields, process rows, app groups, observed process memory, resident memory, and physical footprint when macOS returns it. Process enumeration now uses `sysctl KERN_PROC_ALL` first so renderer/helper processes are less likely to be missed.
@@ -36,6 +36,7 @@ Remaining last30days work batch completed locally through `fa4e241`: Performance
 - Live high-level thermal state from `ProcessInfo.thermalState`.
 - User-selected crash report metadata parsing for crash counts and repeated app patterns, with a strong empty state before reports are selected.
 - Local Diagnostic Report page with `Summary / Markdown` views, notable findings, manual next steps, source/confidence notes, and clipboard-only copy without stack traces, uploads, file contents, or cleanup actions.
+- Native SwiftUI Settings scene exists with placeholder local-first copy; `docs/SETTINGS_PLAN.md` now defines how to mature it.
 - Read-only, manual-action product stance.
 
 ## Planned
@@ -47,6 +48,7 @@ Remaining last30days work batch completed locally through `fa4e241`: Performance
 - Add WindowServer interpretation and thermal contributor attribution only through safe sources.
 - Keep unavailable wattage clearly marked unless a safe, user-approved source exists.
 - Refine menu bar monitor copy and behavior after manual app QA.
+- Mature Settings as a compact native macOS settings window, separate from the diagnostic sidebar.
 
 ## Unavailable
 

@@ -73,6 +73,14 @@ Before calling the MVP trustworthy, Corewise must show provenance for every metr
 - Implemented: lightweight menu bar monitor for at-a-glance CPU, memory, swap, top CPU process, top memory process, and Open Corewise.
 - Planned: refine menu bar behavior after manual QA.
 
+## Phase 7.5: Settings
+
+- Planned: mature the existing SwiftUI `Settings` scene into a compact native macOS settings window.
+- Planned: include only useful controls for General behavior, Privacy & Data, Performance display, Report formatting, and Menu Bar behavior.
+- Planned: document every persisted preference key before implementation.
+- Avoid: adding Settings as a main diagnostic sidebar destination.
+- Avoid: any setting that enables automatic cleanup, broad background scans, private APIs, sudo-only data collection, process killing, accounts, backend services, telemetry, or tracking.
+
 ## Later Ideas
 
 - Health score only after real data coverage and a documented formula are stable.

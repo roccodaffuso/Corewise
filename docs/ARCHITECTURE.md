@@ -21,6 +21,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Report helper: `DiagnosticReportBuilder` renders read-only Summary and Markdown text from the current `HealthSnapshot`.
 - UI: `ContentView` hosts navigation; `DashboardViews` renders section pages, cards, charts, findings, actions, and source notes.
 - Menu bar: `MenuBarExtra` reuses `HealthDashboardStore` snapshot values for at-a-glance CPU, memory, swap, and top process rows.
+- Settings: `CorewiseApp` declares a native SwiftUI `Settings` scene. Settings is configuration, not a diagnostic sidebar destination; future persistent preferences should use documented `@AppStorage` keys.
 
 ## Data Flow
 
@@ -95,6 +96,7 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Add per-section collector errors and permission states.
 - Add tests around data-mode labeling and non-destructive behavior.
 - Consider a menu bar monitor only after the main diagnostic workflows are trustworthy.
+- Mature the existing Settings scene according to `docs/SETTINGS_PLAN.md`, keeping it separate from diagnostic navigation and documenting any persistent preferences.
 
 ## Avoided
 

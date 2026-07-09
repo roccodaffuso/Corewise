@@ -18,6 +18,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Startup plist rows can be revealed in Finder, but Corewise does not edit, disable, delete, or unload them.
 - App Issues remains empty until a report folder is selected; it does not infer crash counts from other sources.
 - Menu bar values reuse the current app snapshot and do not create a second background data collector.
+- Settings currently contains local-first copy only. Future Settings controls must be explicit preferences, not hidden permission grants or remediation shortcuts.
 
 ## Runtime Data
 
@@ -36,6 +37,8 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - Report export must stay local clipboard text unless a future version explicitly adds a user-chosen save action. Summary and Markdown modes must use the same snapshot and must not run extra collectors.
 - Ask for permissions only when a feature clearly needs them and can explain why.
 - Omit unreadable files and reports instead of estimating them.
+- Document every persistent Settings preference key before implementation.
+- Keep any future `Remember selected folder` behavior off by default until security-scoped bookmark consent is designed.
 
 ## Avoided
 
@@ -68,4 +71,5 @@ Not allowed in the MVP:
 - Removing launch agents or daemons.
 - Killing processes automatically.
 - Changing system settings automatically.
+- Settings toggles that enable automatic cleanup, broad personal-folder scans, process killing, telemetry, tracking, or private API reads.
 - Presenting private-sensor readings as product truth.

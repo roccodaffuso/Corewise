@@ -203,3 +203,9 @@ Reason: Process names are useful context, but a serious diagnostic app should av
 Decision: Corewise may let the user drill into folders discovered by a manual storage scan, but the selected root/current folder stay in memory only and no security-scoped bookmark is persisted in this version.
 
 Reason: Drilldown makes storage useful without reintroducing surprising personal-folder scanning or durable permission ambiguity.
+
+## 2026-07-09: Settings Is A Native macOS Scene, Not A Diagnostic Section
+
+Decision: Corewise Settings should mature inside the existing SwiftUI `Settings` scene and should not be added to the main diagnostic sidebar.
+
+Reason: The sidebar is for diagnostic workflows. Settings is configuration, privacy explanation, and display behavior; making it another dashboard page would dilute the product structure and feel less macOS-native.
