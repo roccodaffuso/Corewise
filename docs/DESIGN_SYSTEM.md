@@ -9,7 +9,7 @@ Corewise should feel like a serious Apple-native diagnostic utility: calm, preci
 - Use native SwiftUI controls, system materials, soft transparency, and SF Symbols.
 - The app window background should be a real macOS material surface through a narrow AppKit bridge, with only a transparent color wash above it.
 - The app chrome should follow macOS source-list conventions: a restrained sidebar, compact row icons, icon-only toolbar actions, and no oversized navigation treatments.
-- Sidebar selection should use Corewise's soft moss/accent treatment, not the default bright system-blue selected row, because the app uses translucent dark materials where saturated blue reads cheap.
+- Sidebar selection should feel like a premium source-list rail: a subtle translucent row, a tiny accent indicator, and no saturated full-row blue or green fill.
 - All diagnostic pages should share the same layout rail: one content max width, one page padding, one page spacing value, one panel grid, and one metric grid. Avoid local adaptive widths such as `185`, `210`, `250`, or `300` in first-viewport content because they create visible stepping when switching sections.
 - Prefer natural, muted system-adaptive colors: teal/blue for information, moss green for live/good, amber for attention, red only for critical or used storage.
 - The app detail background should feel layered and translucent, not flat black or generic dashboard gray.

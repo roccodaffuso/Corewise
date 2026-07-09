@@ -147,15 +147,15 @@ private struct SidebarSectionRow: View {
   var body: some View {
     Button(action: select) {
       HStack(spacing: 11) {
+        Capsule()
+          .fill(isSelected ? CorewiseVisual.accentSoft : Color.clear)
+          .frame(width: 3, height: 24)
+
         Image(systemName: section.systemImage)
           .font(.system(size: 13, weight: .semibold))
           .symbolRenderingMode(.hierarchical)
-          .foregroundStyle(isSelected ? CorewiseVisual.moss : .secondary)
+          .foregroundStyle(isSelected ? CorewiseVisual.accentSoft : .secondary)
           .frame(width: 23, height: 23)
-          .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-              .fill(isSelected ? CorewiseVisual.moss.opacity(0.15) : Color.clear)
-          )
 
         VStack(alignment: .leading, spacing: 1) {
           Text(section.title)
@@ -175,7 +175,7 @@ private struct SidebarSectionRow: View {
       .background(rowFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
       .overlay {
         RoundedRectangle(cornerRadius: 9, style: .continuous)
-          .stroke(rowStroke, lineWidth: 1)
+          .stroke(rowStroke, lineWidth: 0.7)
       }
     }
     .buttonStyle(.plain)
@@ -186,16 +186,16 @@ private struct SidebarSectionRow: View {
 
   private var rowFill: Color {
     if isSelected {
-      return CorewiseVisual.moss.opacity(colorScheme == .dark ? 0.20 : 0.14)
+      return CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(colorScheme == .dark ? 0.72 : 0.88)
     }
     if isHovering {
-      return CorewiseVisual.tileFill(colorScheme: colorScheme)
+      return CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(0.72)
     }
     return .clear
   }
 
   private var rowStroke: Color {
-    isSelected ? CorewiseVisual.moss.opacity(0.28) : .clear
+    isSelected ? CorewiseVisual.hairline(colorScheme: colorScheme) : .clear
   }
 }
 
