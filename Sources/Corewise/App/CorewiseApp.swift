@@ -51,13 +51,22 @@ private struct MenuBarMonitorView: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading, spacing: 16) {
       HStack(alignment: .center, spacing: 10) {
         Image(systemName: "waveform.path.ecg")
-          .font(.system(size: 17, weight: .semibold))
+          .font(.system(size: 18, weight: .semibold))
           .foregroundStyle(CorewiseVisual.moss)
-          .frame(width: 30, height: 30)
-          .background(CorewiseVisual.moss.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+          .frame(width: 34, height: 34)
+          .background {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+              .fill(.ultraThinMaterial)
+              .overlay(CorewiseVisual.moss.opacity(0.12))
+          }
+          .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+              .stroke(.white.opacity(0.14), lineWidth: 1)
+          }
+          .shadow(color: CorewiseVisual.moss.opacity(0.18), radius: 14, y: 6)
 
         VStack(alignment: .leading, spacing: 1) {
           Text("Corewise")
@@ -68,6 +77,15 @@ private struct MenuBarMonitorView: View {
         }
 
         Spacer(minLength: 0)
+
+        if snapshot != nil {
+          Text("Live")
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(CorewiseVisual.moss)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(CorewiseVisual.moss.opacity(0.13), in: Capsule())
+        }
       }
 
       if let snapshot {
@@ -138,19 +156,42 @@ private struct MenuBarMonitorView: View {
           .frame(maxWidth: .infinity, minHeight: 92)
       }
 
-      Divider()
+      LinearGradient(
+        colors: [.clear, Color.primary.opacity(0.16), .clear],
+        startPoint: .leading,
+        endPoint: .trailing
+      )
+      .frame(height: 1)
 
       Button {
         openWindow(id: "main")
         NSApp.activate(ignoringOtherApps: true)
       } label: {
         Label("Open Corewise", systemImage: "arrow.up.forward.app")
+          .font(.callout.weight(.semibold))
           .frame(maxWidth: .infinity)
       }
-      .buttonStyle(.borderedProminent)
+      .buttonStyle(.plain)
+      .padding(.horizontal, 12)
+      .padding(.vertical, 10)
+      .background {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+          .fill(
+            LinearGradient(
+              colors: [CorewiseVisual.accent.opacity(0.96), CorewiseVisual.accentSoft.opacity(0.86)],
+              startPoint: .topLeading,
+              endPoint: .bottomTrailing
+            )
+          )
+      }
+      .overlay {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+          .stroke(.white.opacity(0.18), lineWidth: 1)
+      }
+      .shadow(color: CorewiseVisual.accent.opacity(0.22), radius: 16, y: 8)
     }
-    .padding(16)
-    .frame(width: 320)
+    .padding(18)
+    .frame(width: 344)
   }
 
   private func normalized(_ value: Double?, max: Double) -> Double {
@@ -177,12 +218,17 @@ private struct MenuMetricCard: View {
   @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 7) {
-      Text(title)
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(.secondary)
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 6) {
+        Capsule()
+          .fill(tint)
+          .frame(width: 5, height: 5)
+        Text(title)
+          .font(.caption2.weight(.semibold))
+          .foregroundStyle(.secondary)
+      }
       Text(value)
-        .font(.system(size: 16, weight: .semibold, design: .rounded))
+        .font(.system(size: 17, weight: .semibold, design: .rounded))
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.75)
@@ -192,17 +238,9 @@ private struct MenuMetricCard: View {
         .foregroundStyle(.tertiary)
         .lineLimit(1)
     }
-    .padding(10)
+    .padding(11)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background {
-      RoundedRectangle(cornerRadius: 11, style: .continuous)
-        .fill(.regularMaterial)
-        .overlay(tint.opacity(colorScheme == .dark ? 0.16 : 0.11))
-    }
-    .overlay {
-      RoundedRectangle(cornerRadius: 11, style: .continuous)
-        .stroke(tint.opacity(colorScheme == .dark ? 0.18 : 0.14), lineWidth: 1)
-    }
+    .glassSurface(tint: tint, colorScheme: colorScheme)
   }
 }
 
@@ -239,15 +277,7 @@ private struct MenuProcessRow: View {
     }
     .padding(.horizontal, 10)
     .padding(.vertical, 10)
-    .background {
-      RoundedRectangle(cornerRadius: 11, style: .continuous)
-        .fill(.regularMaterial)
-        .overlay(Color.primary.opacity(colorScheme == .dark ? 0.04 : 0.02))
-    }
-    .overlay {
-      RoundedRectangle(cornerRadius: 11, style: .continuous)
-        .stroke(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06), lineWidth: 1)
-    }
+    .glassSurface(tint: tint.opacity(0.55), colorScheme: colorScheme)
   }
 
   private func shortName(_ value: String) -> String {
@@ -268,19 +298,63 @@ private struct MenuUsageBar: View {
       let width = max(proxy.size.width * min(max(progress, 0), 1), 4)
       ZStack(alignment: .leading) {
         Capsule()
-          .fill(Color.primary.opacity(0.10))
+          .fill(.black.opacity(0.18))
+          .overlay(.white.opacity(0.06))
         Capsule()
           .fill(
             LinearGradient(
-              colors: [tint.opacity(0.72), tint],
+              colors: [tint.opacity(0.78), tint, tint.opacity(0.72)],
               startPoint: .leading,
               endPoint: .trailing
             )
           )
           .frame(width: width)
+          .overlay(alignment: .top) {
+            Capsule()
+              .fill(.white.opacity(0.24))
+              .frame(height: 1)
+              .padding(.horizontal, 1)
+          }
+          .shadow(color: tint.opacity(0.24), radius: 7, y: 1)
       }
     }
-    .frame(height: 5)
+    .frame(height: 6)
+  }
+}
+
+private extension View {
+  func glassSurface(tint: Color, colorScheme: ColorScheme) -> some View {
+    background {
+      RoundedRectangle(cornerRadius: 13, style: .continuous)
+        .fill(.ultraThinMaterial)
+        .overlay {
+          RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(
+              LinearGradient(
+                colors: [
+                  .white.opacity(colorScheme == .dark ? 0.08 : 0.18),
+                  tint.opacity(colorScheme == .dark ? 0.11 : 0.08),
+                  .black.opacity(colorScheme == .dark ? 0.06 : 0.00)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+              )
+            )
+        }
+        .overlay(alignment: .top) {
+          RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .stroke(
+              LinearGradient(
+                colors: [.white.opacity(0.24), tint.opacity(0.18), .white.opacity(0.05)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+              ),
+              lineWidth: 1
+            )
+        }
+    }
+    .shadow(color: .black.opacity(colorScheme == .dark ? 0.22 : 0.10), radius: 18, y: 9)
+    .shadow(color: tint.opacity(colorScheme == .dark ? 0.10 : 0.07), radius: 14, y: 5)
   }
 }
 
