@@ -85,15 +85,6 @@ struct ContentView: View {
         }
       }
     }
-    .toolbar {
-      ToolbarItem(placement: .primaryAction) {
-        SettingsLink {
-          Label("Settings", systemImage: "gearshape")
-        }
-        .labelStyle(.iconOnly)
-        .help("Open Corewise Settings")
-      }
-    }
   }
 }
 
@@ -118,8 +109,56 @@ private struct SidebarView: View {
       .padding(.horizontal, 10)
 
       Spacer(minLength: 0)
+
+      SidebarSettingsLink()
+        .padding(.horizontal, 10)
     }
     .padding(.top, 14)
+    .padding(.bottom, 12)
+  }
+}
+
+private struct SidebarSettingsLink: View {
+  @State private var isHovering = false
+  @Environment(\.colorScheme) private var colorScheme
+
+  var body: some View {
+    SettingsLink {
+      HStack(spacing: 11) {
+        Capsule()
+          .fill(Color.clear)
+          .frame(width: 3, height: 24)
+
+        Image(systemName: "gearshape")
+          .font(.system(size: 13, weight: .semibold))
+          .symbolRenderingMode(.hierarchical)
+          .foregroundStyle(.secondary)
+          .frame(width: 23, height: 23)
+
+        VStack(alignment: .leading, spacing: 1) {
+          Text("Settings")
+            .font(.callout.weight(.medium))
+            .foregroundStyle(.primary)
+          Text("Preferences")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+
+        Spacer(minLength: 0)
+      }
+      .padding(.horizontal, 8)
+      .padding(.vertical, 6)
+      .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+      .background(rowFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+    }
+    .buttonStyle(.plain)
+    .onHover { isHovering = $0 }
+    .help("Open Corewise Settings")
+  }
+
+  private var rowFill: Color {
+    isHovering ? CorewiseVisual.tileFill(colorScheme: colorScheme).opacity(0.72) : .clear
   }
 }
 

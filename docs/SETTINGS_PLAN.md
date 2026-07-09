@@ -2,7 +2,7 @@
 
 ## Summary
 
-Corewise should implement Settings as a native macOS settings window, not as another diagnostic page in the main sidebar. The main app stays focused on live diagnostics; Settings controls product behavior, privacy choices, display preferences, and optional future persistence.
+Corewise should implement Settings as a native macOS settings window, not as another diagnostic page in the main navigation. The main app stays focused on live diagnostics; Settings controls product behavior, privacy choices, display preferences, and optional future persistence.
 
 The app now declares a SwiftUI `Settings` scene and uses a dedicated `SettingsView` with compact native tabs. Settings remains configuration, not diagnosis.
 
@@ -23,11 +23,11 @@ References:
 
 ## Product Decision
 
-Settings belongs in the macOS app menu / Settings window, not in the Corewise diagnostic sidebar.
+Settings belongs in the macOS app menu / Settings window, with a small footer link below the Corewise diagnostic navigation.
 
 Reason:
 
-- The sidebar is for diagnostic workflows: Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, and Report.
+- The primary sidebar list is for diagnostic workflows: Overview, Battery, Storage, Performance, Startup, Thermal, App Issues, and Report.
 - Settings is configuration, not diagnosis.
 - A separate Settings scene matches macOS expectations and avoids making the main app feel like a generic admin dashboard.
 
@@ -39,7 +39,7 @@ Implemented:
 - `SettingsView` lives in its own view file.
 - Settings uses a compact `TabView` with native `Form`, `Section`, `Picker`, and `Toggle` controls.
 - Settings contains General, Privacy & Data, Performance, Report, and Menu Bar tabs.
-- The main window toolbar exposes a small native `SettingsLink` gear so Settings is discoverable without adding it to the diagnostic sidebar.
+- The sidebar footer exposes a small native `SettingsLink` row so Settings is discoverable without adding it as a diagnostic navigation item.
 
 Planned:
 
@@ -49,7 +49,7 @@ Planned:
 
 Avoided:
 
-- No Settings destination in the diagnostic sidebar.
+- No Settings destination in the diagnostic navigation list.
 - No account, backend, telemetry, tracking, or cloud configuration.
 - No setting that enables automatic cleanup, deletion, process killing, or broad background scans.
 
@@ -173,7 +173,7 @@ Implementation status:
 - Keep `Settings` scene in `CorewiseApp`.
 - Keep `SettingsView` out of `DashboardViews.swift` in a dedicated settings view file.
 - Use `@AppStorage` only for real user preferences.
-- Use `SettingsLink` only from small entry points, currently the main window toolbar gear.
+- Use `SettingsLink` only from small entry points, currently the sidebar footer below the diagnostic navigation.
 - Keep settings rows simple: label, short explanatory text, control.
 - Prefer system controls: `Toggle`, `Picker`, `Stepper`, `Button`, and `Form`.
 - Avoid custom card-heavy settings UI.
@@ -190,8 +190,8 @@ Implementation status:
 
 ## Success Criteria
 
-- Settings opens through the native macOS Settings command and the main window toolbar gear.
-- Settings does not appear as a diagnostic sidebar item.
+- Settings opens through the native macOS Settings command and the sidebar footer link.
+- Settings does not appear as a diagnostic navigation item.
 - Every setting has a visible user benefit.
 - Every persisted setting uses a documented `@AppStorage` key.
 - No setting weakens the local-first, no-tracking, no-cleanup stance.
