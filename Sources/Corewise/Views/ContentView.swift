@@ -62,18 +62,7 @@ struct ContentView: View {
 
   var body: some View {
     NavigationSplitView {
-      List(selection: $selectedSectionID) {
-        Section {
-          ForEach(DashboardSection.allCases) { section in
-            SidebarSectionRow(section: section, isSelected: section.rawValue == selectedSectionID)
-            .tag(section.rawValue)
-          }
-        } header: {
-          SidebarHeader()
-        }
-      }
-      .listStyle(.sidebar)
-      .tint(CorewiseVisual.accent)
+      SidebarView(selectedSectionID: $selectedSectionID)
       .navigationSplitViewColumnWidth(min: 240, ideal: 268)
     } detail: {
       ZStack {
@@ -96,6 +85,32 @@ struct ContentView: View {
         }
       }
     }
+  }
+}
+
+private struct SidebarView: View {
+  @Binding var selectedSectionID: DashboardSection.RawValue
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      SidebarHeader()
+        .padding(.horizontal, 14)
+
+      VStack(spacing: 4) {
+        ForEach(DashboardSection.allCases) { section in
+          SidebarSectionRow(
+            section: section,
+            isSelected: section.rawValue == selectedSectionID
+          ) {
+            selectedSectionID = section.rawValue
+          }
+        }
+      }
+      .padding(.horizontal, 10)
+
+      Spacer(minLength: 0)
+    }
+    .padding(.top, 14)
   }
 }
 
@@ -125,29 +140,62 @@ private struct SidebarHeader: View {
 private struct SidebarSectionRow: View {
   var section: DashboardSection
   var isSelected: Bool
+  var select: () -> Void
+  @State private var isHovering = false
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    HStack(spacing: 11) {
-      Image(systemName: section.systemImage)
-        .font(.system(size: 13, weight: .semibold))
-        .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(isSelected ? CorewiseVisual.accent : .secondary)
-        .frame(width: 23, height: 23)
-        .background(
-          RoundedRectangle(cornerRadius: 7, style: .continuous)
-            .fill(isSelected ? CorewiseVisual.accent.opacity(0.13) : Color.clear)
-        )
+    Button(action: select) {
+      HStack(spacing: 11) {
+        Image(systemName: section.systemImage)
+          .font(.system(size: 13, weight: .semibold))
+          .symbolRenderingMode(.hierarchical)
+          .foregroundStyle(isSelected ? CorewiseVisual.moss : .secondary)
+          .frame(width: 23, height: 23)
+          .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+              .fill(isSelected ? CorewiseVisual.moss.opacity(0.15) : Color.clear)
+          )
 
-      VStack(alignment: .leading, spacing: 1) {
-        Text(section.title)
-          .font(.callout.weight(isSelected ? .semibold : .medium))
-        Text(section.detail)
-          .font(.caption2)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
+        VStack(alignment: .leading, spacing: 1) {
+          Text(section.title)
+            .font(.callout.weight(isSelected ? .semibold : .medium))
+            .foregroundStyle(.primary)
+          Text(section.detail)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+
+        Spacer(minLength: 0)
+      }
+      .padding(.horizontal, 8)
+      .padding(.vertical, 6)
+      .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+      .background(rowFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+      .overlay {
+        RoundedRectangle(cornerRadius: 9, style: .continuous)
+          .stroke(rowStroke, lineWidth: 1)
       }
     }
-    .padding(.vertical, 3)
+    .buttonStyle(.plain)
+    .onHover { isHovering = $0 }
+    .accessibilityLabel(section.title)
+    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+  }
+
+  private var rowFill: Color {
+    if isSelected {
+      return CorewiseVisual.moss.opacity(colorScheme == .dark ? 0.20 : 0.14)
+    }
+    if isHovering {
+      return CorewiseVisual.tileFill(colorScheme: colorScheme)
+    }
+    return .clear
+  }
+
+  private var rowStroke: Color {
+    isSelected ? CorewiseVisual.moss.opacity(0.28) : .clear
   }
 }
 
