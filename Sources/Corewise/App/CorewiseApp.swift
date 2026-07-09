@@ -74,13 +74,32 @@ private struct MenuBarMonitorView: View {
         if showCPU || showMemory || showSwap {
           HStack(spacing: 8) {
             if showCPU {
-              MenuMetricCard(title: "CPU", value: percent(snapshot.performance.cpu.totalPercent), tint: CorewiseVisual.accent)
+              MenuMetricCard(
+                title: "CPU",
+                value: percent(snapshot.performance.cpu.totalPercent),
+                detail: "total load",
+                progress: normalized(snapshot.performance.cpu.totalPercent, max: 100),
+                tint: CorewiseVisual.accent
+              )
             }
             if showMemory {
-              MenuMetricCard(title: "Memory", value: menuBytes(snapshot.performance.memory.usedBytes), tint: CorewiseVisual.moss)
+              MenuMetricCard(
+                title: "Memory",
+                value: menuBytes(snapshot.performance.memory.usedBytes),
+                detail: "\(number(snapshot.performance.memory.usedPercent))% used",
+                progress: fraction(snapshot.performance.memory.usedBytes, of: snapshot.performance.memory.physicalBytes),
+                tint: CorewiseVisual.moss
+              )
             }
             if showSwap {
-              MenuMetricCard(title: "Swap", value: snapshot.performance.memory.swapUsedBytes.map(menuBytes) ?? "N/A", tint: CorewiseVisual.amber)
+              let swap = snapshot.performance.memory.swap
+              MenuMetricCard(
+                title: "Swap",
+                value: swap.map { menuBytes($0.usedBytes) } ?? "N/A",
+                detail: swap.map { "of \(menuBytes($0.totalBytes))" } ?? "unavailable",
+                progress: swap.map { fraction($0.usedBytes, of: $0.totalBytes) } ?? 0,
+                tint: CorewiseVisual.amber
+              )
             }
           }
         }
@@ -88,10 +107,22 @@ private struct MenuBarMonitorView: View {
         if showTopCPU || showTopMemory {
           VStack(spacing: 8) {
             if showTopCPU {
-              MenuProcessRow(title: "Top CPU", name: topCPUProcess?.displayName ?? "N/A", value: topCPUProcess.map { "\(number($0.cpuPercent))%" } ?? "N/A")
+              MenuProcessRow(
+                title: "Top CPU",
+                name: topCPUProcess?.displayName ?? "N/A",
+                value: topCPUProcess.map { "\(number($0.cpuPercent))%" } ?? "N/A",
+                progress: topCPUProcess.map { normalized($0.cpuPercent, max: 100) } ?? 0,
+                tint: CorewiseVisual.accent
+              )
             }
             if showTopMemory {
-              MenuProcessRow(title: "Top Memory", name: topMemoryProcess?.displayName ?? "N/A", value: topMemoryProcess.map { menuBytes($0.observedMemoryBytes) } ?? "N/A")
+              MenuProcessRow(
+                title: "Top Memory",
+                name: topMemoryProcess?.displayName ?? "N/A",
+                value: topMemoryProcess.map { menuBytes($0.observedMemoryBytes) } ?? "N/A",
+                progress: topMemoryProcess.map { fraction($0.observedMemoryBytes, of: snapshot.performance.memory.physicalBytes) } ?? 0,
+                tint: CorewiseVisual.moss
+              )
             }
           }
         }
@@ -122,15 +153,31 @@ private struct MenuBarMonitorView: View {
     .frame(width: 320)
   }
 
+  private func normalized(_ value: Double?, max: Double) -> Double {
+    guard let value, max > 0 else {
+      return 0
+    }
+    return min(Swift.max(value / max, 0), 1)
+  }
+
+  private func fraction(_ value: UInt64, of total: UInt64) -> Double {
+    guard total > 0 else {
+      return 0
+    }
+    return min(Swift.max(Double(value) / Double(total), 0), 1)
+  }
 }
 
 private struct MenuMetricCard: View {
   var title: String
   var value: String
+  var detail: String
+  var progress: Double
   var tint: Color
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
+    VStack(alignment: .leading, spacing: 7) {
       Text(title)
         .font(.caption2.weight(.semibold))
         .foregroundStyle(.secondary)
@@ -139,10 +186,23 @@ private struct MenuMetricCard: View {
         .monospacedDigit()
         .lineLimit(1)
         .minimumScaleFactor(0.75)
+      MenuUsageBar(progress: progress, tint: tint)
+      Text(detail)
+        .font(.system(size: 9, weight: .medium, design: .rounded))
+        .foregroundStyle(.tertiary)
+        .lineLimit(1)
     }
     .padding(10)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .background {
+      RoundedRectangle(cornerRadius: 11, style: .continuous)
+        .fill(.regularMaterial)
+        .overlay(tint.opacity(colorScheme == .dark ? 0.16 : 0.11))
+    }
+    .overlay {
+      RoundedRectangle(cornerRadius: 11, style: .continuous)
+        .stroke(tint.opacity(colorScheme == .dark ? 0.18 : 0.14), lineWidth: 1)
+    }
   }
 }
 
@@ -150,29 +210,44 @@ private struct MenuProcessRow: View {
   var title: String
   var name: String
   var value: String
+  var progress: Double
+  var tint: Color
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    HStack(alignment: .firstTextBaseline, spacing: 10) {
-      VStack(alignment: .leading, spacing: 2) {
-        Text(title)
-          .font(.caption2.weight(.semibold))
-          .foregroundStyle(.secondary)
-        Text(shortName(name))
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(alignment: .firstTextBaseline, spacing: 10) {
+        VStack(alignment: .leading, spacing: 2) {
+          Text(title)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+          Text(shortName(name))
+            .font(.callout.weight(.semibold))
+            .lineLimit(1)
+        }
+
+        Spacer(minLength: 8)
+
+        Text(value)
           .font(.callout.weight(.semibold))
+          .monospacedDigit()
+          .foregroundStyle(.secondary)
           .lineLimit(1)
       }
 
-      Spacer(minLength: 8)
-
-      Text(value)
-        .font(.callout.weight(.semibold))
-        .monospacedDigit()
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
+      MenuUsageBar(progress: progress, tint: tint)
     }
     .padding(.horizontal, 10)
-    .padding(.vertical, 9)
-    .background(.quinary, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    .padding(.vertical, 10)
+    .background {
+      RoundedRectangle(cornerRadius: 11, style: .continuous)
+        .fill(.regularMaterial)
+        .overlay(Color.primary.opacity(colorScheme == .dark ? 0.04 : 0.02))
+    }
+    .overlay {
+      RoundedRectangle(cornerRadius: 11, style: .continuous)
+        .stroke(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06), lineWidth: 1)
+    }
   }
 
   private func shortName(_ value: String) -> String {
@@ -181,6 +256,31 @@ private struct MenuProcessRow: View {
     }
 
     return String(value.prefix(21)) + "..."
+  }
+}
+
+private struct MenuUsageBar: View {
+  var progress: Double
+  var tint: Color
+
+  var body: some View {
+    GeometryReader { proxy in
+      let width = max(proxy.size.width * min(max(progress, 0), 1), 4)
+      ZStack(alignment: .leading) {
+        Capsule()
+          .fill(Color.primary.opacity(0.10))
+        Capsule()
+          .fill(
+            LinearGradient(
+              colors: [tint.opacity(0.72), tint],
+              startPoint: .leading,
+              endPoint: .trailing
+            )
+          )
+          .frame(width: width)
+      }
+    }
+    .frame(height: 5)
   }
 }
 
