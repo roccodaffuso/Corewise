@@ -78,6 +78,7 @@ Corewise is organized around three trustworthy workflows:
 - `docs/DATA_SOURCES.md` is the source-of-truth matrix for live, planned, unavailable, and avoided signals.
 - `docs/SAFETY_PRIVACY.md` defines the local-first and non-destructive rules.
 - `docs/DESIGN_SYSTEM.md` captures the intended Apple-native diagnostic UI.
+- `docs/PREMIUM_APP_REDESIGN_PLAN.md` defines the researched premium redesign direction before UI implementation.
 - `docs/ROADMAP.md` orders the next implementation phases.
 - `docs/DECISIONS.md` records product and technical decisions.
 - `docs/SETTINGS_PLAN.md` defines how Corewise should mature its native macOS Settings window without turning it into another diagnostic page.
