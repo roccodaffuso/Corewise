@@ -8,9 +8,10 @@ Last updated: 2026-07-10
 - The existing refresh is now store-owned and retained; checks continue across navigation and main-window close/reopen without a second sampler.
 - Added bounded volatile aggregation, cautious pure resolution, typed battery/thermal readings, and a maximum of three evidence items with one next action.
 - Performance now exposes stable app groups, raw-member filtering, typed process explanations, and process/app-group deep links.
+- Performance now includes AI Workloads for supported local tools. It aggregates the full process inventory before top-row truncation, separates direct/related/shared resources, and never presents process count as agent count.
 - Storage now separates approved-scope classified space from space outside the current result and adds owner/review guidance without cleanup promises.
 - Focused results are available in Overview, Quick Actions, menu bar continuity, and local redacted Summary/Markdown reports.
-- Verification: 112 tests pass; strict concurrency with warnings-as-errors passes; 233 English-default localization keys compile; signed bundle runtime verification passes; runtime result/deep-link/CPU/Memory smoke tests pass; five-minute idle and Focused Check Time Profiler baselines are recorded.
+- Verification: 124 tests pass; strict concurrency with warnings-as-errors passes; the English-default localization catalog compiles; signed bundle runtime verification passes; runtime result/deep-link/CPU/Memory smoke tests pass; five-minute idle and Focused Check Time Profiler baselines are recorded.
 - Focused Check-exclusive CPU is below the measured budget at 0.0246% average of one core. Malloc high-water evidence identified implicit Full Storage Analysis, not process sampling or Focused Check, as the cause of the approximately 1,416 MB transient peak. Normal refresh no longer starts a broad scan; the repeated release profile peaked at 156 MB and the memory gate passes. See `docs/PERFORMANCE_BASELINE_2026-07-10.md`.
 - Release validation still open: external user sessions, a ten-minute Battery check on battery power, final distribution-signature profiling, and the complete screenshot/assistive-technology matrix.
 

@@ -4,6 +4,7 @@ struct FocusedCheckResultView: View {
   var result: FocusedCheckResult
   var open: (DashboardRoute) -> Void
   var copy: () -> Void
+  var copyMarkdown: (() -> Void)? = nil
   var startAnother: () -> Void
   @State private var copied = false
 
@@ -87,6 +88,11 @@ struct FocusedCheckResultView: View {
             }
           }
           .accessibilityHint("Copies the local Focused Check summary without uploading it")
+
+          if let copyMarkdown {
+            Button("Copy Markdown", systemImage: "text.page", action: copyMarkdown)
+              .accessibilityHint("Copies a privacy-safe Markdown result without uploading it")
+          }
 
           Spacer()
 

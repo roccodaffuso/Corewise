@@ -20,6 +20,8 @@ enum ProcessTablePresenter {
       [.cpu, .cpuTime, .threads, .name]
     case .memory:
       [.memory, .footprint, .resident, .pageIns, .name]
+    case .aiWorkloads:
+      []
     }
   }
 
@@ -39,6 +41,8 @@ enum ProcessTablePresenter {
         process.cpuPercent >= 0.05
       case .memory:
         process.observedMemoryBytes >= 20 * 1024 * 1024
+      case .aiWorkloads:
+        false
       }
     }
     return sorted(filtered(eligible, query: query), by: sort)

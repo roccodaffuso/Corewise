@@ -1,8 +1,10 @@
+import AppKit
 import Charts
 import SwiftUI
 
 struct PerformanceView: View {
   var performance: PerformanceHealth
+  @ObservedObject var store: HealthDashboardStore
   var focusedCheckSession: FocusedCheckSession?
   var requestedMode: PerformanceMode?
   var requestedFocus: DashboardFocus?
@@ -14,6 +16,10 @@ struct PerformanceView: View {
   @State private var isInspectorPresented = false
   @State private var sort: ProcessTablePresenter.Sort = .cpu
   @State private var selectedGroupID: String?
+  @State private var selectedAIWorkloadID: AIWorkloadID?
+  @State private var selectedAIWorkloadSnapshot: AIWorkloadObservation?
+  @State private var aiSort: AIWorkloadSort = .memory
+  @Environment(AppRouteStore.self) private var routeStore
 
   private var groupFilteredProcesses: [ProcessObservation] {
     guard let selectedGroupID,
@@ -26,18 +32,28 @@ struct PerformanceView: View {
 
   var body: some View {
     let presentedRows = ProcessTablePresenter.presented(groupFilteredProcesses, mode: mode, query: query, sort: sort)
+    let presentedAIWorkloads = AIWorkloadPresenter.presented(performance.aiWorkloads, query: query, sort: aiSort)
 
     ScrollView {
       VStack(alignment: .leading, spacing: CorewiseLayout.space20) {
         PageHeader(
           title: "Performance",
-          subtitle: "CPU activity and memory pressure are separate views of the same live process sample.",
+          subtitle: mode == .aiWorkloads ? "Local AI app footprint, related work, and shared hosts stay explicitly separated." : "CPU activity and memory pressure are separate views of the same live process sample.",
           systemImage: "cpu"
         )
 
-        PerformanceSummaryStrip(performance: performance, mode: mode)
+        if mode == .aiWorkloads {
+          AIWorkloadsSummaryStrip(
+            workloads: performance.aiWorkloads,
+            canStartSession: store.focusedCheckSession == nil || store.focusedCheckSession?.phase == .completed,
+            startSession: startAISession
+          )
+          aiSessionSurface
+        } else {
+          PerformanceSummaryStrip(performance: performance, mode: mode)
+        }
 
-        if let focusedCheckSession, !focusedCheckSession.activityGroups.isEmpty {
+        if mode != .aiWorkloads, let focusedCheckSession, !focusedCheckSession.activityGroups.isEmpty {
           AppGroupEvidenceView(
             activityGroups: focusedCheckSession.activityGroups,
             liveGroups: performance.appGroups,
@@ -54,12 +70,12 @@ struct PerformanceView: View {
             }
           }
           .pickerStyle(.segmented)
-          .frame(maxWidth: 240)
+          .frame(maxWidth: 360)
 
           HStack(spacing: CorewiseLayout.space8) {
             Image(systemName: "magnifyingglass")
               .foregroundStyle(.secondary)
-            TextField("Filter process, user, path, or PID", text: $query)
+            TextField(mode == .aiWorkloads ? "Filter supported AI tools" : "Filter process, user, path, or PID", text: $query)
               .textFieldStyle(.plain)
           }
           .padding(.horizontal, CorewiseLayout.space8)
@@ -67,15 +83,27 @@ struct PerformanceView: View {
           .background(CorewiseVisual.contentSurface, in: .rect(cornerRadius: 8))
 
           Spacer()
-          Picker("Sort", selection: $sort) {
-            ForEach(ProcessTablePresenter.availableSorts(for: mode)) { sort in
-              Text(sort.rawValue).tag(sort)
+          if mode == .aiWorkloads {
+            Picker("Sort", selection: $aiSort) {
+              ForEach(AIWorkloadSort.allCases) { sort in
+                Text(sort.title).tag(sort)
+              }
             }
+            .frame(width: 168)
+            Text("\(presentedAIWorkloads.count) observed")
+              .foregroundStyle(.secondary)
+              .monospacedDigit()
+          } else {
+            Picker("Sort", selection: $sort) {
+              ForEach(ProcessTablePresenter.availableSorts(for: mode)) { sort in
+                Text(sort.rawValue).tag(sort)
+              }
+            }
+            .frame(width: 168)
+            Text(processCountLabel(for: presentedRows))
+              .foregroundStyle(.secondary)
+              .monospacedDigit()
           }
-          .frame(width: 168)
-          Text(processCountLabel(for: presentedRows))
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
         }
         .padding(CorewiseLayout.space12)
         .background(CorewiseVisual.quietSurface, in: .rect(cornerRadius: CorewiseVisual.controlRadius))
@@ -84,9 +112,18 @@ struct PerformanceView: View {
             .stroke(CorewiseVisual.separator, lineWidth: 1)
         }
 
-        if presentedRows.isEmpty {
-          ContentUnavailableView.search(text: query)
-            .frame(maxWidth: .infinity, minHeight: 320)
+        if mode == .aiWorkloads {
+          if presentedAIWorkloads.isEmpty {
+            AIWorkloadsEmptyState(query: query)
+              .frame(maxWidth: .infinity, minHeight: 320)
+          } else {
+            AIWorkloadTable(rows: presentedAIWorkloads, sessionSummaries: focusedCheckSession?.aiWorkloads ?? [], selection: $selectedAIWorkloadID)
+              .frame(height: tableHeightForAI(presentedAIWorkloads))
+              .corewiseTableSurface()
+          }
+        } else if presentedRows.isEmpty {
+            ContentUnavailableView.search(text: query)
+              .frame(maxWidth: .infinity, minHeight: 320)
         } else {
           ProcessEvidenceTable(mode: mode, rows: presentedRows, selection: $selectedPID)
           .frame(height: tableHeight(for: presentedRows))
@@ -98,7 +135,10 @@ struct PerformanceView: View {
       .frame(maxWidth: CorewiseLayout.contentMaxWidth, alignment: .leading)
     }
     .inspector(isPresented: $isInspectorPresented) {
-      if let selectedSnapshot {
+      if mode == .aiWorkloads, let selectedAIWorkloadSnapshot {
+        AIWorkloadInspector(workload: selectedAIWorkloadSnapshot, sessionSummary: focusedCheckSession?.aiWorkloads.first { $0.workloadID == selectedAIWorkloadSnapshot.id })
+          .inspectorColumnWidth(min: 300, ideal: 360, max: 440)
+      } else if let selectedSnapshot {
         ProcessInspector(
           process: selectedSnapshot,
           isCurrent: performance.processes.contains { $0.pid == selectedSnapshot.pid },
@@ -129,6 +169,15 @@ struct PerformanceView: View {
       selectedSnapshot = process
       isInspectorPresented = true
     }
+    .onChange(of: selectedAIWorkloadID) { _, id in
+      guard let id, let workload = performance.aiWorkloads.first(where: { $0.id == id }) else { return }
+      selectedAIWorkloadSnapshot = workload
+      isInspectorPresented = true
+    }
+    .onChange(of: performance.aiWorkloads.map(\.id)) { _, _ in
+      guard let selectedAIWorkloadID, let workload = performance.aiWorkloads.first(where: { $0.id == selectedAIWorkloadID }) else { return }
+      selectedAIWorkloadSnapshot = workload
+    }
     .onChange(of: performance.processes.map(\.id)) { _, _ in
       guard let selectedPID, let process = performance.processes.first(where: { $0.pid == selectedPID }) else { return }
       selectedSnapshot = process
@@ -144,7 +193,9 @@ struct PerformanceView: View {
 
   private func selectMode(_ newMode: PerformanceMode) {
     mode = newMode
-    sort = ProcessTablePresenter.defaultSort(for: newMode)
+    if newMode != .aiWorkloads {
+      sort = ProcessTablePresenter.defaultSort(for: newMode)
+    }
   }
 
   private func apply(_ focus: DashboardFocus?) {
@@ -169,13 +220,244 @@ struct PerformanceView: View {
     min(max(Double(min(rows.count, 18)) * 28 + 58, 320), 600)
   }
 
+  private func tableHeightForAI(_ rows: [AIWorkloadObservation]) -> Double {
+    min(max(Double(rows.count) * 34 + 58, 260), 520)
+  }
+
   private func processCountLabel(for rows: [ProcessObservation]) -> String {
     switch mode {
     case .cpu:
       "\(rows.count) CPU-active"
     case .memory:
       "\(rows.count) memory-significant"
+    case .aiWorkloads:
+      "\(performance.aiWorkloads.count) observed"
     }
+  }
+
+  @ViewBuilder
+  private var aiSessionSurface: some View {
+    if let session = store.focusedCheckSession, session.intent == .aiWorkloads, session.phase != .completed {
+      FocusedCheckProgressView(session: session, cancel: { store.cancelFocusedCheck() }, finish: { store.finishFocusedCheck() })
+    } else if let result = store.lastFocusedCheckResult, result.intent == .aiWorkloads {
+      FocusedCheckResultView(
+        result: result,
+        open: routeStore.show,
+        copy: { copyAIResult(result, markdown: false) },
+        copyMarkdown: { copyAIResult(result, markdown: true) },
+        startAnother: store.dismissFocusedCheckResult
+      )
+    }
+  }
+
+  private func startAISession() {
+    store.startFocusedCheck(.aiWorkloads)
+  }
+
+  private func copyAIResult(_ result: FocusedCheckResult, markdown: Bool) {
+    let builder = DiagnosticReportBuilder()
+    let value = markdown ? builder.focusedCheckMarkdown(for: result) : builder.focusedCheckSummary(for: result)
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(value, forType: .string)
+  }
+}
+
+private enum AIWorkloadSort: String, CaseIterable, Identifiable {
+  case memory
+  case cpu
+  case related
+  case name
+
+  var id: String { rawValue }
+  var title: String {
+    switch self {
+    case .memory: "Observed Memory"
+    case .cpu: "CPU Now"
+    case .related: "Related Work"
+    case .name: "Name"
+    }
+  }
+}
+
+private enum AIWorkloadPresenter {
+  static func presented(_ workloads: [AIWorkloadObservation], query: String, sort: AIWorkloadSort) -> [AIWorkloadObservation] {
+    let filtered = query.isEmpty ? workloads : workloads.filter { workload in
+      workload.name.localizedStandardContains(query)
+        || workload.supportLevel.title.localizedStandardContains(query)
+        || workload.attributions.contains { $0.process.displayName.localizedStandardContains(query) }
+    }
+    return filtered.sorted { lhs, rhs in
+      switch sort {
+      case .memory where lhs.directObservedMemoryBytes != rhs.directObservedMemoryBytes:
+        lhs.directObservedMemoryBytes > rhs.directObservedMemoryBytes
+      case .cpu where lhs.totalCPUPercent != rhs.totalCPUPercent:
+        lhs.totalCPUPercent > rhs.totalCPUPercent
+      case .related where lhs.relatedObservedMemoryBytes != rhs.relatedObservedMemoryBytes:
+        lhs.relatedObservedMemoryBytes > rhs.relatedObservedMemoryBytes
+      default:
+        lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+      }
+    }
+  }
+}
+
+private struct AIWorkloadsSummaryStrip: View {
+  var workloads: [AIWorkloadObservation]
+  var canStartSession: Bool
+  var startSession: () -> Void
+
+  private var directMemory: UInt64 { workloads.reduce(0) { $0 + $1.directObservedMemoryBytes } }
+  private var relatedMemory: UInt64 { workloads.reduce(0) { $0 + $1.relatedObservedMemoryBytes } }
+  private var cpu: Double { workloads.reduce(0) { $0 + $1.totalCPUPercent } }
+
+  var body: some View {
+    OperationalSection(title: "AI workload field", subtitle: "Observed local processes only. Logical and cloud agents are not counted.", instrument: true) {
+      HStack(alignment: .center, spacing: CorewiseLayout.space24) {
+        VStack(alignment: .leading, spacing: CorewiseLayout.space4) {
+          Text("APP FOOTPRINT")
+            .font(.caption.weight(.semibold))
+            .tracking(0.8)
+            .foregroundStyle(.secondary)
+          Text(corewiseBytes(directMemory))
+            .font(.system(.largeTitle, design: .rounded, weight: .semibold).monospacedDigit())
+            .foregroundStyle(CorewiseVisual.accentBright)
+          Text("Directly identified local AI processes. Shared hosts are excluded from this total.")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        }
+        Spacer()
+        Button("Observe AI Session", systemImage: "record.circle", action: startSession)
+          .buttonStyle(.borderedProminent)
+          .disabled(!canStartSession)
+          .accessibilityHint("Starts a ten minute local, volatile observation with an early result after one minute")
+      }
+      Divider()
+      HStack {
+        MetricRow(title: "Tools observed", value: String(workloads.count))
+        Divider()
+        MetricRow(title: "CPU now", value: corewisePercent(cpu))
+        Divider()
+        MetricRow(title: "Related local work", value: corewiseBytes(relatedMemory))
+      }
+    }
+  }
+}
+
+private struct AIWorkloadTable: View {
+  var rows: [AIWorkloadObservation]
+  var sessionSummaries: [AIWorkloadSessionSummary]
+  @Binding var selection: AIWorkloadID?
+
+  var body: some View {
+    Table(rows, selection: $selection) {
+      TableColumn("Tool", value: \.name)
+      TableColumn("Support") { workload in Text(workload.supportLevel.title) }
+        .width(min: 82, ideal: 100)
+      TableColumn("Activity") { workload in
+        Text(sessionSummaries.first(where: { $0.workloadID == workload.id })?.activity.title ?? workload.activity.title)
+      }
+        .width(min: 72, ideal: 88)
+      TableColumn("CPU Now") { workload in Text(corewisePercent(workload.totalCPUPercent)).monospacedDigit() }
+        .width(min: 72, ideal: 88)
+      TableColumn("Observed Memory") { workload in Text(corewiseBytes(workload.directObservedMemoryBytes)).monospacedDigit() }
+        .width(min: 112, ideal: 136)
+      TableColumn("Related Work") { workload in Text(corewiseBytes(workload.relatedObservedMemoryBytes)).monospacedDigit() }
+        .width(min: 104, ideal: 126)
+      TableColumn("Processes") { workload in Text(workload.processCount, format: .number).monospacedDigit() }
+        .width(min: 68, ideal: 80)
+    }
+    .accessibilityLabel("Supported local AI workloads")
+  }
+}
+
+private struct AIWorkloadsEmptyState: View {
+  var query: String
+
+  var body: some View {
+    if query.isEmpty {
+      ContentUnavailableView(
+        "No supported local AI workloads are currently observed",
+        systemImage: "sparkles.rectangle.stack",
+        description: Text("Corewise recognizes Codex, Claude, Cursor, Ollama, Windsurf, LM Studio, Gemini CLI, and Aider. Cloud activity is not included.")
+      )
+    } else {
+      ContentUnavailableView.search(text: query)
+    }
+  }
+}
+
+private struct AIWorkloadInspector: View {
+  var workload: AIWorkloadObservation
+  var sessionSummary: AIWorkloadSessionSummary?
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: CorewiseLayout.space16) {
+        PageHeader(title: workload.name, subtitle: "\(workload.supportLevel.title) local attribution", systemImage: "sparkles.rectangle.stack", compact: true)
+
+        OperationalSection(title: "App footprint", instrument: true) {
+          MetricRow(title: "Observed memory", value: corewiseBytes(workload.directObservedMemoryBytes))
+          Divider()
+          MetricRow(title: "Resident memory (RSS)", value: corewiseBytes(workload.directResidentMemoryBytes))
+          Divider()
+          MetricRow(title: "Physical footprint", value: workload.directPhysicalFootprintBytes.map(corewiseBytes) ?? "Unavailable")
+          Divider()
+          MetricRow(title: "CPU now", value: corewisePercent(workload.directCPUPercent))
+        }
+
+        OperationalSection(title: "Attribution boundary") {
+          MetricRow(title: "Related local work", value: "\(corewiseBytes(workload.relatedObservedMemoryBytes)) · \(corewisePercent(workload.relatedCPUPercent)) CPU")
+          Divider()
+          MetricRow(title: "Shared host excluded", value: corewiseBytes(workload.sharedHostObservedMemoryBytes))
+          Divider()
+          Text("Cloud activity is not included. Process count is not an agent count.")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        }
+
+        if let sessionSummary {
+          OperationalSection(title: "Current observation", instrument: true) {
+            MetricRow(title: "Peak memory", value: corewiseBytes(sessionSummary.peakMemoryBytes))
+            Divider()
+            MetricRow(title: "Average / peak CPU", value: "\(corewisePercent(sessionSummary.averageCPUPercent)) / \(corewisePercent(sessionSummary.maximumCPUPercent))")
+            Divider()
+            MetricRow(title: "Peak process count", value: String(sessionSummary.maximumProcessCount))
+          }
+        }
+
+        OperationalSection(title: "Observed components") {
+          ForEach(workload.attributions) { attribution in
+            VStack(alignment: .leading, spacing: CorewiseLayout.space4) {
+              HStack {
+                Text(attribution.process.displayName)
+                  .fontWeight(.medium)
+                Spacer()
+                Text(attribution.role.title)
+                  .foregroundStyle(.secondary)
+              }
+              Text("\(attribution.surface.title) · \(attribution.kind.rawValue) · \(corewiseBytes(attribution.process.observedMemoryBytes))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+              if let path = attribution.process.path {
+                Text(redactedPath(path))
+                  .font(.caption.monospaced())
+                  .foregroundStyle(.tertiary)
+                  .textSelection(.enabled)
+              }
+            }
+            .accessibilityElement(children: .combine)
+            if attribution.id != workload.attributions.last?.id { Divider() }
+          }
+        }
+
+        SourceDisclosure(title: "AI workload attribution", detail: "Exact bundle and executable evidence is evaluated before bounded parent-process ancestry. Shared hosts remain separate; arguments, environment, working directories, prompts, and project names are never read.")
+      }
+      .padding(CorewiseLayout.space16)
+    }
+  }
+
+  private func redactedPath(_ path: String) -> String {
+    path.replacingOccurrences(of: FileManager.default.homeDirectoryForCurrentUser.path, with: "~")
   }
 }
 
@@ -235,6 +517,8 @@ private struct ProcessEvidenceTable: View {
           .width(min: 72, ideal: 88)
       }
       .accessibilityLabel("Processes with significant observed memory")
+    case .aiWorkloads:
+      EmptyView()
     }
   }
 }
@@ -419,6 +703,8 @@ private struct ProcessInspector: View {
       "CPU Now is a short live interval; CPU Time is cumulative for the process lifetime."
     case .memory:
       "Observed Memory is the larger public value between footprint and RSS. Page-ins are context, not exact process swap ownership."
+    case .aiWorkloads:
+      "AI Workloads separates directly identified processes from attributable descendants and shared hosts."
     }
   }
 }
@@ -462,17 +748,22 @@ func performanceChartAccessibilityValue(points: [PerformanceTimePoint], mode: Pe
 }
 
 #Preview("Performance — live") {
-  PerformanceView(performance: PreviewFixtures.performance, focusedCheckSession: nil, requestedMode: .cpu, requestedFocus: nil)
+  PerformanceView(performance: PreviewFixtures.performance, store: PreviewFixtures.store, focusedCheckSession: nil, requestedMode: .cpu, requestedFocus: nil)
     .frame(width: 1180, height: 800)
 }
 
 #Preview("Performance — memory") {
-  PerformanceView(performance: PreviewFixtures.performance, focusedCheckSession: nil, requestedMode: .memory, requestedFocus: nil)
+  PerformanceView(performance: PreviewFixtures.performance, store: PreviewFixtures.store, focusedCheckSession: nil, requestedMode: .memory, requestedFocus: nil)
+    .frame(width: 1180, height: 800)
+}
+
+#Preview("Performance — AI Workloads") {
+  PerformanceView(performance: PreviewFixtures.performance, store: PreviewFixtures.store, focusedCheckSession: nil, requestedMode: .aiWorkloads, requestedFocus: nil)
     .frame(width: 1180, height: 800)
 }
 
 #Preview("Performance — active Focused Check") {
-  PerformanceView(performance: PreviewFixtures.performance, focusedCheckSession: PreviewFixtures.focusedSession, requestedMode: .cpu, requestedFocus: nil)
+  PerformanceView(performance: PreviewFixtures.performance, store: PreviewFixtures.store, focusedCheckSession: PreviewFixtures.focusedSession, requestedMode: .cpu, requestedFocus: nil)
     .frame(width: 1180, height: 800)
 }
 
@@ -480,7 +771,7 @@ func performanceChartAccessibilityValue(points: [PerformanceTimePoint], mode: Pe
   var performance = PreviewFixtures.performance
   performance.processes = []
   performance.appGroups = []
-  return PerformanceView(performance: performance, focusedCheckSession: nil, requestedMode: .cpu, requestedFocus: nil)
+  return PerformanceView(performance: performance, store: PreviewFixtures.store, focusedCheckSession: nil, requestedMode: .cpu, requestedFocus: nil)
     .frame(width: 1180, height: 800)
 }
 

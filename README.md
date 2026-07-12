@@ -6,6 +6,8 @@ The current build implements the **Corewise Signal System**: a signal-first, key
 
 It also includes the technical implementation of **Focused Check**: choose a symptom from Overview, let Corewise observe the same supported local snapshot stream, then review a cautious result with bounded evidence, one next action, and explicit limitations. No second sampler, persistent history, network service, cleanup action, or causal claim is introduced.
 
+Performance also includes **AI Workloads**, a privacy-preserving view of supported local tools such as Codex, Claude, Cursor, and Ollama. It separates app footprint from attributable local work and shared hosts; it does not claim to count logical or cloud agents.
+
 ## Current Truth
 
 Implemented live signals:

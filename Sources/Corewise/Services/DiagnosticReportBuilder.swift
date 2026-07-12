@@ -5,6 +5,11 @@ struct DiagnosticReportBuilder {
     let evidence = result.evidence.isEmpty
       ? "- No ranked evidence was available."
       : result.evidence.map { "- \($0.title): \($0.value). \($0.detail)" }.joined(separator: "\n")
+    let aiWorkloads = result.aiWorkloads.isEmpty ? "" : """
+
+      AI workloads
+      \(result.aiWorkloads.map { "- \($0.name): \(bytes($0.peakMemoryBytes)) peak memory, \(percent($0.maximumCPUPercent)) peak CPU, \(bytes($0.peakRelatedMemoryBytes)) related local work" }.joined(separator: "\n"))
+      """
     return redactHomeDirectory(
       """
       Corewise Focused Check
@@ -18,6 +23,7 @@ struct DiagnosticReportBuilder {
 
       Evidence
       \(evidence)
+      \(aiWorkloads)
 
       Next step
       - \(result.primaryAction.title): \(result.primaryAction.detail)
@@ -35,6 +41,11 @@ struct DiagnosticReportBuilder {
       : result.evidence.map {
         "- **\($0.title)** — \($0.value)\n  - \($0.detail)\n  - Confidence: \($0.confidence.title); samples: \($0.sampleCount); source: \($0.source)"
       }.joined(separator: "\n")
+    let aiWorkloads = result.aiWorkloads.isEmpty ? "" : """
+
+      ## AI Workloads
+      \(result.aiWorkloads.map { "- **\($0.name)** — peak memory \(bytes($0.peakMemoryBytes)); average / peak CPU \(percent($0.averageCPUPercent)) / \(percent($0.maximumCPUPercent)); related local work \(bytes($0.peakRelatedMemoryBytes)); maximum process count \($0.maximumProcessCount)" }.joined(separator: "\n"))
+      """
     return redactHomeDirectory(
       """
       # Corewise Focused Check
@@ -51,6 +62,7 @@ struct DiagnosticReportBuilder {
 
       ## Evidence
       \(evidence)
+      \(aiWorkloads)
 
       ## Next Step
       **\(result.primaryAction.title)** — \(result.primaryAction.detail)

@@ -233,6 +233,8 @@ private struct ProcessMiniList: View {
       return max(processes.compactMap(\.cpuPercent).max() ?? 1, 1)
     case .memory:
       return max(Double(processes.map(\.observedMemoryBytes).max() ?? 1), 1)
+    case .aiWorkloads:
+      return 1
     }
   }
 }

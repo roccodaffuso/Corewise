@@ -10,6 +10,7 @@ struct FocusedCheckSample {
   var batteryReading: BatteryLiveReading?
   var appGroups: [AppProcessGroup]
   var processes: [ProcessObservation]
+  var aiWorkloads: [AIWorkloadObservation]
 
   init(snapshot: HealthSnapshot) {
     timestamp = snapshot.generatedAt
@@ -21,6 +22,7 @@ struct FocusedCheckSample {
     batteryReading = snapshot.battery.liveReading
     appGroups = snapshot.performance.appGroups.filter { $0.dataMode == .live }
     processes = snapshot.performance.processes.filter { $0.dataMode == .live }
+    aiWorkloads = snapshot.performance.aiWorkloads
   }
 
   init(
@@ -32,7 +34,8 @@ struct FocusedCheckSample {
     thermalLevel: ThermalLevel = .unavailable,
     batteryReading: BatteryLiveReading? = nil,
     appGroups: [AppProcessGroup] = [],
-    processes: [ProcessObservation] = []
+    processes: [ProcessObservation] = [],
+    aiWorkloads: [AIWorkloadObservation] = []
   ) {
     self.timestamp = timestamp
     self.cpuPercent = cpuPercent
@@ -43,6 +46,7 @@ struct FocusedCheckSample {
     self.batteryReading = batteryReading
     self.appGroups = appGroups
     self.processes = processes
+    self.aiWorkloads = aiWorkloads
   }
 }
 
@@ -95,6 +99,7 @@ struct FocusedCheckAggregateSummary: Equatable, Sendable {
   var appGroups: [FocusedCheckActivityAggregate]
   var processes: [FocusedCheckActivityAggregate]
   var storage: FocusedCheckStorageAggregate?
+  var aiWorkloads: [AIWorkloadSessionSummary]
 
   init(
     intent: FocusedCheckIntent,
@@ -105,7 +110,8 @@ struct FocusedCheckAggregateSummary: Equatable, Sendable {
     missingSampleCount: Int = 0,
     appGroups: [FocusedCheckActivityAggregate] = [],
     processes: [FocusedCheckActivityAggregate] = [],
-    storage: FocusedCheckStorageAggregate? = nil
+    storage: FocusedCheckStorageAggregate? = nil,
+    aiWorkloads: [AIWorkloadSessionSummary] = []
   ) {
     self.intent = intent
     self.startedAt = startedAt
@@ -116,6 +122,7 @@ struct FocusedCheckAggregateSummary: Equatable, Sendable {
     self.appGroups = appGroups
     self.processes = processes
     self.storage = storage
+    self.aiWorkloads = aiWorkloads
   }
 
   var elapsed: TimeInterval {
@@ -162,6 +169,7 @@ final class FocusedCheckTracker {
   private var appGroupAggregates: [String: FocusedCheckActivityAggregate] = [:]
   private var processAggregates: [String: FocusedCheckActivityAggregate] = [:]
   private var storageAggregate: FocusedCheckStorageAggregate?
+  private var aiWorkloadPoints: [AIWorkloadID: [AIWorkloadSessionPoint]] = [:]
 
   func start(intent: FocusedCheckIntent, now: Date) {
     reset()
@@ -224,6 +232,30 @@ final class FocusedCheckTracker {
       )
     }
 
+    if intent == .aiWorkloads {
+      let current = Dictionary(uniqueKeysWithValues: sample.aiWorkloads.map { ($0.id, $0) })
+      let ids = Set(aiWorkloadPoints.keys).union(current.keys)
+      for id in ids {
+        let workload = current[id]
+        var points = aiWorkloadPoints[id, default: []]
+        points.append(
+          AIWorkloadSessionPoint(
+            timestamp: sample.timestamp,
+            workloadID: id,
+            directCPUPercent: workload?.directCPUPercent ?? 0,
+            relatedCPUPercent: workload?.relatedCPUPercent ?? 0,
+            directMemoryBytes: workload?.directObservedMemoryBytes ?? 0,
+            relatedMemoryBytes: workload?.relatedObservedMemoryBytes ?? 0,
+            processCount: workload?.processCount ?? 0
+          )
+        )
+        if points.count > Self.maximumSystemPointCount {
+          points.removeFirst(points.count - Self.maximumSystemPointCount)
+        }
+        aiWorkloadPoints[id] = points
+      }
+    }
+
     appGroupAggregates = capped(appGroupAggregates)
     processAggregates = capped(processAggregates)
   }
@@ -269,7 +301,8 @@ final class FocusedCheckTracker {
       missingSampleCount: missingSampleCount,
       appGroups: appGroupAggregates.values.sorted(by: aggregateSort),
       processes: processAggregates.values.sorted(by: aggregateSort),
-      storage: storageAggregate
+      storage: storageAggregate,
+      aiWorkloads: aiWorkloadSummaries()
     )
   }
 
@@ -282,6 +315,7 @@ final class FocusedCheckTracker {
     appGroupAggregates.removeAll(keepingCapacity: true)
     processAggregates.removeAll(keepingCapacity: true)
     storageAggregate = nil
+    aiWorkloadPoints.removeAll(keepingCapacity: true)
   }
 
   private func updatedAggregate(
@@ -342,6 +376,35 @@ final class FocusedCheckTracker {
       return lhsScore > rhsScore
     }
     return lhs.id < rhs.id
+  }
+
+  private func aiWorkloadSummaries() -> [AIWorkloadSessionSummary] {
+    let names = Dictionary(uniqueKeysWithValues: AIWorkloadRegistry.descriptors.map { ($0.id, $0.name) })
+    return aiWorkloadPoints.compactMap { id, points in
+      guard let first = points.first, let last = points.last else { return nil }
+      let cpuValues = points.map { $0.directCPUPercent + $0.relatedCPUPercent }
+      let memoryValues = points.map { $0.directMemoryBytes + $0.relatedMemoryBytes }
+      let activeCount = cpuValues.filter { $0 >= Self.activeCPUThreshold }.count
+      return AIWorkloadSessionSummary(
+        workloadID: id,
+        name: names[id] ?? id.rawValue,
+        sampleCount: points.count,
+        firstObservedAt: first.timestamp,
+        lastObservedAt: last.timestamp,
+        averageCPUPercent: cpuValues.average ?? 0,
+        maximumCPUPercent: cpuValues.max() ?? 0,
+        initialMemoryBytes: first.directMemoryBytes + first.relatedMemoryBytes,
+        finalMemoryBytes: last.directMemoryBytes + last.relatedMemoryBytes,
+        peakMemoryBytes: memoryValues.max() ?? 0,
+        peakRelatedMemoryBytes: points.map(\.relatedMemoryBytes).max() ?? 0,
+        maximumProcessCount: points.map(\.processCount).max() ?? 0,
+        activity: activeCount >= 3 ? .sustained : ((cpuValues.max() ?? 0) >= 5 ? .active : .quiet)
+      )
+    }
+    .sorted {
+      if $0.peakMemoryBytes != $1.peakMemoryBytes { return $0.peakMemoryBytes > $1.peakMemoryBytes }
+      return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+    }
   }
 }
 

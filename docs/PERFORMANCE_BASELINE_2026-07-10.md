@@ -1,5 +1,9 @@
 # Corewise Performance Baseline — 2026-07-10
 
+## AI Workloads follow-up — 2026-07-12
+
+AI Workloads reuses the existing process inventory and one-second CPU window. Three isolated live-snapshot test runs on the final implementation completed in 1.580, 1.509, and 1.489 seconds; the 1.509-second median is below the previously observed 1.585-second baseline run. Classification uses one PID map with memoized parent-chain ownership and cached signing identity, so no second sampler or refresh task was added.
+
 Status: CPU and memory gates passed for the implemented Focused Diagnostics path. External user validation and the full manual accessibility/visual matrix remain open.
 
 ## Environment
@@ -62,7 +66,7 @@ Measured after the correction:
 | --- | ---: | ---: | --- |
 | Signed debug, normal launch/refresh, 160 s | 64-90 MB | 156 MB | Pass |
 | Ad-hoc-signed `-c release`, normal launch/refresh, 160 s | 60-72 MB | 156 MB | Pass |
-| Explicit Folder Scope scan of `/Users/roccodaffuso`, about 900k files observed | 64-67 MB during sampled minute | 156 MB | Pass |
+| Explicit Folder Scope scan of the test user's home folder, about 900k files observed | 64-67 MB during sampled minute | 156 MB | Pass |
 
 The remembered test folder was removed after the profile. The release peak fell by approximately 89% from 1,416 MB to 156 MB.
 

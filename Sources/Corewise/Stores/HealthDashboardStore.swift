@@ -100,6 +100,9 @@ final class HealthDashboardStore: ObservableObject {
   }
 
   func startFocusedCheck(_ intent: FocusedCheckIntent, now: Date = Date()) {
+    guard focusedCheckSession == nil || focusedCheckSession?.phase == .completed else {
+      return
+    }
     if intent == .general {
       focusedCheckTracker.reset()
       focusedCheckSession = nil
@@ -631,6 +634,7 @@ final class HealthDashboardStore: ObservableObject {
     session.lastUpdatedAt = snapshot.generatedAt
     session.provisionalEvidence = provisional.evidence
     session.activityGroups = summary.topAppGroupSummaries
+    session.aiWorkloads = summary.aiWorkloads
     if provisional.state == .unavailable {
       session.phase = .unavailable
     } else if provisional.state == .insufficientEvidence {
@@ -643,12 +647,22 @@ final class HealthDashboardStore: ObservableObject {
       focusedCheckSession = session
     }
 
-    if let suggestedDuration = session.suggestedDuration,
-       summary.elapsed >= suggestedDuration,
-       provisional.state != .insufficientEvidence,
-       provisional.state != .unavailable {
+    if Self.shouldAutoCompleteFocusedCheck(session: session, summary: summary, state: provisional.state) {
       completeFocusedCheck(summary)
     }
+  }
+
+  static func shouldAutoCompleteFocusedCheck(
+    session: FocusedCheckSession,
+    summary: FocusedCheckAggregateSummary,
+    state: FocusedCheckResultState
+  ) -> Bool {
+    guard let suggestedDuration = session.suggestedDuration,
+          summary.elapsed >= suggestedDuration,
+          state != .insufficientEvidence else {
+      return false
+    }
+    return state != .unavailable || session.intent == .aiWorkloads
   }
 
   private func completeFocusedCheck(_ summary: FocusedCheckAggregateSummary) {
@@ -663,6 +677,7 @@ final class HealthDashboardStore: ObservableObject {
       session.missingSampleCount = summary.missingSampleCount
       session.provisionalEvidence = result.evidence
       session.activityGroups = summary.topAppGroupSummaries
+      session.aiWorkloads = summary.aiWorkloads
       session.result = result
       focusedCheckSession = session
     }

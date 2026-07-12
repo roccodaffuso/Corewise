@@ -324,6 +324,12 @@ Decision: CPU and Memory reuse one live process sample but must derive different
 
 Reason: Reordering the same table does not help the user answer two different questions. CPU should explain what is working now; Memory should explain what is holding physical memory and whether broader VM/swap signals deserve review.
 
+## 2026-07-12: AI Workloads Reports Local Process Families, Not Agent Counts
+
+Decision: Performance adds an AI Workloads lens that separates directly identified app footprint, attributable descendant work, and shared hosts. Verified descriptors cover Codex, Claude, Cursor, and Ollama; Windsurf, LM Studio, Gemini CLI, and Aider are labeled best effort.
+
+Reason: Coding agents are multi-process and may run work in cloud environments. OS process counts cannot truthfully represent logical agents. Corewise reuses the existing sampler and Focused Check tracker, reads no prompts, arguments, environment, working directory, or project name, and keeps the observation volatile.
+
 ## 2026-07-10: Focused Check Reuses One Volatile Snapshot Stream
 
 Decision: Focused Check starts from a user-reported symptom and reuses the existing store-owned snapshot refresh. Slow, Hot, and Battery aggregate bounded volatile evidence; Storage completes only from a real approved-scope scan; Just Checking resolves the current attention summary immediately.

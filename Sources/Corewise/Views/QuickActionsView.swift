@@ -134,6 +134,8 @@ struct QuickActionsView: View {
     switch id {
     case let .navigate(section):
       routeStore.show(section)
+    case .openAIWorkloads:
+      routeStore.show(.performance, performanceMode: .aiWorkloads)
     case .refresh:
       Task { await store.refresh() }
     case .openSettings:

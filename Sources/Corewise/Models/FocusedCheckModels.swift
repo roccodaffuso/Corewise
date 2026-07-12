@@ -6,6 +6,7 @@ enum FocusedCheckIntent: String, CaseIterable, Identifiable, Hashable, Sendable 
   case batteryDrain
   case storageFull
   case general
+  case aiWorkloads
 
   var id: String { rawValue }
 
@@ -16,6 +17,7 @@ enum FocusedCheckIntent: String, CaseIterable, Identifiable, Hashable, Sendable 
     case .batteryDrain: String(localized: "focusedCheck.intent.batteryDrain", defaultValue: "Battery drains quickly", bundle: .main)
     case .storageFull: String(localized: "focusedCheck.intent.storageFull", defaultValue: "Storage is full", bundle: .main)
     case .general: String(localized: "focusedCheck.intent.general", defaultValue: "Just checking", bundle: .main)
+    case .aiWorkloads: String(localized: "focusedCheck.intent.aiWorkloads", defaultValue: "Observe AI Session", bundle: .main)
     }
   }
 
@@ -24,6 +26,7 @@ enum FocusedCheckIntent: String, CaseIterable, Identifiable, Hashable, Sendable 
     case .slow, .hot: 15
     case .batteryDrain: 5 * 60
     case .storageFull, .general: 0
+    case .aiWorkloads: 60
     }
   }
 
@@ -32,11 +35,14 @@ enum FocusedCheckIntent: String, CaseIterable, Identifiable, Hashable, Sendable 
     case .slow, .hot: 60
     case .batteryDrain: 10 * 60
     case .storageFull, .general: nil
+    case .aiWorkloads: 10 * 60
     }
   }
 
   var launchRoute: DashboardRoute {
-    DashboardRoute(section: self == .storageFull ? .storage : .overview)
+    if self == .storageFull { return DashboardRoute(section: .storage) }
+    if self == .aiWorkloads { return DashboardRoute(section: .performance, performanceMode: .aiWorkloads) }
+    return DashboardRoute(section: .overview)
   }
 }
 
@@ -66,6 +72,7 @@ enum FocusedCheckEvidenceKind: String, CaseIterable, Hashable, Sendable {
   case storageCoverage
   case storageAttribution
   case unavailable
+  case aiWorkloadActivity
 
   var family: FocusedCheckEvidenceFamily {
     switch self {
@@ -73,7 +80,7 @@ enum FocusedCheckEvidenceKind: String, CaseIterable, Hashable, Sendable {
       .cpu
     case .memoryLoad, .swapGrowth:
       .memory
-    case .appGroupActivity, .processActivity:
+    case .appGroupActivity, .processActivity, .aiWorkloadActivity:
       .activity
     case .thermalPressure:
       .thermal
@@ -192,6 +199,7 @@ struct FocusedCheckResult: Equatable, Sendable {
   var observationEndedAt: Date
   var coverage: String
   var generatedAt: Date
+  var aiWorkloads: [AIWorkloadSessionSummary] = []
 }
 
 struct FocusedCheckActivitySummary: Identifiable, Equatable, Sendable {
@@ -221,6 +229,7 @@ struct FocusedCheckSession: Identifiable, Equatable, Sendable {
   var provisionalEvidence: [FocusedCheckEvidence]
   var activityGroups: [FocusedCheckActivitySummary]
   var result: FocusedCheckResult?
+  var aiWorkloads: [AIWorkloadSessionSummary]
 
   init(intent: FocusedCheckIntent, now: Date, id: UUID = UUID()) {
     self.id = id
@@ -237,6 +246,7 @@ struct FocusedCheckSession: Identifiable, Equatable, Sendable {
     provisionalEvidence = []
     activityGroups = []
     result = nil
+    aiWorkloads = []
   }
 }
 

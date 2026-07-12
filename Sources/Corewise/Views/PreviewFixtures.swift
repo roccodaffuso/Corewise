@@ -31,6 +31,12 @@ enum PreviewFixtures {
     ]
     let metrics: [DiagnosticMetric] = [summary]
     let appGroups = AppProcessGroupingResolver.groups(processes: processes, now: now)
+    var codex = process(pid: 404, name: "codex", cpu: 22, memoryMB: 940)
+    codex.path = "/Applications/ChatGPT.app/Contents/Resources/codex"
+    var build = process(pid: 405, name: "swiftc", cpu: 38, memoryMB: 320)
+    build.path = "/usr/bin/swiftc"
+    build.parentPID = codex.pid
+    let aiWorkloads = AIWorkloadResolver.resolve(processes: [codex, build])
     let insights: [ProcessInsight] = []
     let findings: [DiagnosticFinding] = []
     let actions: [SafeAction] = []
@@ -44,6 +50,7 @@ enum PreviewFixtures {
       metrics: metrics,
       processes: processes,
       appGroups: appGroups,
+      aiWorkloads: aiWorkloads,
       insights: insights,
       findings: findings,
       actions: actions,

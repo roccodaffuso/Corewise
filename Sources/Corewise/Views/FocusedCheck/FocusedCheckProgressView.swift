@@ -63,7 +63,7 @@ struct FocusedCheckProgressView: View {
           Spacer()
           Button("Finish Check", systemImage: "checkmark", action: finish)
             .buttonStyle(.borderedProminent)
-            .disabled(session.phase == .awaitingAccess || session.phase == .readyForStorageScan || session.phase == .scanningStorage)
+            .disabled(session.phase == .awaitingAccess || session.phase == .readyForStorageScan || session.phase == .scanningStorage || elapsed < session.minimumDuration)
         }
       }
     }
@@ -79,6 +79,9 @@ struct FocusedCheckProgressView: View {
     }
     if session.intent == .storageFull {
       return session.phase == .awaitingAccess ? "Access required" : "Read-only scan"
+    }
+    if session.intent == .aiWorkloads {
+      return "\(session.aiWorkloads.count) tools · \(session.systemSampleCount) samples"
     }
     return "\(session.systemSampleCount) live samples"
   }

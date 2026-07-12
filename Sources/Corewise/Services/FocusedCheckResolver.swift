@@ -18,6 +18,8 @@ enum FocusedCheckResolver {
         detail: corewiseText("Just checking uses the current Overview summary rather than a timed observation.", comment: "Focused Check detail"),
         action: FocusedCheckAction(title: corewiseText("Review Overview", comment: "Focused Check action"), detail: corewiseText("Return to Overview to inspect the current supported signals.", comment: "Focused Check action detail"), destination: DashboardRoute(section: .overview))
       )
+    case .aiWorkloads:
+      resolveAIWorkloads(summary)
     }
     return applyingMissingIntervalConfidence(resolved, summary: summary)
   }
@@ -162,6 +164,52 @@ enum FocusedCheckResolver {
       )
     }
     return evidenceResult(summary, headline: corewiseText("Persistent activity is worth reviewing.", comment: "Focused Check headline"), evidence: evidence)
+  }
+
+  private static func resolveAIWorkloads(_ summary: FocusedCheckAggregateSummary) -> FocusedCheckResult {
+    guard summary.elapsed >= summary.intent.minimumDuration, summary.systemSampleCount >= 5 else {
+      return insufficient(summary, required: corewiseText("Keep observing for at least one minute and five live samples.", comment: "AI Focused Check minimum guidance"))
+    }
+    guard !summary.aiWorkloads.isEmpty else {
+      return unavailable(
+        summary,
+        headline: corewiseText("No supported local AI workload was observed.", comment: "AI Focused Check headline"),
+        detail: corewiseText("Cloud agents and unsupported local tools remain outside this observation.", comment: "AI Focused Check detail"),
+        action: FocusedCheckAction(title: corewiseText("Open AI Workloads", comment: "AI Focused Check action"), detail: corewiseText("Review supported tools and attribution limits in Performance.", comment: "AI Focused Check action detail"), destination: DashboardRoute(section: .performance, performanceMode: .aiWorkloads))
+      )
+    }
+
+    let evidence = summary.aiWorkloads.prefix(3).map { workload in
+      FocusedCheckEvidence(
+        id: "ai:\(workload.workloadID.rawValue)",
+        kind: .aiWorkloadActivity,
+        area: .performance,
+        title: corewiseFormat("%@ local activity", workload.name),
+        value: corewiseBytes(workload.peakMemoryBytes),
+        detail: corewiseFormat("Peak observed memory with up to %@ CPU and %@ related-process peak memory. This is local process attribution, not an agent count.", percent(workload.maximumCPUPercent), corewiseBytes(workload.peakRelatedMemoryBytes)),
+        severity: workload.maximumCPUPercent >= 200 ? .warning : .info,
+        confidence: .medium,
+        source: corewiseText("Local volatile AI workload history", comment: "AI Focused Check source"),
+        firstObservedAt: workload.firstObservedAt,
+        lastObservedAt: workload.lastObservedAt,
+        sampleCount: workload.sampleCount,
+        destination: DashboardRoute(section: .performance, performanceMode: .aiWorkloads)
+      )
+    }
+
+    var resolved = result(
+      summary,
+      state: evidence.contains { $0.severity == .warning } ? .review : .clear,
+      headline: corewiseFormat("%@ supported local AI workloads were observed.", String(summary.aiWorkloads.count)),
+      detail: summary.highestThermalLevel >= .serious && summary.aiWorkloads.contains { $0.activity == .sustained }
+        ? corewiseText("Sustained AI-related activity coincided with elevated thermal state; this does not establish cause.", comment: "AI Focused Check detail")
+        : corewiseText("App footprint and attributable local work are separated. Cloud activity is not included.", comment: "AI Focused Check detail"),
+      evidence: evidence,
+      action: FocusedCheckAction(title: corewiseText("Review AI Workloads", comment: "AI Focused Check action"), detail: corewiseText("Compare app footprint with related local work in Performance.", comment: "AI Focused Check action detail"), destination: DashboardRoute(section: .performance, performanceMode: .aiWorkloads)),
+      coverage: coverage(summary)
+    )
+    resolved.aiWorkloads = summary.aiWorkloads
+    return resolved
   }
 
   private static func resolveHot(_ summary: FocusedCheckAggregateSummary) -> FocusedCheckResult {
@@ -508,7 +556,7 @@ enum FocusedCheckResolver {
 
   private static func action(for evidence: FocusedCheckEvidence) -> FocusedCheckAction {
     switch evidence.kind {
-    case .sustainedCPU, .elevatedSystemCPU, .appGroupActivity, .processActivity:
+    case .sustainedCPU, .elevatedSystemCPU, .appGroupActivity, .processActivity, .aiWorkloadActivity:
       FocusedCheckAction(title: corewiseText("Review sustained activity", comment: "Focused Check action"), detail: corewiseText("Open Performance and check whether the observed work is expected.", comment: "Focused Check action detail"), destination: evidence.destination)
     case .memoryLoad, .swapGrowth:
       FocusedCheckAction(title: corewiseText("Review memory context", comment: "Focused Check action"), detail: corewiseText("Open Memory and compare observed memory with swap trend.", comment: "Focused Check action detail"), destination: evidence.destination)

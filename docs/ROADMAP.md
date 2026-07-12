@@ -71,6 +71,7 @@
 - Implemented: process physical footprint through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns it.
 - Implemented: observed process memory uses the larger public value between footprint and RSS, with RSS still visible.
 - Implemented: app groups are derived from process rows and kept separate from the process table.
+- Implemented: AI Workloads separates app footprint, related local work, and shared hosts; exposes a tiered registry, native table/inspector, typed routing, and a bounded ten-minute Observe AI Session.
 - Implemented: short local in-memory history for sustained CPU and repeated high process usage.
 - Implemented: uptime from `ProcessInfo.systemUptime`.
 - Implemented: swap usage, total, available, encryption state, swapped VM pages, trend, and swap in/out rates from safe local VM signals.

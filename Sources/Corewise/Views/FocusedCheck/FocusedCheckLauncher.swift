@@ -50,6 +50,7 @@ struct FocusedCheckLauncher: View {
     case .batteryDrain: "battery.25percent"
     case .storageFull: "internaldrive"
     case .general: "waveform.path.ecg"
+    case .aiWorkloads: "sparkles.rectangle.stack"
     }
   }
 
@@ -59,6 +60,7 @@ struct FocusedCheckLauncher: View {
     case .batteryDrain: "Starts a longer observation that requires Battery Power."
     case .storageFull: "Uses a completed read-only storage scan."
     case .general: "Explains the current supported Overview signals immediately."
+    case .aiWorkloads: "Observes supported local AI tools without counting logical agents or cloud work."
     }
   }
 }

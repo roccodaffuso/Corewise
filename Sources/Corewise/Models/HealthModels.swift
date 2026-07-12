@@ -260,6 +260,7 @@ struct PerformanceHealth {
   var metrics: [DiagnosticMetric]
   var processes: [ProcessObservation]
   var appGroups: [AppProcessGroup]
+  var aiWorkloads: [AIWorkloadObservation] = []
   var insights: [ProcessInsight]
   var findings: [DiagnosticFinding]
   var actions: [SafeAction]
@@ -459,6 +460,9 @@ struct ProcessObservation: Identifiable {
   var appName: String?
   var path: String?
   var user: String
+  var parentPID: Int32 = 0
+  var cpuSampleAvailable: Bool = true
+  var signingIdentifier: String? = nil
   var cpuPercent: Double
   var cpuTimeSeconds: Double
   var threadCount: Int32

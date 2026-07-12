@@ -116,13 +116,14 @@ struct SystemHealthCollector: SystemHealthCollecting {
         metrics: performanceMetrics,
         processes: cpuProcesses,
         appGroups: appGroups,
+        aiWorkloads: instant.aiWorkloads,
         insights: ProcessInsightBuilder().insights(for: processes),
         findings: performanceFindings(historySummary, processes: processes),
         actions: [
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
           SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
-        sourceNote: "Live data. CPU split, process rows, thread count, resident memory, physical footprint when macOS returns it, page-ins, observed memory, system VM memory, uptime, swap totals, swap trend, and sustained CPU history are read locally. Swap contributors are inferred from public memory signals and are not per-process swap ownership. Memory pressure and WindowServer interpretation remain unavailable/planned until a reliable public source is selected."
+        sourceNote: "Live data. CPU split, process rows, parent-process topology, AI workload attribution, thread count, resident memory, physical footprint when macOS returns it, page-ins, observed memory, system VM memory, uptime, swap totals, swap trend, and sustained CPU history are read locally. AI app footprint, attributable descendants, and shared hosts remain separate; logical and cloud agents are not counted. Swap contributors are inferred from public memory signals and are not per-process swap ownership."
       ),
       startup: startupHealth,
       thermal: ThermalHealth(

@@ -12,6 +12,7 @@ Corewise should feel useful because it explains signals clearly, not because it 
 - No network dependency.
 - Live performance sampling stays on-device.
 - Current process data is used for display and grouping, not upload.
+- AI Workloads uses local process identity, parent PID, CPU, memory, footprint, and page-in data already collected for Performance. It never reads command-line arguments, prompts, environment variables, working directories, project names, or cloud-agent state. Copied AI session summaries omit PID, users, and executable paths.
 - Swap Insight reads public system swap counters, VM statistics, and process memory/page-in signals. It does not inspect swap files or claim exact per-process swap ownership.
 - Memory Context is derived from public VM and swap counters and does not claim to be Activity Monitor's private memory-pressure graph.
 - Storage details are read only after the user grants macOS Full Disk Access or chooses a Folder Scope fallback.

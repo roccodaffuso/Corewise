@@ -181,6 +181,7 @@ private struct DetailRouter: View {
     case .performance:
       PerformanceView(
         performance: snapshot.performance,
+        store: store,
         focusedCheckSession: store.focusedCheckSession,
         requestedMode: requestedPerformanceMode,
         requestedFocus: requestedFocus

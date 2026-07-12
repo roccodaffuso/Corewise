@@ -7,6 +7,7 @@ struct InstantSystemMetrics {
   var memory: SystemMemoryReading
   var processes: [ProcessObservation]
   var appGroups: [AppProcessGroup]
+  var aiWorkloads: [AIWorkloadObservation] = []
   var systemWatts: Double?
   var powerSourceNote: String
 }
@@ -26,6 +27,7 @@ enum SystemMetricsSampler {
       memory: memory,
       processes: processes,
       appGroups: appGroups,
+      aiWorkloads: sampledProcesses.aiWorkloads,
       systemWatts: nil,
       powerSourceNote: "macOS does not expose reliable whole-system wattage through a safe public API. Corewise can show battery or power-source context later, but should not invent watts."
     )
@@ -223,7 +225,7 @@ enum SystemMetricsSampler {
     )
   }
 
-  private static func sampleProcesses() async throws -> (processes: [ProcessObservation], now: Date) {
+  private static func sampleProcesses() async throws -> (processes: [ProcessObservation], aiWorkloads: [AIWorkloadObservation], now: Date) {
     let first = processCPUStats()
     let start = Date()
 
@@ -233,13 +235,10 @@ enum SystemMetricsSampler {
     let elapsed = max(Date().timeIntervalSince(start), 0.2)
     let now = Date()
 
-    let observations = second.values.compactMap { current -> ProcessObservation? in
-      guard let previousCPUNanoseconds = first[current.pid] else {
-        return nil
-      }
-
-      let deltaNanoseconds = current.cpuNanoseconds > previousCPUNanoseconds
-        ? current.cpuNanoseconds - previousCPUNanoseconds
+    var observations = second.values.map { current -> ProcessObservation in
+      let previousCPUNanoseconds = first[current.pid]
+      let deltaNanoseconds = current.cpuNanoseconds > (previousCPUNanoseconds ?? current.cpuNanoseconds)
+        ? current.cpuNanoseconds - (previousCPUNanoseconds ?? current.cpuNanoseconds)
         : 0
       let cpuPercent = Double(deltaNanoseconds) / 1_000_000_000 / elapsed * 100
       let footprint = current.physicalFootprintBytes
@@ -255,6 +254,8 @@ enum SystemMetricsSampler {
         appName: appName,
         path: current.path,
         user: current.user,
+        parentPID: current.parentPID,
+        cpuSampleAvailable: previousCPUNanoseconds != nil,
         cpuPercent: cpuPercent,
         cpuTimeSeconds: Double(current.cpuNanoseconds) / 1_000_000_000,
         threadCount: current.threadCount,
@@ -272,6 +273,18 @@ enum SystemMetricsSampler {
       )
     }
 
+    let candidatePaths = Set(observations.compactMap { process -> String? in
+      guard AIWorkloadRegistry.descriptors.contains(where: { $0.directRule.matches(process: process) }) else { return nil }
+      return process.path
+    })
+    let signingIdentifiers = await AIWorkloadSigningCache.shared.identifiers(for: candidatePaths)
+    for index in observations.indices {
+      if let path = observations[index].path {
+        observations[index].signingIdentifier = signingIdentifiers[path]
+      }
+    }
+
+    let aiWorkloads = AIWorkloadResolver.resolve(processes: observations)
     let readable = observations
       .filter { $0.cpuPercent >= 0.05 || $0.observedMemoryBytes >= 20 * 1024 * 1024 }
 
@@ -294,11 +307,12 @@ enum SystemMetricsSampler {
       ($0.cpuPercent, $0.observedMemoryBytes) > ($1.cpuPercent, $1.observedMemoryBytes)
     }
 
-    return (Array(sorted), now)
+    return (Array(sorted), aiWorkloads, now)
   }
 
   private static func processStats() -> [Int32: ProcessStat] {
-    let pids = allProcessIDs()
+    let topology = processTopology()
+    let pids = topology.isEmpty ? allProcessIDs() : Array(topology.keys)
     guard !pids.isEmpty else {
       return [:]
     }
@@ -323,6 +337,7 @@ enum SystemMetricsSampler {
         name: name,
         path: path,
         user: user,
+        parentPID: topology[pid] ?? 0,
         cpuNanoseconds: cpuNanoseconds,
         threadCount: taskInfo.pti_threadnum,
         residentBytes: UInt64(taskInfo.pti_resident_size),
@@ -355,11 +370,15 @@ enum SystemMetricsSampler {
   }
 
   private static func sysctlProcessIDs() -> [pid_t] {
+    Array(processTopology().keys)
+  }
+
+  private static func processTopology() -> [pid_t: pid_t] {
     var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
     var size = 0
 
     guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else {
-      return []
+      return [:]
     }
 
     let stride = MemoryLayout<kinfo_proc>.stride
@@ -369,11 +388,16 @@ enum SystemMetricsSampler {
       sysctl(&mib, u_int(mib.count), buffer.baseAddress, &size, nil, 0)
     }
     guard result == 0 else {
-      return []
+      return [:]
     }
 
     let count = min(size / stride, processes.count)
-    return Array(Set(processes.prefix(count).map(\.kp_proc.p_pid).filter { $0 > 0 }))
+    var topology: [pid_t: pid_t] = [:]
+    topology.reserveCapacity(count)
+    for process in processes.prefix(count) where process.kp_proc.p_pid > 0 {
+      topology[process.kp_proc.p_pid] = process.kp_eproc.e_ppid
+    }
+    return topology
   }
 
   private static func listAllProcessIDs() -> [pid_t] {
@@ -550,6 +574,7 @@ private struct ProcessStat {
   var name: String
   var path: String?
   var user: String
+  var parentPID: pid_t
   var cpuNanoseconds: UInt64
   var threadCount: Int32
   var residentBytes: UInt64

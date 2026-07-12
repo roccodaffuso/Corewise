@@ -70,6 +70,13 @@ Statuses:
 
 ## Performance
 
+| AI signal | State | Source | Confidence | Limit |
+| --- | --- | --- | --- | --- |
+| App footprint | Implemented | Existing `KERN_PROC_ALL`, `proc_pidinfo`, `proc_pid_rusage`, exact bundle/executable registry | High for verified descriptors; medium for best effort | Direct local processes, not logical agents. |
+| Related local work | Implemented | Parent PID topology from the same process inventory | Medium inferred | Attributable descendants only; reparented and cloud work remain outside coverage. |
+| Shared host | Implemented | Exact host identity kept outside direct totals | Medium | Disclosed but not assigned with false precision. |
+| Observe AI Session | Implemented | Existing two-second refresh and bounded volatile Focused Check history | Medium | Ten-minute maximum; no disk persistence or project context. |
+
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
 | System CPU now | Implemented | `host_statistics` CPU ticks | Medium | 1 second sample with user/system/idle split. |

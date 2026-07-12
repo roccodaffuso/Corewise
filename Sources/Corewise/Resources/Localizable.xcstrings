@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "focusedCheck.intent.aiWorkloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observe AI Session"
+          }
+        }
+      }
+    },
     "focusedCheck.intent.batteryDrain": {
       "extractionState": "manual",
       "localizations": {
