@@ -1,0 +1,8 @@
+"quickActions.search" = "Search actions";
+"status.clear.headline" = "No urgent live signals detected";
+"status.unavailable.headline" = "Live signals unavailable";
+"focusedCheck.intent.slow" = "My Mac feels slow";
+"focusedCheck.intent.hot" = "My Mac feels hot";
+"focusedCheck.intent.batteryDrain" = "Battery drains quickly";
+"focusedCheck.intent.storageFull" = "Storage is full";
+"focusedCheck.intent.general" = "Just checking";

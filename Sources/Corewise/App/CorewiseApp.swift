@@ -4,18 +4,23 @@ import SwiftUI
 struct CorewiseApp: App {
   @NSApplicationDelegateAdaptor(AppActivationDelegate.self) private var appDelegate
   @StateObject private var store = HealthDashboardStore(collector: SystemHealthCollector())
+  @State private var routeStore = AppRouteStore()
 
   var body: some Scene {
-    WindowGroup("Corewise", id: "main") {
+    Window("Corewise", id: "main") {
       ContentView(store: store)
+        .environment(routeStore)
         .frame(minWidth: 980, minHeight: 680)
-        .task {
-          await store.startLiveRefresh()
+        .onAppear {
+          store.startLiveRefreshIfNeeded()
         }
     }
     .windowStyle(.hiddenTitleBar)
+    .defaultSize(width: 1180, height: 800)
+    .windowResizability(.contentMinSize)
     .commands {
       CommandGroup(replacing: .newItem) {}
+      CorewiseCommands()
     }
 
     Settings {
@@ -24,6 +29,7 @@ struct CorewiseApp: App {
 
     MenuBarExtra("Corewise", systemImage: "waveform.path.ecg") {
       MenuBarMonitorView(store: store)
+        .environment(routeStore)
     }
     .menuBarExtraStyle(.window)
   }
@@ -31,6 +37,7 @@ struct CorewiseApp: App {
 
 private struct MenuBarMonitorView: View {
   @ObservedObject var store: HealthDashboardStore
+  @Environment(AppRouteStore.self) private var routeStore
   @Environment(\.openWindow) private var openWindow
   @AppStorage(CorewiseSettingsKeys.menuBarShowCPU) private var showCPU = true
   @AppStorage(CorewiseSettingsKeys.menuBarShowMemory) private var showMemory = true
@@ -38,185 +45,239 @@ private struct MenuBarMonitorView: View {
   @AppStorage(CorewiseSettingsKeys.menuBarShowTopCPU) private var showTopCPU = true
   @AppStorage(CorewiseSettingsKeys.menuBarShowTopMemory) private var showTopMemory = true
 
-  private var snapshot: HealthSnapshot? {
-    store.snapshot
-  }
-
-  private var topCPUProcesses: [ProcessObservation] {
-    Array((snapshot?.performance.processes ?? [])
-      .sorted { $0.cpuPercent > $1.cpuPercent }
-      .prefix(3))
-  }
-
-  private var topMemoryProcesses: [ProcessObservation] {
-    Array((snapshot?.performance.processes ?? [])
-      .sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }
-      .prefix(3))
-  }
+  private var snapshot: HealthSnapshot? { store.snapshot }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
-      HStack(alignment: .center, spacing: 10) {
-        Image(systemName: "waveform.path.ecg")
-          .font(.system(size: 18, weight: .semibold))
-          .foregroundStyle(CorewiseVisual.moss)
-          .frame(width: 34, height: 34)
-          .background {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-              .fill(.ultraThinMaterial)
-              .overlay(CorewiseVisual.moss.opacity(0.12))
-          }
-          .overlay {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-              .stroke(.white.opacity(0.14), lineWidth: 1)
-          }
-          .shadow(color: CorewiseVisual.moss.opacity(0.12), radius: 8, y: 3)
-
-        VStack(alignment: .leading, spacing: 1) {
-          Text("Corewise")
-            .font(.headline.weight(.semibold))
-          Text(snapshot == nil ? "Checking your Mac" : "Live local signals")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-
-        Spacer(minLength: 0)
-
-        if snapshot != nil {
-          Text("Live")
-            .font(.caption2.weight(.semibold))
-            .foregroundStyle(CorewiseVisual.moss)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(CorewiseVisual.moss.opacity(0.13), in: Capsule())
-        }
-      }
-
+    VStack(alignment: .leading, spacing: 10) {
       if let snapshot {
+        if let session = store.focusedCheckSession, session.phase != .completed {
+          MenuBarFocusedCheckHeader(session: session)
+        } else if let result = store.lastFocusedCheckResult {
+          MenuBarFocusedCheckResultHeader(result: result)
+        } else {
+          MenuBarStatusHeader(snapshot: snapshot)
+        }
+
         if showCPU || showMemory || showSwap {
-          HStack(spacing: 8) {
-            if showCPU {
-              MenuMetricCard(
-                title: "CPU",
-                value: percent(snapshot.performance.cpu.totalPercent),
-                detail: "total load",
-                progress: normalized(snapshot.performance.cpu.totalPercent, max: 100),
-                tint: CorewiseVisual.accent
-              )
-            }
-            if showMemory {
-              MenuMetricCard(
-                title: "Memory",
-                value: menuBytes(snapshot.performance.memory.usedBytes),
-                detail: "\(number(snapshot.performance.memory.usedPercent))% used",
-                progress: fraction(snapshot.performance.memory.usedBytes, of: snapshot.performance.memory.physicalBytes),
-                tint: CorewiseVisual.moss
-              )
-            }
-            if showSwap {
-              let swap = snapshot.performance.memory.swap
-              MenuMetricCard(
-                title: "Swap",
-                value: swap.map { menuBytes($0.usedBytes) } ?? "N/A",
-                detail: swap.map { "of \(menuBytes($0.totalBytes))" } ?? "unavailable",
-                progress: swap.map { fraction($0.usedBytes, of: $0.totalBytes) } ?? 0,
-                tint: CorewiseVisual.amber
-              )
-            }
-          }
+          MenuMetricStrip(snapshot: snapshot, showCPU: showCPU, showMemory: showMemory, showSwap: showSwap)
         }
 
-        if showTopCPU || showTopMemory {
-          VStack(spacing: 8) {
-            if showTopCPU {
-              MenuProcessGroup(
-                title: "Top CPU",
-                subtitle: "1 second live sample",
-                processes: topCPUProcesses,
-                tint: CorewiseVisual.accent,
-                value: { "\(number($0.cpuPercent))%" },
-                scaleValue: { $0.cpuPercent },
-                progress: { process, maxValue in normalized(process.cpuPercent, max: maxValue) }
-              )
-            }
-            if showTopMemory {
-              MenuProcessGroup(
-                title: "Top Memory",
-                subtitle: "Observed memory",
-                processes: topMemoryProcesses,
-                tint: CorewiseVisual.moss,
-                value: { menuBytes($0.observedMemoryBytes) },
-                scaleValue: { Double($0.observedMemoryBytes) },
-                progress: { process, maxValue in
-                  let value = Double(process.observedMemoryBytes)
-                  return maxValue > 0 ? min(Swift.max(value / maxValue, 0), 1) : 0
-                }
-              )
-            }
-          }
+        if showTopCPU {
+          MenuProcessSection(title: "Top CPU", processes: Array(snapshot.performance.processes.prefix(3)), mode: .cpu, open: openPerformance)
         }
-
-        if !showCPU && !showMemory && !showSwap && !showTopCPU && !showTopMemory {
-          Text("Menu bar signals are hidden in Settings.")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, minHeight: 70)
-        }
-      } else {
-        ProgressView()
-          .frame(maxWidth: .infinity, minHeight: 92)
-      }
-
-      LinearGradient(
-        colors: [.clear, Color.primary.opacity(0.16), .clear],
-        startPoint: .leading,
-        endPoint: .trailing
-      )
-      .frame(height: 1)
-
-      Button {
-        openWindow(id: "main")
-        NSApp.activate(ignoringOtherApps: true)
-      } label: {
-        Label("Open Corewise", systemImage: "arrow.up.forward.app")
-          .font(.callout.weight(.semibold))
-          .frame(maxWidth: .infinity)
-      }
-      .buttonStyle(.plain)
-      .padding(.horizontal, 12)
-      .padding(.vertical, 10)
-      .background {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-          .fill(
-            LinearGradient(
-              colors: [CorewiseVisual.accent.opacity(0.96), CorewiseVisual.accentSoft.opacity(0.86)],
-              startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
+        if showTopMemory {
+          MenuProcessSection(
+            title: "Top Memory",
+            processes: Array(snapshot.performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }.prefix(3)),
+            mode: .memory,
+            open: openPerformance
           )
+        }
+
+        Divider()
+          .padding(.top, 2)
+        if store.focusedCheckSession != nil || store.lastFocusedCheckResult != nil {
+          Button("Open Focused Check", systemImage: "scope", action: openOverview)
+        } else {
+          Menu("Start Focused Check", systemImage: "scope") {
+            ForEach(FocusedCheckIntent.allCases) { intent in
+              Button(intent.title) {
+                startFocusedCheck(intent)
+              }
+            }
+          }
+        }
+        Button("Open Corewise", systemImage: "arrow.up.forward.app", action: openOverview)
+          .buttonStyle(.borderedProminent)
+          .controlSize(.regular)
+          .frame(maxWidth: .infinity)
+      } else {
+        HStack {
+          ProgressView()
+          Text("Checking this Mac…")
+        }
+        .frame(maxWidth: .infinity, minHeight: 90)
       }
-      .overlay {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-          .stroke(.white.opacity(0.18), lineWidth: 1)
-      }
-      .shadow(color: CorewiseVisual.accent.opacity(0.14), radius: 8, y: 4)
     }
-    .padding(18)
+    .padding(14)
     .frame(width: 344)
+    .background(CorewiseVisual.windowBackground)
   }
 
-  private func normalized(_ value: Double?, max: Double) -> Double {
-    guard let value, max > 0 else {
-      return 0
-    }
-    return min(Swift.max(value / max, 0), 1)
+  private func openOverview() {
+    routeStore.show(.overview)
+    openMainWindow()
   }
 
-  private func fraction(_ value: UInt64, of total: UInt64) -> Double {
-    guard total > 0 else {
+  private func openPerformance(_ mode: PerformanceMode) {
+    routeStore.show(.performance, performanceMode: mode)
+    openMainWindow()
+  }
+
+  private func startFocusedCheck(_ intent: FocusedCheckIntent) {
+    store.startFocusedCheck(intent)
+    routeStore.show(intent.launchRoute)
+    openMainWindow()
+  }
+
+  private func openMainWindow() {
+    openWindow(id: "main")
+    NSApp.activate(ignoringOtherApps: true)
+  }
+}
+
+private struct MenuBarFocusedCheckHeader: View {
+  var session: FocusedCheckSession
+
+  var body: some View {
+    HStack(alignment: .center, spacing: CorewiseLayout.space12) {
+      CorewiseBrandGlyph(size: 36, stateColor: CorewiseVisual.accent)
+      VStack(alignment: .leading, spacing: CorewiseLayout.space4) {
+        Text("FOCUSED CHECK")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Text(session.intent.title)
+          .font(.headline.weight(.semibold))
+        Text(status)
+          .font(.caption.monospacedDigit())
+          .foregroundStyle(.secondary)
+      }
+      Spacer()
+      ProgressView()
+        .controlSize(.small)
+        .accessibilityLabel("Focused Check in progress")
+    }
+    .padding(12)
+    .corewisePanel(instrument: true)
+    .accessibilityElement(children: .combine)
+  }
+
+  private var status: String {
+    switch session.intent {
+    case .batteryDrain: "\(session.distinctBatterySampleCount) battery readings"
+    case .storageFull:
+      switch session.phase {
+      case .awaitingAccess: "Storage access required"
+      case .readyForStorageScan: "Limited folder confirmation required"
+      default: "Storage scan in progress"
+      }
+    default: "\(session.systemSampleCount) live samples"
+    }
+  }
+}
+
+private struct MenuBarFocusedCheckResultHeader: View {
+  var result: FocusedCheckResult
+
+  var body: some View {
+    HStack(alignment: .center, spacing: CorewiseLayout.space12) {
+      CorewiseBrandGlyph(size: 36, stateColor: stateColor)
+      VStack(alignment: .leading, spacing: CorewiseLayout.space4) {
+        Text("FOCUSED CHECK")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Text(result.headline)
+          .font(.headline.weight(.semibold))
+          .lineLimit(2)
+        Text(result.intent.title)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+      Spacer()
+      Image(systemName: result.state == .clear ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+        .foregroundStyle(stateColor)
+        .accessibilityHidden(true)
+    }
+    .padding(12)
+    .corewisePanel(instrument: true)
+    .accessibilityElement(children: .combine)
+  }
+
+  private var stateColor: Color {
+    switch result.state {
+    case .clear: CorewiseVisual.good
+    case .review: CorewiseVisual.warning
+    case .critical: CorewiseVisual.critical
+    case .unavailable, .insufficientEvidence: CorewiseVisual.info
+    }
+  }
+}
+
+private struct MenuBarStatusHeader: View {
+  var snapshot: HealthSnapshot
+
+  var body: some View {
+    HStack(alignment: .center, spacing: CorewiseLayout.space12) {
+      CorewiseBrandGlyph(size: 36, stateColor: CorewiseVisual.color(for: snapshot.attentionSummary.state))
+      VStack(alignment: .leading, spacing: CorewiseLayout.space4) {
+        Text("COREWISE")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Text(snapshot.attentionSummary.headline)
+          .font(.headline.weight(.semibold))
+          .lineLimit(2)
+          .fixedSize(horizontal: false, vertical: true)
+        Text(snapshot.attentionSummary.lastUpdated?.formatted(date: .omitted, time: .shortened) ?? "Live signals unavailable")
+          .font(.caption.monospacedDigit())
+          .foregroundStyle(.secondary)
+      }
+      Spacer()
+      StatusBadge(state: snapshot.attentionSummary.state)
+    }
+    .padding(12)
+    .corewisePanel(instrument: true)
+    .accessibilityElement(children: .combine)
+  }
+}
+
+private struct MenuMetricStrip: View {
+  var snapshot: HealthSnapshot
+  var showCPU: Bool
+  var showMemory: Bool
+  var showSwap: Bool
+
+  var body: some View {
+    HStack(spacing: CorewiseLayout.space8) {
+      if showCPU {
+        MenuMetricCard(
+          title: "CPU",
+          value: corewisePercent(snapshot.performance.cpu.totalPercent),
+          detail: "load",
+          fraction: (snapshot.performance.cpu.totalPercent ?? 0) / 100,
+          tint: CorewiseVisual.accent
+        )
+      }
+      if showMemory {
+        MenuMetricCard(
+          title: "Memory",
+          value: "\(corewiseNumber(snapshot.performance.memory.usedPercent))%",
+          detail: corewiseBytes(snapshot.performance.memory.usedBytes),
+          fraction: snapshot.performance.memory.usedPercent / 100,
+          tint: CorewiseVisual.good
+        )
+      }
+      if showSwap {
+        MenuMetricCard(
+          title: "Swap",
+          value: snapshot.performance.memory.swapUsedBytes.map(corewiseBytes) ?? "N/A",
+          detail: snapshot.performance.memory.swapTotalGB.map { "of \(corewiseNumber($0)) GB" } ?? "unavailable",
+          fraction: swapFraction,
+          tint: CorewiseVisual.warning
+        )
+      }
+    }
+    .frame(maxWidth: .infinity)
+  }
+
+  private var swapFraction: Double {
+    guard
+      let used = snapshot.performance.memory.swapUsedBytes,
+      let totalGB = snapshot.performance.memory.swapTotalGB,
+      totalGB > 0
+    else {
       return 0
     }
-    return min(Swift.max(Double(value) / Double(total), 0), 1)
+    return min(max(Double(used) / (totalGB * 1_000_000_000), 0), 1)
   }
 }
 
@@ -224,226 +285,140 @@ private struct MenuMetricCard: View {
   var title: String
   var value: String
   var detail: String
-  var progress: Double
+  var fraction: Double
   var tint: Color
-  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack(spacing: 6) {
-        Capsule()
-          .fill(tint)
-          .frame(width: 5, height: 5)
-        Text(title)
-          .font(.caption2.weight(.semibold))
-          .foregroundStyle(.secondary)
-      }
+    VStack(alignment: .leading, spacing: 7) {
+      Text(title)
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
       Text(value)
-        .font(.system(size: 17, weight: .semibold, design: .rounded))
-        .monospacedDigit()
-        .lineLimit(1)
-        .minimumScaleFactor(0.75)
-      MenuUsageBar(progress: progress, tint: tint)
+        .font(.title3.monospacedDigit().weight(.semibold))
+      MenuProgressBar(value: fraction, tint: tint)
       Text(detail)
-        .font(.system(size: 9, weight: .medium, design: .rounded))
+        .font(.caption)
         .foregroundStyle(.tertiary)
         .lineLimit(1)
     }
-    .padding(11)
+    .padding(10)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .glassSurface(tint: tint, colorScheme: colorScheme)
+    .background {
+      ZStack {
+        CorewiseVisual.quietSurface
+        tint.opacity(0.07)
+      }
+    }
+    .clipShape(.rect(cornerRadius: 12))
+    .overlay {
+      RoundedRectangle(cornerRadius: 12)
+        .stroke(tint.opacity(0.18), lineWidth: 0.8)
+    }
+    .accessibilityElement(children: .combine)
   }
 }
 
-private struct MenuProcessGroup: View {
+private struct MenuProcessSection: View {
   var title: String
-  var subtitle: String
   var processes: [ProcessObservation]
-  var tint: Color
-  var value: (ProcessObservation) -> String
-  var scaleValue: (ProcessObservation) -> Double
-  var progress: (ProcessObservation, Double) -> Double
-  @Environment(\.colorScheme) private var colorScheme
-
-  private var maxValue: Double {
-    processes
-      .map(scaleValue)
-      .max() ?? 0
-  }
+  var mode: PerformanceMode
+  var open: (PerformanceMode) -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      HStack(alignment: .firstTextBaseline, spacing: 10) {
-        VStack(alignment: .leading, spacing: 2) {
-          Text(title)
-            .font(.caption2.weight(.semibold))
-            .foregroundStyle(.secondary)
-          Text(subtitle)
-            .font(.system(size: 9, weight: .medium, design: .rounded))
-            .foregroundStyle(.tertiary)
-        }
-
-        Spacer(minLength: 0)
+    VStack(alignment: .leading, spacing: CorewiseLayout.space8) {
+      HStack {
+        Text(title)
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Spacer()
+        Image(systemName: mode == .cpu ? "cpu" : "memorychip")
+          .font(.caption)
+          .foregroundStyle(.tertiary)
       }
-
       if processes.isEmpty {
         Text("No readable process rows")
-          .font(.caption)
+          .font(.callout)
           .foregroundStyle(.secondary)
-          .frame(maxWidth: .infinity, minHeight: 36, alignment: .leading)
       } else {
-        VStack(spacing: 7) {
-          ForEach(Array(processes.enumerated()), id: \.element.id) { index, process in
-            MenuProcessRankRow(
-              rank: index + 1,
-              name: process.displayName,
-              value: value(process),
-              progress: progress(process, maxValue),
-              tint: tint
-            )
+        ForEach(Array(processes.enumerated()), id: \.element.id) { index, process in
+          MenuProcessRow(index: index + 1, process: process, mode: mode, maxValue: maxValue) {
+            open(mode)
           }
         }
       }
     }
-    .padding(12)
-    .glassSurface(tint: tint.opacity(0.55), colorScheme: colorScheme)
+    .padding(10)
+    .background(CorewiseVisual.quietSurface, in: .rect(cornerRadius: 13))
+    .overlay {
+      RoundedRectangle(cornerRadius: 13)
+        .stroke(CorewiseVisual.separator, lineWidth: 1)
+    }
+  }
+
+  private var maxValue: Double {
+    let values = processes.map {
+      mode == .cpu ? $0.cpuPercent : Double($0.observedMemoryBytes)
+    }
+    return max(values.max() ?? 1, 1)
   }
 }
 
-private struct MenuProcessRankRow: View {
-  var rank: Int
-  var name: String
-  var value: String
-  var progress: Double
-  var tint: Color
+private struct MenuProcessRow: View {
+  var index: Int
+  var process: ProcessObservation
+  var mode: PerformanceMode
+  var maxValue: Double
+  var action: () -> Void
+  @State private var isHovered = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 5) {
-      HStack(alignment: .firstTextBaseline, spacing: 8) {
-        Text("\(rank)")
-          .font(.system(size: 10, weight: .semibold, design: .rounded))
-          .foregroundStyle(tint)
-          .frame(width: 16, height: 16)
-          .background(tint.opacity(0.12), in: Circle())
-
-        Text(shortName(name))
-          .font(.caption.weight(.semibold))
-          .lineLimit(1)
-
-        Spacer(minLength: 8)
-
-        Text(value)
-          .font(.caption.weight(.semibold))
-          .monospacedDigit()
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
+    Button(action: action) {
+      VStack(alignment: .leading, spacing: 5) {
+        HStack(spacing: CorewiseLayout.space8) {
+          Text(String(index))
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.tertiary)
+            .frame(width: 12)
+          Text(process.displayName)
+            .lineLimit(1)
+          Spacer()
+          Text(mode == .cpu ? corewisePercent(process.cpuPercent) : corewiseBytes(process.observedMemoryBytes))
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+        MenuProgressBar(value: currentValue / maxValue, tint: mode == .cpu ? CorewiseVisual.accent : CorewiseVisual.good)
       }
-
-      MenuUsageBar(progress: progress, tint: tint)
-        .padding(.leading, 24)
+      .padding(.horizontal, CorewiseLayout.space8)
+      .padding(.vertical, 6)
+      .background(isHovered ? CorewiseVisual.elevatedSurface : .clear, in: .rect(cornerRadius: 7))
+      .contentShape(.rect)
     }
+    .buttonStyle(.plain)
+    .onHover { isHovered = $0 }
+    .accessibilityLabel("Open Performance for \(process.displayName)")
   }
 
-  private func shortName(_ value: String) -> String {
-    if value.count <= 24 {
-      return value
-    }
-
-    return String(value.prefix(21)) + "..."
+  private var currentValue: Double {
+    mode == .cpu ? process.cpuPercent : Double(process.observedMemoryBytes)
   }
 }
 
-private struct MenuUsageBar: View {
-  var progress: Double
+private struct MenuProgressBar: View {
+  var value: Double
   var tint: Color
 
   var body: some View {
     GeometryReader { proxy in
-      let width = max(proxy.size.width * min(max(progress, 0), 1), 4)
       ZStack(alignment: .leading) {
         Capsule()
-          .fill(.black.opacity(0.18))
-          .overlay(.white.opacity(0.06))
+          .fill(CorewiseVisual.elevatedSurface.opacity(0.65))
         Capsule()
-          .fill(
-            LinearGradient(
-              colors: [tint.opacity(0.78), tint, tint.opacity(0.72)],
-              startPoint: .leading,
-              endPoint: .trailing
-            )
-          )
-          .frame(width: width)
-          .overlay(alignment: .top) {
-            Capsule()
-              .fill(.white.opacity(0.24))
-              .frame(height: 1)
-              .padding(.horizontal, 1)
-          }
-          .shadow(color: tint.opacity(0.18), radius: 5, y: 1)
+          .fill(tint.opacity(0.78))
+          .frame(width: max(4, proxy.size.width * min(max(value, 0), 1)))
       }
     }
-    .frame(height: 6)
+    .frame(height: 4)
+    .accessibilityHidden(true)
   }
-}
-
-private extension View {
-  func glassSurface(tint: Color, colorScheme: ColorScheme) -> some View {
-    background {
-      RoundedRectangle(cornerRadius: 13, style: .continuous)
-        .fill(.ultraThinMaterial)
-        .overlay {
-          RoundedRectangle(cornerRadius: 13, style: .continuous)
-            .fill(
-              LinearGradient(
-                colors: [
-                  .white.opacity(colorScheme == .dark ? 0.08 : 0.18),
-                  tint.opacity(colorScheme == .dark ? 0.11 : 0.08),
-                  .black.opacity(colorScheme == .dark ? 0.06 : 0.00)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-              )
-            )
-        }
-        .overlay(alignment: .top) {
-          RoundedRectangle(cornerRadius: 13, style: .continuous)
-            .stroke(
-              LinearGradient(
-                colors: [.white.opacity(0.24), tint.opacity(0.18), .white.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-              ),
-              lineWidth: 1
-            )
-        }
-    }
-    .shadow(color: .black.opacity(colorScheme == .dark ? 0.18 : 0.08), radius: 8, y: 4)
-    .shadow(color: tint.opacity(colorScheme == .dark ? 0.08 : 0.05), radius: 6, y: 2)
-  }
-}
-
-private func percent(_ value: Double?) -> String {
-  guard let value else {
-    return "N/A"
-  }
-
-  return "\(number(value))%"
-}
-
-private func menuBytes(_ value: UInt64) -> String {
-  let gb = Double(value) / SystemMetricsSampler.bytesPerGB
-  if gb >= 1 {
-    return "\(number(gb)) GB"
-  }
-
-  let mb = Double(value) / (1024.0 * 1024.0)
-  return "\(number(mb)) MB"
-}
-
-private func number(_ value: Double) -> String {
-  if value.rounded() == value {
-    return String(Int(value))
-  }
-
-  return String(format: "%.1f", value)
 }

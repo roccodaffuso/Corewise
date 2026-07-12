@@ -45,7 +45,7 @@ Planned:
 
 - Launch at login only if implemented through safe user-visible macOS APIs.
 - Refresh interval only if refresh behavior becomes deliberately configurable.
-- Remember selected folders only after security-scoped bookmark consent is designed.
+- Storage access controls remain outside Settings. Full Disk Access is granted in macOS System Settings; Folder Scope fallback has its own visible `Forget` path in Storage.
 
 Avoided:
 
@@ -106,12 +106,13 @@ Content:
 
 Possible controls:
 
-- Clear session scan results: planned; clears only in-memory selected-folder/report state.
-- Remember selected folders: planned and off by default; requires explicit security-scoped bookmark design before implementation.
+- Clear session scan results: planned; clears only in-memory Folder Scope/report state and never revokes Full Disk Access.
+- Full Disk Access: not a Settings toggle. Corewise opens macOS System Settings and checks likely access from Storage.
+- Folder Scope fallback: remembered only after explicit folder choice and revocable from Storage, not configured as a generic Settings preference.
 
 Avoided:
 
-- Any broad "scan my Mac automatically" toggle.
+- Any broad "scan my Mac automatically" Settings toggle.
 - Any setting that grants or implies durable access without explicit consent.
 
 ## Performance

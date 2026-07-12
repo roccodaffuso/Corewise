@@ -1,10 +1,76 @@
 import Foundation
 
 struct DiagnosticReportBuilder {
+  func focusedCheckSummary(for result: FocusedCheckResult) -> String {
+    let evidence = result.evidence.isEmpty
+      ? "- No ranked evidence was available."
+      : result.evidence.map { "- \($0.title): \($0.value). \($0.detail)" }.joined(separator: "\n")
+    return redactHomeDirectory(
+      """
+      Corewise Focused Check
+      Check: \(result.intent.title)
+      Generated: \(result.generatedAt.formatted(date: .abbreviated, time: .shortened))
+      Observed for: \(duration(result.observationEndedAt.timeIntervalSince(result.observationStartedAt)))
+
+      Result
+      - \(result.headline)
+      - \(result.detail)
+
+      Evidence
+      \(evidence)
+
+      Next step
+      - \(result.primaryAction.title): \(result.primaryAction.detail)
+
+      Coverage and limitations
+      - \(result.coverage)
+      - This local observation reports coincidence and supported signals, not proven causation.
+      """
+    )
+  }
+
+  func focusedCheckMarkdown(for result: FocusedCheckResult) -> String {
+    let evidence = result.evidence.isEmpty
+      ? "No ranked evidence was available."
+      : result.evidence.map {
+        "- **\($0.title)** — \($0.value)\n  - \($0.detail)\n  - Confidence: \($0.confidence.title); samples: \($0.sampleCount); source: \($0.source)"
+      }.joined(separator: "\n")
+    return redactHomeDirectory(
+      """
+      # Corewise Focused Check
+
+      - Check: \(result.intent.title)
+      - Generated: \(result.generatedAt.formatted(date: .abbreviated, time: .shortened))
+      - Observed for: \(duration(result.observationEndedAt.timeIntervalSince(result.observationStartedAt)))
+      - State: \(result.state.rawValue)
+
+      ## Result
+      \(result.headline)
+
+      \(result.detail)
+
+      ## Evidence
+      \(evidence)
+
+      ## Next Step
+      **\(result.primaryAction.title)** — \(result.primaryAction.detail)
+
+      ## Coverage and Limitations
+      \(result.coverage)
+
+      This local observation reports coincidence and supported signals, not proven causation. No raw file contents or crash stacks are included.
+      """
+    )
+  }
+
   func summary(for snapshot: HealthSnapshot, options: DiagnosticReportOptions = .default) -> String {
     """
     Corewise Diagnostic Summary
     Generated: \(snapshot.generatedAt.formatted(date: .abbreviated, time: .shortened))
+
+    Current signal summary
+    - \(snapshot.attentionSummary.headline)
+    - \(snapshot.attentionSummary.detail)
 
     Notable findings
     \(notableFindings(snapshot).isEmpty ? "- No notable findings in the current snapshot." : notableFindings(snapshot))
@@ -14,7 +80,8 @@ struct DiagnosticReportBuilder {
 
     Current live signals
     - CPU: \(percent(snapshot.performance.cpu.totalPercent)) total, \(percent(snapshot.performance.cpu.userPercent)) user, \(percent(snapshot.performance.cpu.systemPercent)) system
-    - Memory: \(bytes(snapshot.performance.memory.usedBytes)) used of \(bytes(snapshot.performance.memory.physicalBytes)); swap \(swapInsightSummary(snapshot.performance.swapInsight))
+    - Memory: \(memoryContextSummary(snapshot.performance.memoryContext))
+    - Swap: \(swapInsightSummary(snapshot.performance.swapInsight))
     - Storage: \(number(snapshot.storage.availableGB)) GB free of \(number(snapshot.storage.totalGB)) GB
     - Battery: \(displayValue(snapshot.battery.summary))
     - Thermal: \(displayValue(snapshot.thermal.summary))
@@ -23,7 +90,7 @@ struct DiagnosticReportBuilder {
     - Crash reports: \(crashReportSummary(snapshot, options: options))
 
     Limits
-    - Global score is planned, not calculated.
+    - Corewise does not calculate a global health score.
     - Storage folder and crash report details require manual selection.
     - Swap insight shows system swap context and likely memory pressure contributors, not exact per-process swap ownership.
     - This report is local clipboard text only.
@@ -53,6 +120,8 @@ struct DiagnosticReportBuilder {
     Data policy: local read-only snapshot. No cleanup, upload, stack traces, or file contents.
 
     ## Summary
+    - Signal summary: \(snapshot.attentionSummary.headline)
+    - Interpretation: \(snapshot.attentionSummary.detail)
     - CPU: \(percent(snapshot.performance.cpu.totalPercent)) total, \(percent(snapshot.performance.cpu.userPercent)) user, \(percent(snapshot.performance.cpu.systemPercent)) system, \(percent(snapshot.performance.cpu.idlePercent)) idle
     - Memory used: \(bytes(snapshot.performance.memory.usedBytes)) of \(bytes(snapshot.performance.memory.physicalBytes))
     - Swap: \(swapInsightSummary(snapshot.performance.swapInsight))
@@ -77,6 +146,13 @@ struct DiagnosticReportBuilder {
 
     Top memory processes:
     \(memoryProcesses.isEmpty ? "No readable process rows in this snapshot." : memoryProcesses)
+
+    ## Memory And Swap
+    Source: \(snapshot.performance.memoryContext.source)
+    Confidence: \(snapshot.performance.memoryContext.confidence)
+
+    Memory context:
+    \(memoryContextMarkdown(snapshot.performance.memoryContext))
 
     Swap insight:
     \(swapInsight)
@@ -113,8 +189,9 @@ struct DiagnosticReportBuilder {
     \(crashSummary)
 
     ## Limits
-    - Global score is planned, not calculated.
+    - Corewise does not calculate a global health score.
     - Memory values use public macOS APIs and are not a private Activity Monitor clone.
+    - Corewise memory context is derived from public VM and swap counters; it is not Activity Monitor's private memory-pressure graph.
     - macOS does not expose exact per-process swap ownership through public APIs.
     - Storage and crash details appear only after user-selected scans.
     """
@@ -155,7 +232,7 @@ struct DiagnosticReportBuilder {
 
     return snapshot.storage.spaceOffenders.isEmpty
       ? "No user-selected folder scan"
-      : "\(snapshot.storage.spaceOffenders.count) selected-scan items"
+      : "\(snapshot.storage.spaceOffenders.count) selected-scan categories"
   }
 
   private func crashReportSummary(_ snapshot: HealthSnapshot, options: DiagnosticReportOptions) -> String {
@@ -173,9 +250,13 @@ struct DiagnosticReportBuilder {
       return "Excluded by Settings."
     }
 
-    return snapshot.storage.spaceOffenders.isEmpty
-      ? "No user-selected folder scan in this snapshot."
-      : snapshot.storage.spaceOffenders.prefix(5).map { "- \($0.title): \(number($0.value)) \($0.unit)" }.joined(separator: "\n")
+    if snapshot.storage.spaceOffenders.isEmpty {
+      return "No user-selected folder scan in this snapshot."
+    }
+
+    return snapshot.storage.spaceOffenders.prefix(5)
+      .map { "- \($0.title): \(number($0.value)) \($0.unit) classified in selected scope" }
+      .joined(separator: "\n")
   }
 
   private func crashSummaryMarkdown(_ snapshot: HealthSnapshot, options: DiagnosticReportOptions) -> String {
@@ -194,6 +275,26 @@ struct DiagnosticReportBuilder {
     }
 
     return "\(bytes(reading.usedBytes)) used of \(bytes(reading.totalBytes)); \(insight.trend.title.lowercased())"
+  }
+
+  private func memoryContextSummary(_ context: MemoryPressureContext) -> String {
+    "\(context.title); \(bytes(context.usedBytes)) used of \(bytes(context.physicalBytes)); swap \(context.swapUsedBytes.map(bytes) ?? "Unavailable")"
+  }
+
+  private func memoryContextMarkdown(_ context: MemoryPressureContext) -> String {
+    """
+    - State: \(context.title)
+    - Detail: \(context.detail)
+    - Physical memory: \(bytes(context.physicalBytes))
+    - Used memory: \(bytes(context.usedBytes)) (\(number(context.memoryUsedPercent))%)
+    - App memory: \(bytes(context.appMemoryBytes))
+    - Cached files: \(bytes(context.cachedFilesBytes))
+    - Wired memory: \(bytes(context.wiredBytes))
+    - Compressed memory: \(bytes(context.compressedBytes))
+    - Swap used: \(context.swapUsedBytes.map(bytes) ?? "Unavailable")
+    - Swap trend: \(context.swapTrend.title)
+    - Limit: Corewise derives this from public VM and swap counters; it is not Activity Monitor's private memory-pressure graph.
+    """
   }
 
   private func swapInsightMarkdown(_ insight: SwapInsight) -> String {
@@ -256,5 +357,16 @@ struct DiagnosticReportBuilder {
       return String(Int(value))
     }
     return String(format: "%.1f", value)
+  }
+
+  private func duration(_ interval: TimeInterval) -> String {
+    let seconds = max(Int(interval.rounded()), 0)
+    return seconds >= 60 ? "\(seconds / 60)m \(seconds % 60)s" : "\(seconds)s"
+  }
+
+  private func redactHomeDirectory(_ text: String) -> String {
+    let home = FileManager.default.homeDirectoryForCurrentUser.path
+    guard !home.isEmpty else { return text }
+    return text.replacingOccurrences(of: home, with: "~")
   }
 }

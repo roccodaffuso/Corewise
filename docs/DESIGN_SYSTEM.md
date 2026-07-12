@@ -1,103 +1,50 @@
-# Design System
+# Corewise Signal System
 
-## Summary
+Last updated: 2026-07-10
 
-Corewise should feel like a serious Apple-native diagnostic utility: calm, precise, softly premium, dense enough to be useful, and never alarmist.
+## Product register
 
-## Implemented Visual Tokens
+Corewise is a calm, precise, premium macOS diagnostic utility. Design serves the task: familiar native controls, fast scanning, honest source boundaries, and a recognizable instrument identity without decorative dashboard grammar.
 
-- `CorewiseVisual` owns semantic colors for live/good, info/planned, warning/swap, critical/used, graphite/stone neutrals, and shared app accent colors.
-- `CorewiseVisual` owns surface roles for page wash, hero fill, panel fill, tile fill, table row fill, sidebar selection, sidebar hover, hairline, and soft shadow.
-- `CorewiseLayout` owns shared rails for content width, content padding, page spacing, panel spacing, tile spacing, hero minimum height, metric tile heights, sidebar row height, and table row height.
-- Local first-viewport widths should not be introduced unless a native control requires a bounded width. Prefer shared adaptive grids and tokenized heights.
-- Hero panels, metric tiles, source notes, table rows, and menu bar tiles should use the shared radii rather than local corner values.
+The implemented mix is 70% Signal Command Center, 20% Native Observatory, and 10% Precision Console inside Performance.
 
-## Visual Principles
+## Semantic tokens
 
-- Use native SwiftUI controls, system materials, soft transparency, and SF Symbols.
-- The app window background should be a real macOS material surface through a narrow AppKit bridge, with only a transparent color wash above it.
-- The app chrome should follow macOS source-list conventions: a restrained sidebar, compact row icons, icon-only toolbar actions, and no oversized navigation treatments.
-- Sidebar selection should feel like a premium source-list rail: a subtle translucent row, a tiny accent indicator, and no saturated full-row blue or green fill.
-- All diagnostic pages should share the same layout rail: one content max width, one page padding, one page spacing value, one panel grid, and one metric grid. Avoid local adaptive widths such as `185`, `210`, `250`, or `300` in first-viewport content because they create visible stepping when switching sections.
-- Prefer natural, muted system-adaptive colors: teal/blue for information, moss green for live/good, amber for attention, red only for critical or used storage.
-- The app detail background should feel layered and translucent, not flat black or generic dashboard gray.
-- Panels should use material plus a subtle adaptive tint and hairline, with no heavy shadows or decorative gradients.
-- Keep cards purposeful: summary cards, metric cards, findings, actions, and data notes.
-- Use semantic colors only for state: moss good/live, teal info/planned, amber warning, red critical.
-- Pair color with labels and icons; never rely on color alone.
-- Keep typography compact and readable in narrow macOS windows.
-- Prefer calm density over marketing-style hero composition.
-- Put operational live diagnostics before explanatory access panels in the first viewport.
-- Overview should show immediately useful values before provenance education: CPU, memory, top processes, storage free space, battery, and thermal state.
-- Do not use placeholder score states as the primary hero. The Overview hero must show a verifiable fact: live signals, coverage, and update time.
-- Section heroes, first metric rows, and first two-column diagnostic panels should align to `CorewiseLayout` constants so navigation between pages feels stable rather than stepped.
-- Coverage numbers must count diagnostic signal families, not table rows such as individual processes or launch plist entries.
-- Data provenance badges must stay single-line. If a panel is narrow, wrap the surrounding layout rather than compressing badge text vertically.
-- Storage breakdown uses red for used space and green for available space. This is a storage-capacity convention, not a destructive-action cue.
-- Performance pages should lead with summary pressure and a compact top list. Full process rows should hide long filesystem paths behind short context labels unless the user asks for raw detail.
-- Process tables should use stable right-aligned numeric columns, monospaced digits, subtle alternating row fills, and a single table-level source note instead of per-row provenance noise.
-- Dense process rows should not repeat `Live` badges on every row when the whole table has a source note.
-- Performance is the visual flagship: it may be denser than other pages, but it must stay table-first and source-note driven.
-- Performance explanations should be phrased as context from live process names, not causal proof. Use "may", "usually", and "can be normal" for system processes and helpers.
-- Swap Insight should be shown as pressure context in `Performance > Memory`: system swap totals/rates first, likely contributors second, and a visible note that Corewise does not show exact per-process swap ownership.
-- Startup inventory should use a compact table for plist rows instead of stacked diagnostic cards, with Finder reveal as the only row action.
-- App Issues should lead with an empty/manual-access state until the user chooses reports; repeated crash counts should appear only after selection.
-- Menu bar content should use a compact window-style popover, not a plain text menu, with CPU, memory, swap, top-three CPU rows, top-three memory rows, and one Open Corewise action.
-- Menu bar metric tiles use compact progress bars and restrained shadows. Avoid glow-heavy button styling.
-- Settings uses a native macOS Settings scene: compact, form-based, tabbed, and visually quieter than diagnostic pages. Expose it through the macOS Settings command and one subtle footer link below the sidebar navigation; do not add Settings as another diagnostic source-list item.
+- `CorewiseVisual` uses an adaptive Corewise graphite environment, a proprietary teal accent, tonal surfaces, restrained highlights, and semantic state colors.
+- `CorewiseLayout` uses a 4/8/12/16/20/24/32 spacing scale, 28-point page margins, 14-point content radius, 10-point control radius, and an 1180-point content rail.
+- SF Pro/system typography is used throughout. Diagnostics use monospaced digits; paths and report text use the system monospaced face.
+- No `caption2`, fixed 9-point labels, glow, gradient buttons, gradient text, or repeated glass cards.
 
-## Status Language
+## Surfaces and hierarchy
 
-Use these user-facing data badges:
+- Material is reserved for native chrome, the sidebar, and the transient Quick Actions overlay.
+- The content backdrop uses a low-contrast dot field and two static ambient color fields. They create depth but never carry information or animate.
+- Content uses solid adaptive tonal surfaces, dividers, alignment, and native tables. A subtle tonal gradient is reserved for true instrument surfaces such as Status Rail and Performance history.
+- `CorewiseBrandGlyph` is the shared signal signature in sidebar, Status Rail, menu bar, and Quick Actions; it is not repeated as a decorative watermark.
+- `OperationalSection` keeps its title outside the bounded surface so sections do not read as an equal grid of cards. Rows and explanations are not wrapped in nested cards.
+- `PageHeader` establishes stronger title hierarchy and adapts to a compact inspector mode.
+- Overview: status rail → three signal groups → top resource users → at most one action → data/privacy disclosure.
+- Focused Check: one compact symptom control group in the Overview flow → one active observation surface → one result surface. It is not a sidebar destination and never becomes five decorative cards.
+- Performance: pressure/history → CPU/Memory control → mode-specific native process table → mode-specific inspector. CPU and Memory must never be cosmetic aliases: their eligibility, columns, sort choices, supporting metrics, and explanations differ.
+- Storage: volume headroom → scan state → results → privacy/source disclosure.
+- Battery, Thermal, Startup, App Issues, and Report use page-specific native layouts rather than a generic diagnostic-card template.
 
-- `Live`: read from the current Mac during this session.
-- `Planned`: not implemented yet, but planned through safe APIs or read-only review.
-- `Unavailable`: not safely available in the MVP.
-- `Avoided`: intentionally excluded because the source or behavior would weaken the trust model.
+Coverage describes available signal families and must never appear as Mac health. The approved clear wording is `No urgent live signals detected`; Corewise never upgrades that sentence to `Your Mac is healthy`.
 
-Use these health states:
+## Interaction and accessibility
 
-- `Good`: no action needed.
-- `Info`: useful context, not a problem by itself.
-- `Warning`: worth reviewing.
-- `Critical`: important and should be reviewed carefully.
+- `⌘K` opens in-window Quick Actions. Escape closes it; arrows move; Return runs.
+- Sidebar, menu bar, and Quick Actions route through typed `DashboardRoute` values.
+- Refresh retains visible content and table state; initial loading uses redacted skeletons.
+- Process selections open an inspector. If a process disappears, its last sample remains visible and is explicitly marked stale.
+- Storage cancellation discards partial data and preserves the last completed session.
+- State always combines text, icon, and color. Icon-only controls retain textual labels.
+- Charts expose trend summaries; progress exposes counts and scope rather than a false percentage.
+- Focused evidence rows expose text, icon, severity, value, confidence, sample count, and an optional typed destination. Color is never the sole state indicator.
+- Reduce Motion disables hover displacement and transient copied-state animation. Reduce Transparency removes ambient fields and replaces Quick Actions material with a solid system background.
 
-## Page Requirements
+## Copy and trust
 
-Every diagnostic page should include:
-
-- Summary card.
-- Metric grid or list.
-- Findings.
-- Safe actions.
-- Data source note.
-- Manual scan controls only where the user explicitly grants scope.
-- Report/export surfaces must offer a short `Summary` and fuller `Markdown` view from the same snapshot, without raw crash contents, stack traces, uploads, or file writes.
-
-## Permission Controls
-
-- Use calm labels such as `Choose Folder` and `Choose Reports`.
-- Explain the scope before the picker opens.
-- Do not present manual scans as required, urgent, or automatic.
-- After a scan, keep `Live` badges tied to the selected folder/report source.
-- `Reveal in Finder` is allowed for scanned storage items because it opens user-visible context without changing files.
-- Storage drilldown must show the selected root/current folder, breadcrumbs, scanned size, file count, unreadable count, and duration before listing items.
-- Storage pages should show real startup-volume context before manual scan controls: capacity, available space semantics, volume format, local/internal state, and read-only state.
-
-## Chart Rules
-
-- Charts should answer one question quickly.
-- Use tables for process diagnostics; use horizontal bars only for compact app-group summaries and selected storage items.
-- Use compact breakdown charts for storage.
-- Label storage scan charts as selected-folder results, not whole-disk rankings.
-- Keep unit labels visible.
-- Avoid random colors; use status colors.
-- In narrow windows, prioritize readable labels over dense plotting.
-
-## Copy Rules
-
-- Explain behavior in plain language.
-- Prefer "review", "inspect", "check", and "open" over action-heavy wording.
-- Do not imply a value is real unless it is marked `Live`.
-- Do not claim Activity Monitor exact parity; describe CPU, observed memory, footprint, RSS, VM memory, and swap by their actual sources.
-- Do not make unsupported claims about performance, battery service, thermal sensors, or system power.
+- Prefer inspect, review, check, and open.
+- Never suggest killing processes, deleting files, causal thermal attribution, exact Activity Monitor parity, or per-process swap ownership.
+- Source, confidence, data mode, last update, and privacy boundaries remain available one layer below the immediate answer.

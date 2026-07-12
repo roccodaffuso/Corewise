@@ -1,5 +1,36 @@
 # Roadmap
 
+## Implemented: Focused Diagnostics technical foundation
+
+- [x] Add symptom-led Focused Check lifecycle and cautious pure resolver.
+- [x] Reuse one store-owned refresh loop with bounded volatile aggregation.
+- [x] Complete Storage checks from real scans and disclose approved-scope coverage.
+- [x] Add stable app grouping, typed process interpretation, and evidence deep links.
+- [x] Add Focused results to Overview, reports, Quick Actions, and menu bar continuity.
+- [x] Add strict-concurrency-safe store integration, deterministic fixtures, and focused regression tests.
+- [ ] Run 8-12 external trigger-based sessions before treating the workflow as product-validated.
+- [x] Record five-minute idle/active Instruments baselines on a representative Mac.
+- [x] Remove implicit Full Storage Analysis from normal refresh and reduce the measured release physical-footprint peak from approximately 1,416 MB to 156 MB, below the 700 MB gate.
+- [ ] Complete light/dark, size, keyboard, VoiceOver, Reduce Motion, Reduce Transparency, and Increase Contrast release QA.
+
+## Completed: Signal System production redesign
+
+- [x] Remove numeric health scoring and implement typed live-only attention resolution.
+- [x] Replace card-grid Overview with status rail, ranked signals, resource rows, and quiet coverage disclosure.
+- [x] Adopt native grouped sidebar, typed routing, single-window shell, toolbar refresh, and Quick Actions.
+- [x] Rebuild Performance with short history, native Table, search/sort, and inspector.
+- [x] Add truthful Storage progress, explicit scan phases, result modes, breadcrumbs, and Finder reveal.
+- [x] Rebuild Battery, Thermal, Startup, App Issues, Report, Settings continuity, and menu bar hierarchy.
+- [x] Add localization catalog, accessibility adaptations, deterministic previews, and resolver/presenter/progress tests.
+
+## Next validation work
+
+- [ ] Run the documented screenshot matrix on physical macOS in light/dark and 980×680, 1180×800, and 1440×900 windows.
+- [ ] Complete keyboard-only and Accessibility Inspector QA with Reduce Motion, Reduce Transparency, and Increase Contrast.
+- [x] Measure sustained two-second refresh CPU with five-minute idle and Focused Check Time Profiler recordings.
+- [ ] Measure energy impact and a ten-minute Battery check while physically running on battery power.
+- [ ] Use real feedback to refine density; do not add cards, telemetry, private sources, or destructive controls speculatively.
+
 ## Phase 1: Trust And Provenance
 
 - Implemented: explicit `Live`, `Planned`, `Unavailable`, and `Avoided` data modes in the model.
@@ -14,11 +45,14 @@
 
 - Implemented: real total, used, available, and available-percent values.
 - Implemented: safe startup-volume context for Finder-style free space, important/opportunistic availability, volume name, format, local/internal flags, and read-only state.
-- Implemented: automatic refresh reads startup volume capacity only.
-- Implemented: Downloads, Trash, caches, and user Library folders are not scanned automatically.
+- Implemented: automatic refresh reads startup-volume capacity and probes access only; broad analysis starts from an explicit action or immediately after the one-time permission-return flow.
+- Implemented: Full Disk Access probe and `Enable Full Storage Analysis` flow for optional broad local storage classification.
+- Implemented: Full Storage Analysis scans curated standard scopes only; it does not scan `/`, `/System`, `/private`, Trash, or the raw whole disk.
 - Implemented: explicit user-selected folder scan with largest folders/files, unreadable count, and scan duration.
+- Implemented: Folder Scope fallback for users who prefer approving one folder instead of Full Disk Access.
+- Implemented: approved storage scans include file count, folder count, largest examples, and category breakdown for Applications, Development, Documents, Photos, Video, Music, Archives & Installers, Cache & Temporary, System-like, Other, and Unreadable.
 - Implemented: scanned storage items can be revealed in Finder without deletion or file mutation.
-- Planned: refine scan presets and optional security-scoped persistence only if the product needs it.
+- Implemented: large Full Storage Analysis progress/cancel behavior, bounded per-item allocation, and explicit classified/outside-scope/inaccessible coverage reporting.
 - Never delete, move, or modify files.
 
 ## Phase 3: Battery Collector
@@ -32,6 +66,8 @@
 
 - Implemented: live CPU split, VM memory fields, and dense process rows.
 - Implemented: Performance is the main diagnostic page and is organized around "what is slowing my Mac right now".
+- Implemented: Performance explanations cover common live process patterns such as helpers/renderers, Electron-style apps, WindowServer, Spotlight, file provider/iCloud sync, media services, and Corewise itself.
+- Implemented: Memory Context derives plain-language memory state from public VM and swap counters. It is not Activity Monitor's private memory-pressure graph.
 - Implemented: process physical footprint through `proc_pid_rusage(RUSAGE_INFO_V4)` when macOS returns it.
 - Implemented: observed process memory uses the larger public value between footprint and RSS, with RSS still visible.
 - Implemented: app groups are derived from process rows and kept separate from the process table.
@@ -49,6 +85,7 @@
 - Implemented: notable findings, manual next steps, and source/confidence notes derived from existing snapshot data.
 - Implemented: report excludes stack traces, raw crash contents, file contents, uploads, and cleanup actions.
 - Implemented: report includes Swap Insight with real values and source limits.
+- Implemented: report includes Memory Context and a clearer `Memory And Swap` section.
 - Planned: refine report grouping after real user review.
 
 ## Phase 5: Startup Inventory
@@ -81,18 +118,16 @@ Before calling the MVP trustworthy, Corewise must show provenance for every metr
 - Implemented: compact native SwiftUI Settings window with General, Privacy & Data, Performance, Report, and Menu Bar tabs.
 - Implemented: documented `@AppStorage` keys for Performance default focus, Report defaults, optional report summaries, and visible Menu Bar rows.
 - Avoid: adding Settings as a main diagnostic sidebar destination.
-- Avoid: any setting that enables automatic cleanup, broad background scans, private APIs, sudo-only data collection, process killing, accounts, backend services, telemetry, or tracking.
+- Avoid: any setting that enables automatic cleanup, hidden broad background scans, private APIs, sudo-only data collection, process killing, accounts, backend services, telemetry, or tracking.
 
 ## Phase 8: Premium Visual System
 
-- Implemented: shared `CorewiseVisual` semantic colors and surface roles for page wash, panels, tiles, table rows, sidebar states, and soft shadows.
-- Implemented: shared `CorewiseLayout` heights for heroes, metric tiles, sidebar rows, and process table rows to reduce cross-page stepping.
-- Implemented: sidebar selection changed to a restrained source-list treatment with subtle translucent fill and accent indicator instead of saturated full-row selection.
-- Implemented: hero, metric, panel, source-note, empty-state, process-table, and menu bar surfaces use the same softened material language.
-- Implemented: storage breakdown uses muted red for used space and moss green for available space.
-- Planned: manual screenshot QA for dark/light, narrow/wide windows, and first-viewport alignment.
-- Planned: further page-specific polish only after visual QA identifies concrete issues.
+- Implemented: dynamic semantic tokens, solid tonal content, native sidebar, native tables, inspectors, Quick Actions, and menu bar continuity.
+- Implemented: ranked signal Overview with quiet coverage disclosure and no health score.
+- Implemented: truthful Storage progress and page-specific Battery, Thermal, Startup, App Issues, and Report layouts.
+- Implemented: accessibility adaptations, string catalog, and deterministic previews.
+- Release validation: manual screenshot and assistive-technology matrix remains open above.
 
-## Later Ideas
+## Later ideas
 
-- Health score only after real data coverage and a documented formula are stable.
+- Add new diagnostics only when they have a safe public source and a specific user question; do not reintroduce numeric health scoring by default.

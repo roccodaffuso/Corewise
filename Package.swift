@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
   name: "Corewise",
+  defaultLocalization: "en",
   platforms: [
     .macOS(.v14)
   ],
@@ -13,7 +14,8 @@ let package = Package(
   targets: [
     .executableTarget(
       name: "Corewise",
-      path: "Sources/Corewise"
+      path: "Sources/Corewise",
+      resources: [.process("Resources")]
     ),
     .testTarget(
       name: "CorewiseTests",

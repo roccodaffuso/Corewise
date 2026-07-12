@@ -6,17 +6,23 @@ final class PerformanceHistoryTracker {
   private let sustainedWindowSeconds: TimeInterval
   private let sustainedCPUThreshold: Double
   private let requiredSustainedSamples: Int
+  private let maximumVisiblePoints: Int
+  private let maximumRetainedSamples: Int
 
   init(
     retentionSeconds: TimeInterval = 120,
     sustainedWindowSeconds: TimeInterval = 60,
     sustainedCPUThreshold: Double = 25,
-    requiredSustainedSamples: Int = 3
+    requiredSustainedSamples: Int = 3,
+    maximumVisiblePoints: Int = 60,
+    maximumRetainedSamples: Int = 60
   ) {
     self.retentionSeconds = retentionSeconds
     self.sustainedWindowSeconds = sustainedWindowSeconds
     self.sustainedCPUThreshold = sustainedCPUThreshold
     self.requiredSustainedSamples = requiredSustainedSamples
+    self.maximumVisiblePoints = maximumVisiblePoints
+    self.maximumRetainedSamples = maximumRetainedSamples
   }
 
   func record(instant: InstantSystemMetrics, now: Date) -> PerformanceHistorySummary {
@@ -57,6 +63,14 @@ final class PerformanceHistoryTracker {
       requiredSampleCount: requiredSustainedSamples,
       repeatedHighCPUProcesses: repeated,
       sustainedCPUThreshold: sustainedCPUThreshold,
+      recentPoints: samples.suffix(maximumVisiblePoints).map {
+        PerformanceTimePoint(
+          timestamp: $0.timestamp,
+          cpuPercent: $0.cpuPercent,
+          memoryUsedPercent: $0.memoryUsedPercent,
+          swapUsedBytes: $0.swap?.usedBytes
+        )
+      },
       swapInsight: SwapInsightCalculator.insight(samples: recentSamples, now: now)
     )
   }
@@ -64,6 +78,9 @@ final class PerformanceHistoryTracker {
   private func prune(now: Date) {
     let cutoff = now.addingTimeInterval(-retentionSeconds)
     samples.removeAll { $0.timestamp < cutoff }
+    if samples.count > maximumRetainedSamples {
+      samples.removeFirst(samples.count - maximumRetainedSamples)
+    }
   }
 }
 
@@ -73,6 +90,7 @@ struct PerformanceHistorySummary {
   var requiredSampleCount: Int
   var repeatedHighCPUProcesses: [String]
   var sustainedCPUThreshold: Double
+  var recentPoints: [PerformanceTimePoint]
   var swapInsight: SwapInsight
 
   var hasEnoughSamples: Bool {
@@ -89,7 +107,43 @@ struct PerformanceHistorySample {
   var cpuPercent: Double?
   var memoryUsedPercent: Double
   var swap: SwapReading?
-  var processes: [ProcessObservation]
+  var processes: [PerformanceHistoryProcessSample]
+
+  init(
+    timestamp: Date,
+    cpuPercent: Double?,
+    memoryUsedPercent: Double,
+    swap: SwapReading?,
+    processes: [ProcessObservation]
+  ) {
+    self.timestamp = timestamp
+    self.cpuPercent = cpuPercent
+    self.memoryUsedPercent = memoryUsedPercent
+    self.swap = swap
+    self.processes = processes.map(PerformanceHistoryProcessSample.init)
+  }
+}
+
+struct PerformanceHistoryProcessSample {
+  var pid: Int32
+  var displayName: String
+  var cpuPercent: Double
+  var observedMemoryBytes: UInt64
+  var residentMemoryBytes: UInt64
+  var physicalFootprintBytes: UInt64?
+  var pageIns: UInt64
+  var dataMode: DataMode
+
+  init(_ process: ProcessObservation) {
+    pid = process.pid
+    displayName = process.displayName
+    cpuPercent = process.cpuPercent
+    observedMemoryBytes = process.observedMemoryBytes
+    residentMemoryBytes = process.residentMemoryBytes
+    physicalFootprintBytes = process.physicalFootprintBytes
+    pageIns = process.pageIns
+    dataMode = process.dataMode
+  }
 }
 
 enum SwapInsightCalculator {

@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Corewise
 
@@ -6,11 +7,39 @@ import Testing
   #expect(CorewiseSettingsKeys.reportDefaultFormat == "settings.report.defaultFormat")
   #expect(CorewiseSettingsKeys.reportIncludeStorageScan == "settings.report.includeStorageScan")
   #expect(CorewiseSettingsKeys.reportIncludeCrashSummary == "settings.report.includeCrashSummary")
+  #expect(CorewiseSettingsKeys.storageAutomaticClassificationBookmark == "settings.storage.automaticClassificationBookmark")
+  #expect(CorewiseSettingsKeys.storageAutomaticClassificationTitle == "settings.storage.automaticClassificationTitle")
   #expect(CorewiseSettingsKeys.menuBarShowCPU == "settings.menuBar.showCPU")
   #expect(CorewiseSettingsKeys.menuBarShowMemory == "settings.menuBar.showMemory")
   #expect(CorewiseSettingsKeys.menuBarShowSwap == "settings.menuBar.showSwap")
   #expect(CorewiseSettingsKeys.menuBarShowTopCPU == "settings.menuBar.showTopCPU")
   #expect(CorewiseSettingsKeys.menuBarShowTopMemory == "settings.menuBar.showTopMemory")
+}
+
+@MainActor
+@Test func rememberedStorageScopeIsOffWithoutBookmark() {
+  UserDefaults.standard.removeObject(forKey: CorewiseSettingsKeys.storageAutomaticClassificationBookmark)
+  UserDefaults.standard.removeObject(forKey: CorewiseSettingsKeys.storageAutomaticClassificationTitle)
+
+  let store = HealthDashboardStore(collector: SystemHealthCollector())
+
+  #expect(store.rememberedStorageScopeEnabled == false)
+  #expect(store.rememberedStorageScopeTitle == nil)
+}
+
+@MainActor
+@Test func fullStorageAccessRequestOpensSettingsOnceAndWaitsForReturn() {
+  var settingsOpenCount = 0
+  let store = HealthDashboardStore(
+    collector: SystemHealthCollector(),
+    openFullDiskAccessSettings: { settingsOpenCount += 1 }
+  )
+
+  store.requestFullStorageAnalysisAccess()
+
+  #expect(settingsOpenCount == 1)
+  #expect(store.isAwaitingFullDiskAccess)
+  #expect(store.storageAccessSummary.contains("return here"))
 }
 
 @Test func settingsRawValuesFallbackToSafeDefaults() {

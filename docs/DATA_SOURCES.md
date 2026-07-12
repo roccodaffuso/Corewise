@@ -13,16 +13,16 @@ Statuses:
 
 | Metric | Status | Source | Confidence | Limit |
 | --- | --- | --- | --- | --- |
-| Live Signals header | Implemented | DataMode signal-family coverage plus live section signals | High | Shows coverage and real local signals; it is not a health score and does not count individual process rows. |
-| First-viewport signal grid | Implemented | Current `HealthSnapshot` CPU, memory, process, storage, battery, and thermal signals | Medium | Summarizes live signals; it does not replace section-level detail. |
-| Health score | Planned | Corewise scoring model | High | Not calculated until scoring has enough live inputs. |
-| Score confidence | Implemented | DataMode signal-family coverage count | High | Describes coverage, not device health or row count. |
-| Overall status | Planned | Corewise scoring model | High | Overview leads with coverage and live signals until real scoring exists. |
+| Attention summary | Implemented | Typed supported live metrics through `AttentionSummaryResolver` | High | Conservative attention language only; not a diagnosis or health score. |
+| Ranked signal rows | Implemented | Current `HealthSnapshot` performance, storage, battery, thermal, startup, and app-issue roles | Medium | Selects Performance, Storage, and the most relevant System signal; section detail remains authoritative. |
+| Health score | Avoided | None | High | Numeric health scoring was removed because incomplete coverage cannot safely support it. |
+| Data coverage | Implemented | DataMode signal-family coverage count | High | Describes available data, not device health or row count. |
+| Overall attention state | Implemented | Critical/warning ordering across eligible live roles | High | Clear means no urgent supported live signal, not that the Mac is healthy. |
 | CPU now | Implemented | `host_statistics` / `HOST_CPU_LOAD_INFO` | Medium | 1 second sample; not a sysmond clone. |
 | RAM used now | Implemented | `host_statistics64` / `HOST_VM_INFO64` | Medium | Corewise VM view based on app memory, wired memory, and compressed pages; not a private Activity Monitor clone. |
 | Swap used and trend | Implemented | `sysctl vm.swapusage`, `host_statistics64`, `PerformanceHistoryTracker` | Medium | Shows system swap context only; it does not attribute exact swap ownership to processes. |
 | System power watts | Unavailable | Safe public API check | High | No reliable whole-system wattage through safe public APIs in this MVP. |
-| Main attention area | Unavailable | Corewise scoring model | High | Cross-section prioritization is not implemented. |
+| Main attention area | Implemented | `AttentionSummaryResolver` | High | Uses the highest-ranked supported live signal and one real recommended action. |
 | Data access capabilities | Implemented | Static capability matrix plus scan state | High | Explains access state; it is not a device-health signal. |
 
 ## Battery
@@ -50,17 +50,21 @@ Statuses:
 | Opportunistic available | Implemented when present | `FileManager` `volumeAvailableCapacityForOpportunisticUsage` | Medium | Some volumes may not expose it; unavailable is shown instead of `0 GB`. |
 | Volume name and format | Implemented | `FileManager` `volumeLocalizedName` and `volumeLocalizedFormatDescription` | High | Startup volume only; not a full disk inventory. |
 | Volume flags | Implemented | `FileManager` `volumeIsInternal`, `volumeIsLocal`, `volumeIsReadOnly` | Medium | Flags are shown as volume context, not health scoring. |
-| User-selected folder scan | Implemented | `NSOpenPanel` folder choice plus read-only size scan | Medium | Runs only after user action; no bookmark is persisted in this version. |
-| Storage scan session | Implemented | In-memory root/current folder URLs plus scan result | Medium | Session-only; folder access is not persisted across launches. |
-| Storage breadcrumbs | Implemented | Derived from selected root and current scan folder | Medium | Used only for navigation inside the chosen folder scope. |
-| Large folders | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
-| Large files | Implemented after selection | Read-only scan of chosen folder | Medium | Empty until the user chooses a folder. |
+| Full Disk Access probe | Implemented | Read-only checks against dedicated FDA-protected sentinels | Medium | Never opens Documents, Downloads, Desktop, or scan scopes before consent. A return to Corewise forces a fresh probe; Corewise cannot grant access itself. |
+| Full Storage Analysis | Implemented after consent | Full Disk Access plus read-only scans of curated standard scopes | Medium | Optional, local, revocable in System Settings, cancellable, and started explicitly after the initial permission-return flow; normal refresh probes access without enumerating scopes. |
+| Folder Scope fallback | Implemented | One `NSOpenPanel` choice plus a security-scoped bookmark | Medium | The approved folder is remembered and reused without another picker; it remains secondary to Full Disk Access and can be forgotten. |
+| Storage scan session | Implemented | Approved root/current folder URLs plus scan result | Medium | Full Storage Analysis uses a synthetic approved root; Folder Scope drilldown stays inside the chosen folder. |
+| Storage breadcrumbs | Implemented | Derived from approved root and current scan folder | Medium | Used only for navigation inside the approved scope. |
+| Storage category breakdown | Implemented after consent | Read-only path rules, bundle/package hints, `UTType` content type, and extension fallback inside approved scopes | Medium | Categories are Corewise's transparent taxonomy, not a System Settings Storage clone. |
+| Category examples | Implemented after consent | Largest readable files observed per category | Medium | Shows examples only from approved scopes; unreadable items are counted and omitted instead of estimated. |
+| Large folders | Implemented after consent | Read-only scan of approved scopes | Medium | Empty until Full Disk Access or Folder Scope is available. |
+| Large files | Implemented after consent | Read-only scan of approved scopes | Medium | Empty until Full Disk Access or Folder Scope is available. |
 | Reveal in Finder | Implemented after selection | Finder reveal for a scanned item path | High | Opens Finder only; it does not delete, move, or modify files. |
-| Drilldown scan | Implemented after selection | Read-only scan of a folder discovered inside the selected scan session | Medium | Does not scan unrelated folders automatically. |
-| Developer caches | Planned | Explicit targeted scan later | Medium | Not scanned automatically because these live under user Library. |
+| Drilldown scan | Implemented after selection | Read-only scan of a folder discovered inside the approved scan session | Medium | Does not scan unrelated folders automatically. |
+| Developer data | Implemented after consent | `~/Library/Developer` as part of Full Storage Analysis or Folder Scope | Medium | Read-only size/category classification; no cleanup or DerivedData deletion. |
 | Browser caches | Planned | Browser-owned settings or explicit targeted scan | Low | Browser cache folders are not scanned during refresh. |
-| Downloads | Unavailable | Explicit targeted scan later | High | Corewise does not request Downloads access at launch/refresh. |
-| Trash | Unavailable | Explicit targeted scan later | High | Corewise must not inspect or empty Trash automatically. |
+| Downloads | Implemented after consent | `~/Downloads` as part of Full Storage Analysis or Folder Scope | Medium | Only after Full Disk Access or explicit folder approval; never cleaned automatically. |
+| Trash | Avoided | N/A | High | Corewise does not inspect or empty Trash automatically in v1. |
 | iOS backups | Planned | Read-only known-path review | Medium | Prefer Finder/device settings for action. |
 | Container data | Planned | Read-only known-path review | Low | Must be generic unless a specific installed tool is detected. |
 
@@ -78,6 +82,7 @@ Statuses:
 | Process identity | Implemented | `proc_pidpath`, `proc_name`, short BSD info | Medium | Provides path, app bundle, PID, user, and thread count where readable. |
 | App grouping | Implemented | Derived from live process rows and `.app` bundle paths | Medium | Separate from individual process rows so helper aggregation is explicit. |
 | Memory pressure | Unavailable | No selected public parity source | High | Corewise does not show an estimated pressure value as live. |
+| Memory Context | Implemented | Derived from `host_statistics64` VM fields plus Swap Insight | Medium | Plain-language Corewise context only; it is not Activity Monitor's private memory-pressure graph. |
 | Swap used | Implemented | `sysctl vm.swapusage` / `xsw_usage` | Medium | Available when macOS returns swap usage. |
 | Swap total | Implemented | `sysctl vm.swapusage` / `xsw_usage.xsu_total` | Medium | System-level configured swap, not process-level data. |
 | Swap available | Implemented | `sysctl vm.swapusage` / `xsw_usage.xsu_avail` | Medium | System-level remaining swap. |
@@ -136,9 +141,10 @@ Statuses:
 | Manual next steps | Implemented | Existing safe actions already present in `HealthSnapshot` | Medium | Manual review only; no cleanup or process termination. |
 | Top CPU and memory rows | Implemented | Live process rows already present in the snapshot | Medium | Uses the same public API semantics as Performance. |
 | Swap insight | Implemented | Current `HealthSnapshot` swap insight | Medium | Includes system swap context and limits; no per-process swap ownership claim. |
+| Memory context | Implemented | Current `HealthSnapshot` memory context | Medium | Derived from public VM/swap counters; not Activity Monitor's private pressure graph. |
 | Storage scan summary | Implemented after selection | User-selected folder scan results | Medium | Empty when no manual scan exists. |
 | Crash summary | Implemented after selection | User-selected report folder metadata | Medium | Counts only; no stack traces or raw report contents. |
-| Global score in report | Planned | Corewise scoring model | High | Report states that global scoring is planned, not calculated. |
+| Global score in report | Avoided | None | High | Report explicitly states that Corewise does not calculate a global health score. |
 
 ## Menu Bar
 
@@ -156,5 +162,5 @@ Statuses:
 - Corewise should not read document contents to size files.
 - Corewise should not store process histories beyond what is needed for local explanation.
 - Corewise should display source and confidence next to every diagnostic claim.
-- Storage folders and crash reports are read only after user-selected folder scans.
+- Storage details are read only after Full Disk Access or Folder Scope approval; crash reports are read only after the user selects a report folder.
 - Diagnostic reports copied from Corewise are local Markdown summaries and should not include stack traces or file contents.

@@ -3,6 +3,8 @@ enum CorewiseSettingsKeys {
   static let reportDefaultFormat = "settings.report.defaultFormat"
   static let reportIncludeStorageScan = "settings.report.includeStorageScan"
   static let reportIncludeCrashSummary = "settings.report.includeCrashSummary"
+  static let storageAutomaticClassificationBookmark = "settings.storage.automaticClassificationBookmark"
+  static let storageAutomaticClassificationTitle = "settings.storage.automaticClassificationTitle"
   static let menuBarShowCPU = "settings.menuBar.showCPU"
   static let menuBarShowMemory = "settings.menuBar.showMemory"
   static let menuBarShowSwap = "settings.menuBar.showSwap"
