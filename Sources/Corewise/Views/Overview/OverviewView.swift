@@ -46,7 +46,6 @@ struct OverviewView: View {
       .padding(CorewiseLayout.pagePadding)
       .frame(maxWidth: CorewiseLayout.contentMaxWidth, alignment: .leading)
     }
-    .scrollContentBackground(.visible)
   }
 
   @ViewBuilder

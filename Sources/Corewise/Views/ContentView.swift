@@ -20,8 +20,6 @@ struct ContentView: View {
     } detail: {
       ZStack(alignment: .top) {
         CorewiseBackdrop()
-        WindowTransparencyConfigurator()
-          .frame(width: 0, height: 0)
 
         if let snapshot = store.snapshot {
           DetailRouter(section: selectedSection, snapshot: snapshot, store: store, requestedPerformanceMode: requestedPerformanceMode, requestedFocus: requestedFocus)

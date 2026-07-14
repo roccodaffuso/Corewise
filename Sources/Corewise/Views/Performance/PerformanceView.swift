@@ -82,7 +82,7 @@ struct PerformanceView: View {
           .padding(.horizontal, CorewiseLayout.space8)
           .padding(.vertical, 6)
           .background(CorewiseVisual.contentSurface, in: .rect(cornerRadius: 8))
-          .frame(width: 200)
+          .frame(minWidth: 150, idealWidth: 200, maxWidth: 200)
 
           Spacer(minLength: 0)
 
@@ -285,7 +285,11 @@ private struct PerformanceInspectorModifier: ViewModifier {
   @ViewBuilder
   func body(content: Content) -> some View {
     if isPresented {
-      content.inspector(isPresented: $isPresented) {
+      GeometryReader { geometry in
+        content
+          .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+      }
+      .inspector(isPresented: $isPresented) {
         inspectorContent
       }
     } else {
