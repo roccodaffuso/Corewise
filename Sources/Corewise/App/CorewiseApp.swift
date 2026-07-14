@@ -24,7 +24,7 @@ struct CorewiseApp: App {
     }
 
     Settings {
-      SettingsView()
+      SettingsView(store: store)
     }
 
     MenuBarExtra("Corewise", systemImage: "waveform.path.ecg") {
@@ -42,8 +42,10 @@ private struct MenuBarMonitorView: View {
   @AppStorage(CorewiseSettingsKeys.menuBarShowCPU) private var showCPU = true
   @AppStorage(CorewiseSettingsKeys.menuBarShowMemory) private var showMemory = true
   @AppStorage(CorewiseSettingsKeys.menuBarShowSwap) private var showSwap = true
+  @AppStorage(CorewiseSettingsKeys.menuBarShowAIWorkloads) private var showAIWorkloads = true
   @AppStorage(CorewiseSettingsKeys.menuBarShowTopCPU) private var showTopCPU = true
   @AppStorage(CorewiseSettingsKeys.menuBarShowTopMemory) private var showTopMemory = true
+  @AppStorage(CorewiseSettingsKeys.menuBarProcessRowCount) private var processRowCount = MenuBarPreferences.defaultProcessRowCount
 
   private var snapshot: HealthSnapshot? { store.snapshot }
 
@@ -62,13 +64,21 @@ private struct MenuBarMonitorView: View {
           MenuMetricStrip(snapshot: snapshot, showCPU: showCPU, showMemory: showMemory, showSwap: showSwap)
         }
 
+        if showAIWorkloads {
+          MenuAIWorkloadSection(
+            workloads: visibleAIWorkloads(snapshot.performance.aiWorkloads),
+            totalCount: snapshot.performance.aiWorkloads.count,
+            open: { openPerformance(.aiWorkloads) }
+          )
+        }
+
         if showTopCPU {
-          MenuProcessSection(title: "Top CPU", processes: Array(snapshot.performance.processes.prefix(3)), mode: .cpu, open: openPerformance)
+          MenuProcessSection(title: "Top CPU", processes: Array(snapshot.performance.processes.prefix(visibleRowCount)), mode: .cpu, open: openPerformance)
         }
         if showTopMemory {
           MenuProcessSection(
             title: "Top Memory",
-            processes: Array(snapshot.performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }.prefix(3)),
+            processes: Array(snapshot.performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }.prefix(visibleRowCount)),
             mode: .memory,
             open: openPerformance
           )
@@ -76,15 +86,23 @@ private struct MenuBarMonitorView: View {
 
         Divider()
           .padding(.top, 2)
-        if store.focusedCheckSession != nil || store.lastFocusedCheckResult != nil {
-          Button("Open Focused Check", systemImage: "scope", action: openOverview)
-        } else {
-          Menu("Start Focused Check", systemImage: "scope") {
-            ForEach(FocusedCheckIntent.allCases) { intent in
-              Button(intent.title) {
-                startFocusedCheck(intent)
+        HStack(spacing: CorewiseLayout.space8) {
+          if store.focusedCheckSession != nil || store.lastFocusedCheckResult != nil {
+            Button("Open Focused Check", systemImage: "scope", action: openOverview)
+          } else {
+            Menu("Start Focused Check", systemImage: "scope") {
+              ForEach(FocusedCheckIntent.allCases) { intent in
+                Button(intent.title) {
+                  startFocusedCheck(intent)
+                }
               }
             }
+          }
+
+          Spacer(minLength: 0)
+
+          SettingsLink {
+            Label("Customize", systemImage: "slider.horizontal.3")
           }
         }
         Button("Open Corewise", systemImage: "arrow.up.forward.app", action: openOverview)
@@ -123,6 +141,23 @@ private struct MenuBarMonitorView: View {
   private func openMainWindow() {
     openWindow(id: "main")
     NSApp.activate(ignoringOtherApps: true)
+  }
+
+  private var visibleRowCount: Int {
+    MenuBarPreferences.normalizedProcessRowCount(processRowCount)
+  }
+
+  private func visibleAIWorkloads(_ workloads: [AIWorkloadObservation]) -> [AIWorkloadObservation] {
+    Array(
+      workloads
+        .sorted {
+          if $0.directObservedMemoryBytes != $1.directObservedMemoryBytes {
+            return $0.directObservedMemoryBytes > $1.directObservedMemoryBytes
+          }
+          return $0.name.localizedStandardCompare($1.name) == .orderedAscending
+        }
+        .prefix(visibleRowCount)
+    )
   }
 }
 
@@ -315,6 +350,115 @@ private struct MenuMetricCard: View {
         .stroke(tint.opacity(0.18), lineWidth: 0.8)
     }
     .accessibilityElement(children: .combine)
+  }
+}
+
+private struct MenuAIWorkloadSection: View {
+  var workloads: [AIWorkloadObservation]
+  var totalCount: Int
+  var open: () -> Void
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: CorewiseLayout.space8) {
+      HStack {
+        Text("AI Workloads")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+        Spacer()
+        Label("\(totalCount) observed", systemImage: "sparkles.rectangle.stack")
+          .font(.caption)
+          .foregroundStyle(.tertiary)
+      }
+
+      if workloads.isEmpty {
+        Button(action: open) {
+          HStack(spacing: CorewiseLayout.space8) {
+            Image(systemName: "sparkles")
+              .foregroundStyle(CorewiseVisual.accent)
+            Text("No supported local AI workload observed")
+              .foregroundStyle(.secondary)
+            Spacer()
+            Image(systemName: "chevron.right")
+              .foregroundStyle(.tertiary)
+          }
+          .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+      } else {
+        ForEach(workloads) { workload in
+          MenuAIWorkloadRow(workload: workload, maxMemory: maxMemory, action: open)
+        }
+      }
+
+      Text("Local process attribution only · cloud activity is not included")
+        .font(.caption)
+        .foregroundStyle(.tertiary)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .padding(10)
+    .background(CorewiseVisual.quietSurface, in: .rect(cornerRadius: 13))
+    .overlay {
+      RoundedRectangle(cornerRadius: 13)
+        .stroke(CorewiseVisual.accent.opacity(0.22), lineWidth: 1)
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("AI Workloads")
+  }
+
+  private var maxMemory: Double {
+    max(Double(workloads.map(\.directObservedMemoryBytes).max() ?? 1), 1)
+  }
+}
+
+private struct MenuAIWorkloadRow: View {
+  var workload: AIWorkloadObservation
+  var maxMemory: Double
+  var action: () -> Void
+  @State private var isHovered = false
+
+  var body: some View {
+    Button(action: action) {
+      VStack(alignment: .leading, spacing: 5) {
+        HStack(spacing: CorewiseLayout.space8) {
+          Text(workload.name)
+            .lineLimit(1)
+          Text(workload.activity.title)
+            .font(.caption)
+            .foregroundStyle(activityColor)
+          Spacer()
+          Text(corewiseBytes(workload.directObservedMemoryBytes))
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+        }
+        HStack(spacing: CorewiseLayout.space8) {
+          MenuProgressBar(value: Double(workload.directObservedMemoryBytes) / maxMemory, tint: CorewiseVisual.accent)
+          Text("\(corewisePercent(workload.totalCPUPercent)) CPU")
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary)
+        }
+        if workload.relatedObservedMemoryBytes > 0 {
+          Text("\(corewiseBytes(workload.relatedObservedMemoryBytes)) related local work")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+        }
+      }
+      .padding(.horizontal, CorewiseLayout.space8)
+      .padding(.vertical, 6)
+      .background(isHovered ? CorewiseVisual.elevatedSurface : .clear, in: .rect(cornerRadius: 7))
+      .contentShape(.rect)
+    }
+    .buttonStyle(.plain)
+    .onHover { isHovered = $0 }
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel("\(workload.name), \(workload.activity.title), \(corewiseBytes(workload.directObservedMemoryBytes)) app footprint, \(corewisePercent(workload.totalCPUPercent)) CPU, \(corewiseBytes(workload.relatedObservedMemoryBytes)) related local work")
+    .accessibilityHint("Opens AI Workloads in Performance")
+  }
+
+  private var activityColor: Color {
+    switch workload.activity {
+    case .active, .sustained: CorewiseVisual.accent
+    case .quiet, .notObserved: .secondary
+    }
   }
 }
 

@@ -122,13 +122,13 @@ Before calling the MVP trustworthy, Corewise must show provenance for every metr
 
 ## Phase 7: Menu Bar Monitor
 
-- Implemented: lightweight menu bar monitor for at-a-glance CPU, memory, swap, top three CPU rows, top three memory rows, and Open Corewise.
-- Planned: refine menu bar behavior after manual QA.
+- Implemented: customizable menu bar monitor for at-a-glance CPU, memory, swap, supported local AI workloads, bounded CPU/memory rows, Focused Check, Settings, and Open Corewise.
+- Planned: refine menu bar behavior after manual QA on compact displays and with five-row density.
 
 ## Phase 7.5: Settings
 
-- Implemented: compact native SwiftUI Settings window with General, Privacy & Data, Performance, Report, and Menu Bar tabs.
-- Implemented: documented `@AppStorage` keys for Performance default focus, Report defaults, optional report summaries, and visible Menu Bar rows.
+- Implemented: native SwiftUI Settings window with consistent pane hierarchy, grouped forms, General, Privacy & Data, Performance, Report, and Menu Bar tabs.
+- Implemented: documented `@AppStorage` keys for Performance default focus including AI Workloads, Report defaults, optional report summaries, menu bar visibility, and bounded list density.
 - Avoid: adding Settings as a main diagnostic sidebar destination.
 - Avoid: any setting that enables automatic cleanup, hidden broad background scans, private APIs, sudo-only data collection, process killing, accounts, backend services, telemetry, or tracking.
 

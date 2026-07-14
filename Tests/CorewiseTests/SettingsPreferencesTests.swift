@@ -12,8 +12,10 @@ import Testing
   #expect(CorewiseSettingsKeys.menuBarShowCPU == "settings.menuBar.showCPU")
   #expect(CorewiseSettingsKeys.menuBarShowMemory == "settings.menuBar.showMemory")
   #expect(CorewiseSettingsKeys.menuBarShowSwap == "settings.menuBar.showSwap")
+  #expect(CorewiseSettingsKeys.menuBarShowAIWorkloads == "settings.menuBar.showAIWorkloads")
   #expect(CorewiseSettingsKeys.menuBarShowTopCPU == "settings.menuBar.showTopCPU")
   #expect(CorewiseSettingsKeys.menuBarShowTopMemory == "settings.menuBar.showTopMemory")
+  #expect(CorewiseSettingsKeys.menuBarProcessRowCount == "settings.menuBar.processRowCount")
 }
 
 @MainActor
@@ -45,8 +47,14 @@ import Testing
 @Test func settingsRawValuesFallbackToSafeDefaults() {
   #expect(PerformanceDefaultFocus.cpu.rawValue == "cpu")
   #expect(PerformanceDefaultFocus.memory.rawValue == "memory")
+  #expect(PerformanceDefaultFocus.aiWorkloads.rawValue == "aiWorkloads")
   #expect(PerformanceDefaultFocus.normalized("memory") == .memory)
+  #expect(PerformanceDefaultFocus.normalized("aiWorkloads") == .aiWorkloads)
   #expect(PerformanceDefaultFocus.normalized("unknown") == .cpu)
+
+  #expect(MenuBarPreferences.normalizedProcessRowCount(0) == 1)
+  #expect(MenuBarPreferences.normalizedProcessRowCount(3) == 3)
+  #expect(MenuBarPreferences.normalizedProcessRowCount(8) == 5)
 
   #expect(ReportFormatPreference.summary.rawValue == "summary")
   #expect(ReportFormatPreference.markdown.rawValue == "markdown")

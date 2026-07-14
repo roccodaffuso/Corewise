@@ -28,6 +28,7 @@ The implemented mix is 70% Signal Command Center, 20% Native Observatory, and 10
 - Performance: pressure/history → CPU/Memory control → mode-specific native process table → mode-specific inspector. CPU and Memory must never be cosmetic aliases: their eligibility, columns, sort choices, supporting metrics, and explanations differ.
 - Storage: volume headroom → scan state → results → privacy/source disclosure.
 - Battery, Thermal, Startup, App Issues, and Report use page-specific native layouts rather than a generic diagnostic-card template.
+- Settings remains a native macOS `TabView` and grouped `Form`. A shared pane header provides hierarchy; the single menu-bar preview is functional feedback, not a decorative dashboard card.
 
 Coverage describes available signal families and must never appear as Mac health. The approved clear wording is `No urgent live signals detected`; Corewise never upgrades that sentence to `Your Mac is healthy`.
 

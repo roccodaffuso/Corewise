@@ -47,8 +47,8 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 - Performance presentation: `ProcessTablePresenter` derives separate worksets from the shared live sample. CPU eligibility requires observed interval activity and exposes CPU-specific sorts; Memory eligibility requires significant observed memory and exposes footprint/RSS/page-in sorts. `PerformanceView` renders different native table schemas and inspectors for the two modes.
 - AI workload presentation: `AIWorkloadResolver` classifies exact bundle/executable identities first, then performs one bounded parent-chain attribution pass over the same full process inventory before top-row truncation. Direct app footprint, descendant local work, and shared hosts remain separate. Arguments, environment, working directories, prompts, and project names are never read.
 - AI observation reuses the single `FocusedCheckTracker`; it retains at most 300 compact points per observed family, completes automatically at ten minutes, and remains volatile.
-- Menu bar: `MenuBarExtra` reads the existing `HealthDashboardStore` snapshot for at-a-glance CPU, memory, swap, and top three CPU/memory process rows.
-- Settings: `CorewiseApp` declares a native SwiftUI `Settings` scene. Settings is configuration, not a diagnostic sidebar destination. The dedicated Settings view uses documented `@AppStorage` keys for display/report preferences only.
+- Menu bar: `MenuBarExtra` reads the existing `HealthDashboardStore` snapshot for at-a-glance CPU, memory, swap, supported local AI workloads, and bounded CPU/memory process rows. Visibility and row density are local presentation preferences; no additional collector is started.
+- Settings: `CorewiseApp` declares a native SwiftUI `Settings` scene. Settings is configuration, not a diagnostic sidebar destination. The dedicated Settings view observes the existing store only for a live layout preview and uses documented `@AppStorage` keys for display/report preferences.
 
 ## Data Flow
 
@@ -65,12 +65,14 @@ Corewise is a local SwiftUI macOS app with a single snapshot-oriented data flow.
 
 ## Settings Preferences
 
-- `settings.performance.defaultFocus`: initial Performance focus, `cpu` or `memory`.
+- `settings.performance.defaultFocus`: initial Performance focus, `cpu`, `memory`, or `aiWorkloads`.
 - `settings.report.defaultFormat`: initial Report view, `summary` or `markdown`.
 - `settings.report.includeStorageScan`: whether copied/previewed reports include selected storage scan summaries.
 - `settings.report.includeCrashSummary`: whether copied/previewed reports include crash report summaries.
 - `settings.menuBar.showCPU`, `settings.menuBar.showMemory`, `settings.menuBar.showSwap`: visible menu bar metric cards.
+- `settings.menuBar.showAIWorkloads`: visible supported local AI workload summary.
 - `settings.menuBar.showTopCPU`, `settings.menuBar.showTopMemory`: visible menu bar process rows.
+- `settings.menuBar.processRowCount`: rows per AI/CPU/Memory list, normalized to `1...5`.
 
 Internal storage-consent keys:
 

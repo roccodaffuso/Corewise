@@ -165,7 +165,7 @@ struct PerformanceView: View {
       )
     )
     .onAppear {
-      selectMode(requestedMode ?? (PerformanceDefaultFocus(rawValue: defaultFocus) == .memory ? .memory : .cpu))
+      selectMode(requestedMode ?? PerformanceDefaultFocus.normalized(defaultFocus).performanceMode)
       apply(requestedFocus)
     }
     .onChange(of: requestedMode) { _, requestedMode in
@@ -271,6 +271,16 @@ struct PerformanceView: View {
     let value = markdown ? builder.focusedCheckMarkdown(for: result) : builder.focusedCheckSummary(for: result)
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(value, forType: .string)
+  }
+}
+
+private extension PerformanceDefaultFocus {
+  var performanceMode: PerformanceMode {
+    switch self {
+    case .cpu: .cpu
+    case .memory: .memory
+    case .aiWorkloads: .aiWorkloads
+    }
   }
 }
 
