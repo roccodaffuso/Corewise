@@ -40,6 +40,7 @@ Implemented:
 - Settings uses a native `TabView` with grouped `Form`, `Section`, `Picker`, `Toggle`, and `Stepper` controls, plus one functional live menu-bar layout preview.
 - Settings contains General, Privacy & Data, Performance, Report, and Menu Bar tabs.
 - Every pane now has a consistent title, purpose statement, and semantic icon so the window reads as a deliberate utility surface rather than an unfinished form.
+- General includes native links to the public GitHub repository and the new-issue page so source and support remain discoverable without entering the diagnostic navigation.
 - The sidebar footer exposes a small native `SettingsLink` row so Settings is discoverable without adding it as a diagnostic navigation item.
 
 Planned:
@@ -94,6 +95,7 @@ Possible preferences:
 Default stance:
 
 - Keep this tab sparse.
+- Keep project and issue-reporting links visible under Project & Support.
 - Do not add preferences just to fill space.
 
 ## Privacy & Data

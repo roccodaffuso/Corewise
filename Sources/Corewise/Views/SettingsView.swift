@@ -61,6 +61,21 @@ private struct GeneralSettingsPane: View {
           )
         }
 
+        Section("Project & Support") {
+          SettingsExternalLinkRow(
+            title: "View on GitHub",
+            detail: "Explore the source, roadmap, and public development history.",
+            systemImage: "chevron.left.forwardslash.chevron.right",
+            destination: URL(string: "https://github.com/roccodaffuso/CoreWise")!
+          )
+          SettingsExternalLinkRow(
+            title: "Report an Issue",
+            detail: "Open a new GitHub issue for a bug, regression, or reproducible problem.",
+            systemImage: "exclamationmark.bubble",
+            destination: URL(string: "https://github.com/roccodaffuso/CoreWise/issues/new")!
+          )
+        }
+
         Section("Build") {
           LabeledContent("Version", value: versionLabel)
           LabeledContent("Minimum system", value: "macOS 14")
@@ -413,5 +428,46 @@ private struct SettingsInfoRow: View {
     }
     .padding(.vertical, 2)
     .accessibilityElement(children: .combine)
+  }
+}
+
+private struct SettingsExternalLinkRow: View {
+  var title: String
+  var detail: String
+  var systemImage: String
+  var destination: URL
+
+  var body: some View {
+    Link(destination: destination) {
+      HStack(alignment: .top, spacing: CorewiseLayout.space12) {
+        Image(systemName: systemImage)
+          .font(.callout)
+          .foregroundStyle(CorewiseVisual.accent)
+          .frame(width: 18, height: 18)
+          .accessibilityHidden(true)
+
+        VStack(alignment: .leading, spacing: 3) {
+          Text(title)
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(.primary)
+          Text(detail)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
+        Spacer(minLength: CorewiseLayout.space12)
+
+        Image(systemName: "arrow.up.right")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
+      }
+      .contentShape(.rect)
+      .padding(.vertical, 2)
+    }
+    .buttonStyle(.plain)
+    .accessibilityElement(children: .combine)
+    .accessibilityHint("Opens in your default browser")
   }
 }

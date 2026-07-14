@@ -95,6 +95,8 @@ Useful project documents:
 
 Issues and focused pull requests are welcome while the public beta is being prepared. Please keep changes narrow, preserve the local-first and non-destructive constraints, and never attach diagnostic reports containing usernames, personal paths, process arguments, prompts, or private file contents.
 
+Found a reproducible problem? [Report an issue](https://github.com/roccodaffuso/CoreWise/issues/new). The same link is available in Corewise under **Settings → General → Project & Support**.
+
 Before proposing a new diagnostic, document its public macOS source, failure mode, privacy boundary, and user-facing wording.
 
 ## Project status and license
