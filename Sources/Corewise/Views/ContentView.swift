@@ -97,7 +97,7 @@ private struct CorewiseSidebar: View {
     }
     .background {
       ZStack {
-        Rectangle().fill(.ultraThinMaterial)
+        Rectangle().fill(CorewiseVisual.windowBackground)
         CorewiseVisual.sidebarFill(colorScheme: colorScheme)
       }
     }

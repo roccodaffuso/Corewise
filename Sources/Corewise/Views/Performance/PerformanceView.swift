@@ -148,7 +148,6 @@ struct PerformanceView: View {
         }
       }
       .padding(CorewiseLayout.pagePadding)
-      .padding(.top, 44)
       .frame(maxWidth: CorewiseLayout.contentMaxWidth, alignment: .leading)
     }
     .inspector(isPresented: $isInspectorPresented) {
