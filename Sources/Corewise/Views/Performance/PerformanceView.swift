@@ -71,7 +71,7 @@ struct PerformanceView: View {
           }
           .pickerStyle(.segmented)
           .labelsHidden()
-          .frame(maxWidth: 300)
+          .frame(width: 250)
 
           HStack(spacing: CorewiseLayout.space8) {
             Image(systemName: "magnifyingglass")
@@ -82,15 +82,18 @@ struct PerformanceView: View {
           .padding(.horizontal, CorewiseLayout.space8)
           .padding(.vertical, 6)
           .background(CorewiseVisual.contentSurface, in: .rect(cornerRadius: 8))
+          .frame(width: 200)
 
-          Spacer()
+          Spacer(minLength: 0)
+
           if mode == .aiWorkloads {
             Picker("Sort", selection: $aiSort) {
               ForEach(AIWorkloadSort.allCases) { sort in
                 Text(sort.title).tag(sort)
               }
             }
-            .frame(width: 144)
+            .labelsHidden()
+            .frame(width: 120)
             Text("\(presentedAIWorkloads.count) observed")
               .font(.callout)
               .foregroundStyle(.secondary)
@@ -102,7 +105,8 @@ struct PerformanceView: View {
                 Text(sort.rawValue).tag(sort)
               }
             }
-            .frame(width: 144)
+            .labelsHidden()
+            .frame(width: 120)
             Text(processCountLabel(for: presentedRows))
               .font(.callout)
               .foregroundStyle(.secondary)
@@ -150,24 +154,16 @@ struct PerformanceView: View {
       .padding(CorewiseLayout.pagePadding)
       .frame(maxWidth: CorewiseLayout.contentMaxWidth, alignment: .leading)
     }
-    .inspector(isPresented: $isInspectorPresented) {
-      if mode == .aiWorkloads, let selectedAIWorkloadSnapshot {
-        AIWorkloadInspector(workload: selectedAIWorkloadSnapshot, sessionSummary: focusedCheckSession?.aiWorkloads.first { $0.workloadID == selectedAIWorkloadSnapshot.id })
-          .inspectorColumnWidth(min: 300, ideal: 360, max: 440)
-      } else if let selectedSnapshot {
-        ProcessInspector(
-          process: selectedSnapshot,
-          isCurrent: performance.processes.contains { $0.pid == selectedSnapshot.pid },
-          mode: mode,
-          owningGroup: performance.appGroups.first { $0.memberPIDs.contains(selectedSnapshot.pid) },
-          checkActivity: focusedCheckSession?.activityGroups.first { $0.memberPIDs.contains(selectedSnapshot.pid) }
-        )
-        .inspectorColumnWidth(min: 260, ideal: 320, max: 380)
-      } else {
-        ContentUnavailableView("Select a process", systemImage: "cursorarrow.click", description: Text("Choose a row to inspect its local metadata."))
-          .inspectorColumnWidth(min: 260, ideal: 320, max: 380)
-      }
-    }
+    .modifier(
+      PerformanceInspectorModifier(
+        isPresented: $isInspectorPresented,
+        mode: mode,
+        performance: performance,
+        focusedCheckSession: focusedCheckSession,
+        selectedProcess: selectedSnapshot,
+        selectedAIWorkload: selectedAIWorkloadSnapshot
+      )
+    )
     .onAppear {
       selectMode(requestedMode ?? (PerformanceDefaultFocus(rawValue: defaultFocus) == .memory ? .memory : .cpu))
       apply(requestedFocus)
@@ -275,6 +271,53 @@ struct PerformanceView: View {
     let value = markdown ? builder.focusedCheckMarkdown(for: result) : builder.focusedCheckSummary(for: result)
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(value, forType: .string)
+  }
+}
+
+private struct PerformanceInspectorModifier: ViewModifier {
+  @Binding var isPresented: Bool
+  var mode: PerformanceMode
+  var performance: PerformanceHealth
+  var focusedCheckSession: FocusedCheckSession?
+  var selectedProcess: ProcessObservation?
+  var selectedAIWorkload: AIWorkloadObservation?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if isPresented {
+      content.inspector(isPresented: $isPresented) {
+        inspectorContent
+      }
+    } else {
+      content
+    }
+  }
+
+  @ViewBuilder
+  private var inspectorContent: some View {
+    if mode == .aiWorkloads, let selectedAIWorkload {
+      AIWorkloadInspector(
+        workload: selectedAIWorkload,
+        sessionSummary: focusedCheckSession?.aiWorkloads.first { $0.workloadID == selectedAIWorkload.id }
+      )
+      .inspectorColumnWidth(min: 300, ideal: 360, max: 440)
+    } else if let selectedProcess {
+      ProcessInspector(
+        process: selectedProcess,
+        isCurrent: performance.processes.contains { $0.pid == selectedProcess.pid },
+        mode: mode,
+        owningGroup: performance.appGroups.first { $0.memberPIDs.contains(selectedProcess.pid) },
+        checkActivity: focusedCheckSession?.activityGroups.first { $0.memberPIDs.contains(selectedProcess.pid) }
+      )
+      .inspectorColumnWidth(min: 260, ideal: 320, max: 380)
+    } else {
+      ContentUnavailableView(
+        "Select a process",
+        systemImage: "cursorarrow.click",
+        description: Text("Choose a row to inspect its local metadata.")
+      )
+      .inspectorColumnWidth(min: 260, ideal: 320, max: 380)
+    }
   }
 }
 
