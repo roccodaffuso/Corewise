@@ -106,6 +106,7 @@ struct PerformanceView: View {
           }
         }
         .padding(CorewiseLayout.space12)
+        .fixedSize(horizontal: false, vertical: true)
         .background(CorewiseVisual.quietSurface, in: .rect(cornerRadius: CorewiseVisual.controlRadius))
         .overlay {
           RoundedRectangle(cornerRadius: CorewiseVisual.controlRadius)
@@ -115,19 +116,29 @@ struct PerformanceView: View {
         if mode == .aiWorkloads {
           if presentedAIWorkloads.isEmpty {
             AIWorkloadsEmptyState(query: query)
-              .frame(maxWidth: .infinity, minHeight: 320)
+              .frame(maxWidth: .infinity, minHeight: 220)
           } else {
-            AIWorkloadTable(rows: presentedAIWorkloads, sessionSummaries: focusedCheckSession?.aiWorkloads ?? [], selection: $selectedAIWorkloadID)
+            VStack(spacing: 0) {
+              AIWorkloadMemoryMap(workloads: presentedAIWorkloads)
+                .padding(CorewiseLayout.space16)
+              Divider()
+              AIWorkloadTable(
+                rows: presentedAIWorkloads,
+                sessionSummaries: focusedCheckSession?.aiWorkloads ?? [],
+                selection: $selectedAIWorkloadID
+              )
               .frame(height: tableHeightForAI(presentedAIWorkloads))
-              .corewiseTableSurface()
+            }
+            .background(CorewiseVisual.contentSurface)
+            .corewiseTableSurface()
           }
         } else if presentedRows.isEmpty {
             ContentUnavailableView.search(text: query)
               .frame(maxWidth: .infinity, minHeight: 320)
         } else {
           ProcessEvidenceTable(mode: mode, rows: presentedRows, selection: $selectedPID)
-          .frame(height: tableHeight(for: presentedRows))
-          .corewiseTableSurface()
+            .frame(height: tableHeight(for: presentedRows))
+            .corewiseTableSurface()
         }
       }
       .padding(CorewiseLayout.pagePadding)
@@ -221,7 +232,7 @@ struct PerformanceView: View {
   }
 
   private func tableHeightForAI(_ rows: [AIWorkloadObservation]) -> Double {
-    min(max(Double(rows.count) * 34 + 58, 260), 520)
+    min(max(Double(rows.count) * 30 + 42, 126), 420)
   }
 
   private func processCountLabel(for rows: [ProcessObservation]) -> String {
@@ -309,21 +320,25 @@ private struct AIWorkloadsSummaryStrip: View {
   private var directMemory: UInt64 { workloads.reduce(0) { $0 + $1.directObservedMemoryBytes } }
   private var relatedMemory: UInt64 { workloads.reduce(0) { $0 + $1.relatedObservedMemoryBytes } }
   private var cpu: Double { workloads.reduce(0) { $0 + $1.totalCPUPercent } }
+  private var lastUpdated: Date? { workloads.map(\.lastUpdated).max() }
 
   var body: some View {
-    OperationalSection(title: "AI workload field", subtitle: "Observed local processes only. Logical and cloud agents are not counted.", instrument: true) {
-      HStack(alignment: .center, spacing: CorewiseLayout.space24) {
+    OperationalSection(title: "Local AI workloads", subtitle: "Current process attribution on this Mac.", instrument: true) {
+      HStack(alignment: .center, spacing: CorewiseLayout.space16) {
+        CorewiseBrandGlyph(size: 42, stateColor: CorewiseVisual.accent)
         VStack(alignment: .leading, spacing: CorewiseLayout.space4) {
-          Text("APP FOOTPRINT")
-            .font(.caption.weight(.semibold))
-            .tracking(0.8)
-            .foregroundStyle(.secondary)
-          Text(corewiseBytes(directMemory))
-            .font(.system(.largeTitle, design: .rounded, weight: .semibold).monospacedDigit())
-            .foregroundStyle(CorewiseVisual.accentBright)
-          Text("Directly identified local AI processes. Shared hosts are excluded from this total.")
-            .font(.callout)
-            .foregroundStyle(.secondary)
+          Text("Observed local processes")
+            .font(.headline)
+          HStack(spacing: CorewiseLayout.space8) {
+            Label("\(workloads.count) supported tools", systemImage: "dot.radiowaves.left.and.right")
+            if let lastUpdated {
+              Text("·")
+              Text(lastUpdated.formatted(date: .omitted, time: .shortened))
+                .monospacedDigit()
+            }
+          }
+          .font(.callout)
+          .foregroundStyle(.secondary)
         }
         Spacer()
         Button("Observe AI Session", systemImage: "record.circle", action: startSession)
@@ -332,14 +347,106 @@ private struct AIWorkloadsSummaryStrip: View {
           .accessibilityHint("Starts a ten minute local, volatile observation with an early result after one minute")
       }
       Divider()
-      HStack {
-        MetricRow(title: "Tools observed", value: String(workloads.count))
+
+      Grid(alignment: .leading, horizontalSpacing: CorewiseLayout.space24, verticalSpacing: CorewiseLayout.space12) {
+        GridRow {
+          MetricRow(title: "App footprint", value: corewiseBytes(directMemory))
+          MetricRow(title: "Related local work", value: corewiseBytes(relatedMemory))
+        }
         Divider()
-        MetricRow(title: "CPU now", value: corewisePercent(cpu))
-        Divider()
-        MetricRow(title: "Related local work", value: corewiseBytes(relatedMemory))
+          .gridCellColumns(2)
+        GridRow {
+          MetricRow(title: "CPU now", value: corewisePercent(cpu))
+          MetricRow(title: "Tools observed", value: String(workloads.count))
+        }
       }
+
+      Label(
+        "App footprint is directly identified. Related work is attributed separately; shared hosts and cloud activity stay outside the total.",
+        systemImage: "scope"
+      )
+      .font(.callout)
+      .foregroundStyle(.secondary)
+      .fixedSize(horizontal: false, vertical: true)
     }
+  }
+}
+
+private struct AIWorkloadMemoryMap: View {
+  var workloads: [AIWorkloadObservation]
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: CorewiseLayout.space12) {
+      HStack(alignment: .firstTextBaseline, spacing: CorewiseLayout.space16) {
+        VStack(alignment: .leading, spacing: CorewiseLayout.space4) {
+          Text("Memory attribution")
+            .font(.headline)
+          Text("Direct app footprint compared with related local work in the current sample.")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        }
+        Spacer(minLength: CorewiseLayout.space12)
+        HStack(spacing: CorewiseLayout.space12) {
+          legend(title: "App footprint", color: CorewiseVisual.accent)
+          legend(title: "Related work", color: CorewiseVisual.accentMuted)
+        }
+      }
+
+      Chart(workloads) { workload in
+        BarMark(
+          xStart: .value("Start memory", 0),
+          xEnd: .value("App footprint", megabytes(workload.directObservedMemoryBytes)),
+          y: .value("Tool", workload.name)
+        )
+        .foregroundStyle(CorewiseVisual.accent)
+
+        BarMark(
+          xStart: .value("App footprint", megabytes(workload.directObservedMemoryBytes)),
+          xEnd: .value("App footprint and related work", megabytes(workload.directObservedMemoryBytes + workload.relatedObservedMemoryBytes)),
+          y: .value("Tool", workload.name)
+        )
+        .foregroundStyle(CorewiseVisual.accentMuted)
+      }
+      .chartXAxis(.hidden)
+      .chartYAxis {
+        AxisMarks(position: .leading) {
+          AxisValueLabel()
+            .font(.callout.weight(.medium))
+        }
+      }
+      .chartLegend(.hidden)
+      .chartPlotStyle { plotArea in
+        plotArea
+          .background(CorewiseVisual.quietSurface.opacity(0.72), in: .rect(cornerRadius: 8))
+      }
+      .frame(height: min(max(Double(workloads.count) * 34 + 22, 96), 230))
+      .accessibilityLabel("Observed AI memory attribution")
+      .accessibilityValue(accessibilitySummary)
+    }
+  }
+
+  private var accessibilitySummary: String {
+    workloads.map { workload in
+      "\(workload.name), app footprint \(corewiseBytes(workload.directObservedMemoryBytes)), related work \(corewiseBytes(workload.relatedObservedMemoryBytes))"
+    }
+    .joined(separator: "; ")
+  }
+
+  private func megabytes(_ bytes: UInt64) -> Double {
+    Double(bytes) / 1_048_576
+  }
+
+  private func legend(title: String, color: Color) -> some View {
+    HStack(spacing: CorewiseLayout.space4) {
+      RoundedRectangle(cornerRadius: 2)
+        .fill(color)
+        .frame(width: 14, height: 6)
+        .accessibilityHidden(true)
+      Text(title)
+        .font(.callout)
+        .foregroundStyle(.secondary)
+    }
+    .accessibilityElement(children: .combine)
   }
 }
 
@@ -350,11 +457,28 @@ private struct AIWorkloadTable: View {
 
   var body: some View {
     Table(rows, selection: $selection) {
-      TableColumn("Tool", value: \.name)
-      TableColumn("Support") { workload in Text(workload.supportLevel.title) }
+      TableColumn("Tool") { workload in
+        HStack(spacing: CorewiseLayout.space8) {
+          Image(systemName: symbol(for: workload.category))
+            .foregroundStyle(CorewiseVisual.accent)
+            .frame(width: 16)
+            .accessibilityHidden(true)
+          Text(workload.name)
+            .fontWeight(.medium)
+        }
+      }
+      TableColumn("Support") { workload in
+        Label(
+          workload.supportLevel.title,
+          systemImage: workload.supportLevel == .verified ? "checkmark.seal" : "scope"
+        )
+        .foregroundStyle(workload.supportLevel == .verified ? .primary : .secondary)
+      }
         .width(min: 82, ideal: 100)
       TableColumn("Activity") { workload in
-        Text(sessionSummaries.first(where: { $0.workloadID == workload.id })?.activity.title ?? workload.activity.title)
+        AIWorkloadActivityLabel(
+          activity: sessionSummaries.first(where: { $0.workloadID == workload.id })?.activity ?? workload.activity
+        )
       }
         .width(min: 72, ideal: 88)
       TableColumn("CPU Now") { workload in Text(corewisePercent(workload.totalCPUPercent)).monospacedDigit() }
@@ -366,7 +490,42 @@ private struct AIWorkloadTable: View {
       TableColumn("Processes") { workload in Text(workload.processCount, format: .number).monospacedDigit() }
         .width(min: 68, ideal: 80)
     }
+    .scrollContentBackground(.hidden)
+    .background(CorewiseVisual.quietSurface)
     .accessibilityLabel("Supported local AI workloads")
+  }
+
+  private func symbol(for category: AIWorkloadCategory) -> String {
+    switch category {
+    case .codingAgent: "terminal"
+    case .aiEditor: "cursorarrow.rays"
+    case .cliAgent: "chevron.left.forwardslash.chevron.right"
+    case .localModelRuntime: "cpu"
+    }
+  }
+}
+
+private struct AIWorkloadActivityLabel: View {
+  var activity: AIWorkloadActivity
+
+  var body: some View {
+    HStack(spacing: CorewiseLayout.space4) {
+      Circle()
+        .fill(color)
+        .frame(width: 6, height: 6)
+        .accessibilityHidden(true)
+      Text(activity.title)
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("Activity: \(activity.title)")
+  }
+
+  private var color: Color {
+    switch activity {
+    case .active: CorewiseVisual.accent
+    case .sustained: CorewiseVisual.warning
+    case .quiet, .notObserved: .secondary
+    }
   }
 }
 
