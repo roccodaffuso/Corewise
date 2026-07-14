@@ -164,26 +164,14 @@ private struct ResourceConsumersSection: View {
 
   var body: some View {
     OperationalSection(title: "Resource field", subtitle: "The processes shaping CPU and memory pressure.", instrument: true) {
-      ViewThatFits(in: .horizontal) {
-        HStack(alignment: .top, spacing: CorewiseLayout.space24) {
-          ProcessMiniList(title: "Top CPU", processes: Array(performance.processes.prefix(3)), mode: .cpu)
-          Divider()
-          ProcessMiniList(
-            title: "Top Memory",
-            processes: Array(performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }.prefix(3)),
-            mode: .memory
-          )
-        }
-
-        VStack(spacing: CorewiseLayout.space16) {
-          ProcessMiniList(title: "Top CPU", processes: Array(performance.processes.prefix(3)), mode: .cpu)
-          Divider()
-          ProcessMiniList(
-            title: "Top Memory",
-            processes: Array(performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }.prefix(3)),
-            mode: .memory
-          )
-        }
+      HStack(alignment: .top, spacing: CorewiseLayout.space24) {
+        ProcessMiniList(title: "Top CPU", processes: Array(performance.processes.prefix(3)), mode: .cpu)
+        Divider()
+        ProcessMiniList(
+          title: "Top Memory",
+          processes: Array(performance.processes.sorted { $0.observedMemoryBytes > $1.observedMemoryBytes }.prefix(3)),
+          mode: .memory
+        )
       }
 
       Button("Open Performance", systemImage: "arrow.right", action: showAll)
