@@ -8,7 +8,7 @@
 - [ ] Select and add an OSI-approved license.
 - [ ] Freeze the permanent bundle identifier, versioning policy, copyright metadata, and trademark boundary.
 - [x] Add universal Developer ID-signed, hardened-runtime, timestamped DMG packaging with checksum and mounted-artifact verification.
-- [ ] Validate the `notarytool` Keychain profile, Apple acceptance, stapling, and Gatekeeper assessment in public release mode.
+- [x] Validate the `notarytool` Keychain profile, Apple acceptance, zero-issue log, stapling, and local Gatekeeper assessment in public release mode.
 - [ ] Validate the distribution artifact on a clean account and a second physical Mac before publishing the first binary.
 
 ## Implemented: Focused Diagnostics technical foundation

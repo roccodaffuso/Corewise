@@ -5,10 +5,11 @@ Last updated: 2026-07-14
 ## Public release foundation
 
 - Added a repository-owned Corewise app icon derived from the existing signal glyph, a reproducible Swift generator, and bundle metadata that installs the `.icns` asset with explicit `0.1.0` beta-line version values.
-- Rebuilt the public README around the current product truth, privacy boundary, source-build path, and the absence of a signed public binary.
+- Rebuilt the public README around the current product truth, privacy boundary, source-build path, and the absence of a published binary.
 - Documented the recommended consumer path as a universal Developer ID-signed and notarized DMG on GitHub Releases, with Homebrew Cask following only after the release artifact is stable.
-- Added separate preview and release packaging modes. The verified preview builds arm64 and x86_64 separately, merges them into one universal executable, signs with Developer ID and hardened runtime, creates and remounts a compressed DMG, and writes a SHA-256 checksum. Public mode remains gated on a `notarytool` Keychain profile and successful Apple notarization.
-- Release blockers remain explicit: choose an OSI-approved license, freeze the permanent bundle identifier and copyright metadata, audit public history/assets, build universal, enable hardened runtime and secure timestamps, notarize, and validate on a second physical Mac.
+- Added separate preview and release packaging modes. Both build arm64 and x86_64, merge one universal executable, sign with Developer ID and hardened runtime, create and remount a compressed DMG, and write a SHA-256 checksum.
+- The `0.1.0 (1)` release candidate was accepted by Apple under submission `bac00019-d99a-431e-b13a-8db5e1bd8d39`. The notarization log reports `Ready for distribution`, status code `0`, and no issues; stapling, ticket validation, local Gatekeeper assessment, signature verification, and checksum verification all pass. SHA-256: `66f15cb20959267e3fc835cf4f7e4aafc52de87f4bac61e66c1e54cb9248078f`.
+- Remaining public-release blockers are explicit: choose an OSI-approved license, freeze permanent identity and copyright metadata, audit public history/assets, validate on a clean account and second physical Mac, and retest Full Disk Access on the exact distribution-signed bundle.
 
 ## Focused Diagnostics technical implementation
 

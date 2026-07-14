@@ -20,7 +20,7 @@ Corewise is a local-first macOS diagnostic utility for understanding performance
 No account. No backend. No analytics. No automatic cleanup.
 
 > [!IMPORTANT]
-> Corewise is currently available as source code. The first signed and notarized public binary has not been released yet. Do not treat GitHub's automatic “Source code” archives as installable app downloads.
+> Corewise is currently available publicly as source code. A signed and notarized release candidate exists locally, but no binary has been published yet. Do not treat GitHub's automatic “Source code” archives as installable app downloads.
 
 ## What Corewise does
 
@@ -49,7 +49,7 @@ script/build_and_run.sh
 
 The script builds and signs a local development bundle at `dist/Corewise.app`, then opens it. Full Disk Access is not required to run Corewise; it is optional and used only when you explicitly start Full Storage Analysis.
 
-For the planned signed DMG, Homebrew option, Gatekeeper requirements, and update strategy, see [Installation and distribution](docs/INSTALLATION.md).
+For the signed DMG workflow, Homebrew option, Gatekeeper requirements, and update strategy, see [Installation and distribution](docs/INSTALLATION.md).
 
 ## Privacy and safety model
 
@@ -74,6 +74,8 @@ swift test
 swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 script/build_and_run.sh --verify
 script/package_release.sh preview
+# Requires a validated notarytool Keychain profile:
+script/package_release.sh release --notary-profile corewise-notary
 ```
 
 The app icon is reproducible from repository-owned drawing code:
@@ -103,4 +105,4 @@ Before proposing a new diagnostic, document its public macOS source, failure mod
 
 Corewise is under active beta development. The source is public for inspection and collaboration, but an open-source license has not yet been selected. Until a `LICENSE` file is added, copyright law reserves reuse and redistribution rights by default.
 
-Selecting an OSI-approved license, freezing the permanent bundle identifier, and producing a Developer ID-signed and notarized release are explicit gates before the first public binary.
+Selecting an OSI-approved license, freezing the permanent bundle identifier, auditing the public repository, and validating the notarized release candidate on a second Mac remain explicit gates before the first public binary.

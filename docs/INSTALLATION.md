@@ -63,7 +63,29 @@ Create the profile once with credentials from the Apple Developer account:
 xcrun notarytool store-credentials corewise-notary
 ```
 
+If Apple ID authentication is unavailable, use an App Store Connect **Team API Key**. Individual API keys do not support `notarytool`. Keep the downloaded `.p8` outside the repository with owner-only permissions, then store a validated Keychain profile:
+
+```sh
+xcrun notarytool store-credentials corewise-notary \
+  --key ~/.private_keys/AuthKey_<KEY_ID>.p8 \
+  --key-id <KEY_ID> \
+  --issuer <ISSUER_ID> \
+  --validate
+```
+
+Never commit the `.p8`, Key ID, Issuer ID, Apple ID, app-specific password, or Keychain export.
+
 The preview filename contains `-preview` so it cannot be confused with a publishable artifact.
+
+## Current notarization result
+
+The local `0.1.0 (1)` universal release candidate was accepted by Apple's notary service on 2026-07-14. Submission `bac00019-d99a-431e-b13a-8db5e1bd8d39` returned `Ready for distribution`, status code `0`, and no issues. The DMG ticket was stapled and validated, and local Gatekeeper assessment reported `Notarized Developer ID`.
+
+- Artifact: `dist/releases/Corewise-0.1.0-universal.dmg`
+- Architectures: `arm64`, `x86_64`
+- SHA-256: `66f15cb20959267e3fc835cf4f7e4aafc52de87f4bac61e66c1e54cb9248078f`
+
+This is a local release candidate, not a published binary. License, permanent identity, repository audit, clean-account/second-Mac validation, and Full Disk Access return-flow QA remain release gates.
 
 ## Planned user flow for the first beta
 
@@ -102,9 +124,10 @@ Before publishing an installable Corewise beta:
 - [ ] Confirm the repository and Git history contain no secrets, personal paths, signing material, or unlicensed assets.
 - [x] Build and test a universal Apple Silicon and Intel application bundle.
 - [x] Sign every executable with Developer ID Application, hardened runtime, and secure timestamp.
-- [ ] Submit the packaged DMG with `notarytool` using a Keychain profile.
-- [ ] Review the notarization log and staple the accepted ticket.
-- [ ] Verify with `codesign`, `spctl`, a clean user account, and a second physical Mac.
+- [x] Submit the packaged DMG with `notarytool` using a Keychain profile.
+- [x] Review the zero-issue notarization log and staple the accepted ticket.
+- [x] Verify the release candidate locally with `codesign`, `stapler`, and `spctl`.
+- [ ] Validate installation and first launch with a clean user account and a second physical Mac.
 - [ ] Publish SHA-256 checksums and release notes with supported macOS versions and known limitations.
 - [ ] Test the optional Full Disk Access return flow on the exact distribution-signed bundle identifier.
 
