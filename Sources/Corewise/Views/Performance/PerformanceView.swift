@@ -63,14 +63,15 @@ struct PerformanceView: View {
           )
         }
 
-        HStack {
+        HStack(spacing: CorewiseLayout.space8) {
           Picker("Performance focus", selection: modeSelection) {
             ForEach(PerformanceMode.allCases) { mode in
               Text(mode.title).tag(mode)
             }
           }
           .pickerStyle(.segmented)
-          .frame(maxWidth: 360)
+          .labelsHidden()
+          .frame(maxWidth: 300)
 
           HStack(spacing: CorewiseLayout.space8) {
             Image(systemName: "magnifyingglass")
@@ -89,24 +90,29 @@ struct PerformanceView: View {
                 Text(sort.title).tag(sort)
               }
             }
-            .frame(width: 168)
+            .frame(width: 144)
             Text("\(presentedAIWorkloads.count) observed")
+              .font(.callout)
               .foregroundStyle(.secondary)
               .monospacedDigit()
+              .fixedSize()
           } else {
             Picker("Sort", selection: $sort) {
               ForEach(ProcessTablePresenter.availableSorts(for: mode)) { sort in
                 Text(sort.rawValue).tag(sort)
               }
             }
-            .frame(width: 168)
+            .frame(width: 144)
             Text(processCountLabel(for: presentedRows))
+              .font(.callout)
               .foregroundStyle(.secondary)
               .monospacedDigit()
+              .fixedSize()
           }
         }
-        .padding(CorewiseLayout.space12)
-        .fixedSize(horizontal: false, vertical: true)
+        .controlSize(.small)
+        .padding(.horizontal, CorewiseLayout.space12)
+        .frame(height: 48)
         .background(CorewiseVisual.quietSurface, in: .rect(cornerRadius: CorewiseVisual.controlRadius))
         .overlay {
           RoundedRectangle(cornerRadius: CorewiseVisual.controlRadius)
