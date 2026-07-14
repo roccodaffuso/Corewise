@@ -16,7 +16,7 @@ struct ContentView: View {
   var body: some View {
     NavigationSplitView {
       CorewiseSidebar(selectedSectionID: $selectedSectionID)
-        .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 240)
+        .navigationSplitViewColumnWidth(min: 218, ideal: 218, max: 218)
     } detail: {
       ZStack(alignment: .top) {
         CorewiseBackdrop()
@@ -37,6 +37,7 @@ struct ContentView: View {
       }
       .navigationTitle(selectedSection.title)
     }
+    .background(CorewiseVisual.contentBackground)
     .tint(CorewiseVisual.accent)
     .overlay {
       if isShowingQuickActions {
@@ -100,6 +101,7 @@ private struct CorewiseSidebar: View {
         Rectangle().fill(CorewiseVisual.windowBackground)
         CorewiseVisual.sidebarFill(colorScheme: colorScheme)
       }
+      .ignoresSafeArea()
     }
   }
 
