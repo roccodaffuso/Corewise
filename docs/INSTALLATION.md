@@ -55,6 +55,18 @@ script/package_release.sh release --notary-profile corewise-notary
 
 Both modes build arm64 and x86_64 separately, merge the executable with `lipo`, assemble the app bundle, enable hardened runtime, add a secure timestamp, create a compressed DMG with an Applications shortcut, mount it again for inspection, and publish a SHA-256 checksum under `dist/releases/`.
 
+### GitHub Actions validation
+
+Pull requests run the Swift test suite and strict-concurrency build on clean ARM64 and Intel macOS runners. Release candidates use a separate workflow that downloads the exact DMG and checksum from a Draft or published GitHub Release, then verifies:
+
+- SHA-256 and disk-image integrity;
+- the stapled notarization ticket and Gatekeeper assessment;
+- the mounted app's strict Developer ID signature and hardened runtime;
+- bundle identifier, version, build number, minimum macOS version, and universal architectures;
+- a non-interactive launch smoke test on both runner architectures.
+
+The workflow intentionally receives no Apple signing or notarization secrets. Signing and notarization remain local until the release process has been audited further. Full Disk Access, TCC prompts, and visual first-launch behavior still require manual macOS QA.
+
 `release` additionally submits the DMG to Apple's notary service, waits for acceptance, staples the ticket, validates it, and runs a Gatekeeper assessment. It fails before packaging if the notary profile is missing. Notarization credentials stay in the login Keychain and must never be committed.
 
 Create the profile once with credentials from the Apple Developer account:
