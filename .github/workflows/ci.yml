@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         runner:
-          - macos-14
-          - macos-15-intel
+          - macos-26
+          - macos-26-intel
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Check out source

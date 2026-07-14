@@ -35,8 +35,8 @@ jobs:
       fail-fast: false
       matrix:
         runner:
-          - macos-14
-          - macos-15-intel
+          - macos-26
+          - macos-26-intel
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ github.token }}
@@ -49,11 +49,30 @@ jobs:
       - name: Download release candidate
         run: |
           mkdir -p "$RUNNER_TEMP/corewise-release"
-          gh release download "$RELEASE_TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --pattern "$ASSET_NAME" \
-            --pattern "$ASSET_NAME.sha256" \
-            --dir "$RUNNER_TEMP/corewise-release"
+          releases="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100")"
+
+          download_asset() {
+            local name="$1"
+            local asset_id
+            asset_id="$(jq -r \
+              --arg tag "$RELEASE_TAG" \
+              --arg name "$name" \
+              '.[] | select(.tag_name == $tag) | .assets[] | select(.name == $name) | .id' \
+              <<<"$releases")"
+
+            if [[ -z "$asset_id" || "$asset_id" == "null" ]]; then
+              echo "Asset not found in release $RELEASE_TAG: $name" >&2
+              exit 1
+            fi
+
+            gh api \
+              -H "Accept: application/octet-stream" \
+              "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" \
+              >"$RUNNER_TEMP/corewise-release/$name"
+          }
+
+          download_asset "$ASSET_NAME"
+          download_asset "$ASSET_NAME.sha256"
 
       - name: Validate signed and notarized DMG
         run: |
