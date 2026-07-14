@@ -73,6 +73,7 @@ swift build
 swift test
 swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 script/build_and_run.sh --verify
+script/package_release.sh preview
 ```
 
 The app icon is reproducible from repository-owned drawing code:

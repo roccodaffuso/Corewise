@@ -5,7 +5,7 @@ MODE="${1:-run}"
 APP_NAME="Corewise"
 BUNDLE_ID="com.roccodaffuso.Corewise"
 MIN_SYSTEM_VERSION="14.0"
-APP_VERSION="${COREWISE_VERSION:-0.1.0-beta}"
+APP_VERSION="${COREWISE_VERSION:-0.1.0}"
 BUILD_NUMBER="${COREWISE_BUILD_NUMBER:-1}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

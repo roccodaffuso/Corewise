@@ -7,7 +7,8 @@
 - [x] Document the recommended DMG, Homebrew, source-build, and Mac App Store distribution paths.
 - [ ] Select and add an OSI-approved license.
 - [ ] Freeze the permanent bundle identifier, versioning policy, copyright metadata, and trademark boundary.
-- [ ] Add a universal Developer ID-signed, hardened-runtime, timestamped, notarized, stapled, and checksummed release pipeline.
+- [x] Add universal Developer ID-signed, hardened-runtime, timestamped DMG packaging with checksum and mounted-artifact verification.
+- [ ] Validate the `notarytool` Keychain profile, Apple acceptance, stapling, and Gatekeeper assessment in public release mode.
 - [ ] Validate the distribution artifact on a clean account and a second physical Mac before publishing the first binary.
 
 ## Implemented: Focused Diagnostics technical foundation

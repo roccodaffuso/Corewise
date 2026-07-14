@@ -41,6 +41,30 @@ script/build_and_run.sh
 
 The generated application is placed at `dist/Corewise.app`. The local build script uses an available development signing identity and falls back to ad-hoc signing when necessary. That behavior is suitable for development only; it is not the public release-signing workflow.
 
+## DMG packaging
+
+Corewise now has two explicit packaging modes:
+
+```sh
+# Universal Developer ID-signed preview; not notarized and never for publishing
+script/package_release.sh preview
+
+# Public artifact; requires a notarytool Keychain profile
+script/package_release.sh release --notary-profile corewise-notary
+```
+
+Both modes build arm64 and x86_64 separately, merge the executable with `lipo`, assemble the app bundle, enable hardened runtime, add a secure timestamp, create a compressed DMG with an Applications shortcut, mount it again for inspection, and publish a SHA-256 checksum under `dist/releases/`.
+
+`release` additionally submits the DMG to Apple's notary service, waits for acceptance, staples the ticket, validates it, and runs a Gatekeeper assessment. It fails before packaging if the notary profile is missing. Notarization credentials stay in the login Keychain and must never be committed.
+
+Create the profile once with credentials from the Apple Developer account:
+
+```sh
+xcrun notarytool store-credentials corewise-notary
+```
+
+The preview filename contains `-preview` so it cannot be confused with a publishable artifact.
+
 ## Planned user flow for the first beta
 
 1. Open the latest Corewise release on GitHub or follow the verified link from `corewise.dev`.
@@ -76,9 +100,9 @@ Before publishing an installable Corewise beta:
 - [ ] Select and add an OSI-approved source license.
 - [ ] Freeze the canonical name, permanent bundle identifier, version, and copyright metadata.
 - [ ] Confirm the repository and Git history contain no secrets, personal paths, signing material, or unlicensed assets.
-- [ ] Build and test a universal Apple Silicon and Intel application bundle.
-- [ ] Sign every executable with Developer ID Application, hardened runtime, and secure timestamp.
-- [ ] Package the app in a DMG and submit it with `notarytool`.
+- [x] Build and test a universal Apple Silicon and Intel application bundle.
+- [x] Sign every executable with Developer ID Application, hardened runtime, and secure timestamp.
+- [ ] Submit the packaged DMG with `notarytool` using a Keychain profile.
 - [ ] Review the notarization log and staple the accepted ticket.
 - [ ] Verify with `codesign`, `spctl`, a clean user account, and a second physical Mac.
 - [ ] Publish SHA-256 checksums and release notes with supported macOS versions and known limitations.
