@@ -18,8 +18,7 @@ on:
         required: true
         default: Corewise-0.1.0-universal.dmg
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: release-candidate-${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +30,10 @@ jobs:
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
+    # GitHub exposes Draft Releases only to tokens with push access. Fork PRs
+    # are excluded above, so no untrusted fork receives this permission.
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
