@@ -5,6 +5,8 @@ MODE="${1:-run}"
 APP_NAME="Corewise"
 BUNDLE_ID="com.roccodaffuso.Corewise"
 MIN_SYSTEM_VERSION="14.0"
+APP_VERSION="${COREWISE_VERSION:-0.1.0-beta}"
+BUILD_NUMBER="${COREWISE_BUILD_NUMBER:-1}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
@@ -57,10 +59,16 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$APP_NAME</string>
   <key>CFBundleIdentifier</key>
   <string>$BUNDLE_ID</string>
+  <key>CFBundleIconFile</key>
+  <string>Corewise.icns</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$APP_VERSION</string>
+  <key>CFBundleVersion</key>
+  <string>$BUILD_NUMBER</string>
   <key>LSMinimumSystemVersion</key>
   <string>$MIN_SYSTEM_VERSION</string>
   <key>NSPrincipalClass</key>

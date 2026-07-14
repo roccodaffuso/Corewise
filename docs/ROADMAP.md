@@ -1,5 +1,15 @@
 # Roadmap
 
+## Public release foundation
+
+- [x] Add a reproducible repository-owned app icon and include it in the generated application bundle.
+- [x] Replace the prototype README with a public-facing product, privacy, build, and contribution overview.
+- [x] Document the recommended DMG, Homebrew, source-build, and Mac App Store distribution paths.
+- [ ] Select and add an OSI-approved license.
+- [ ] Freeze the permanent bundle identifier, versioning policy, copyright metadata, and trademark boundary.
+- [ ] Add a universal Developer ID-signed, hardened-runtime, timestamped, notarized, stapled, and checksummed release pipeline.
+- [ ] Validate the distribution artifact on a clean account and a second physical Mac before publishing the first binary.
+
 ## Implemented: Focused Diagnostics technical foundation
 
 - [x] Add symptom-led Focused Check lifecycle and cautious pure resolver.

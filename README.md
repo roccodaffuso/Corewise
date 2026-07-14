@@ -1,108 +1,103 @@
-# Corewise
+<p align="center">
+  <img src="docs/assets/corewise-app-icon.png" width="112" height="112" alt="Corewise app icon">
+</p>
 
-Corewise is a SwiftUI macOS utility that explains what a Mac is doing in plain language. It is local-first, has no account, no backend, and no tracking.
+<h1 align="center">Corewise</h1>
 
-The current build implements the **Corewise Signal System**: a signal-first, keyboard-friendly macOS workspace that gives one calm answer first and progressively exposes source-level detail. Runtime values are either live, planned, unavailable, or avoided; Corewise never presents synthetic diagnostic data as if it came from the Mac.
+<p align="center">
+  Understand what your Mac is doing, without giving up your data.
+</p>
 
-It also includes the technical implementation of **Focused Check**: choose a symptom from Overview, let Corewise observe the same supported local snapshot stream, then review a cautious result with bounded evidence, one next action, and explicit limitations. No second sampler, persistent history, network service, cleanup action, or causal claim is introduced.
+<p align="center">
+  <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-1f6feb?style=flat-square">
+  <img alt="Swift 5.9+" src="https://img.shields.io/badge/Swift-5.9%2B-f05138?style=flat-square">
+  <img alt="Local only" src="https://img.shields.io/badge/Data-local_only-2db8bd?style=flat-square">
+  <img alt="Beta status" src="https://img.shields.io/badge/Status-public_beta_in_preparation-d29922?style=flat-square">
+</p>
 
-Performance also includes **AI Workloads**, a privacy-preserving view of supported local tools such as Codex, Claude, Cursor, and Ollama. It separates app footprint from attributable local work and shared hosts; it does not claim to count logical or cloud agents.
+Corewise is a local-first macOS diagnostic utility for understanding performance, storage, battery, startup activity, thermal state, and recurring app issues. It leads with observable signals, explains their limits, and never claims that one number represents the health of your Mac.
 
-## Current Truth
+No account. No backend. No analytics. No automatic cleanup.
 
-Implemented live signals:
+> [!IMPORTANT]
+> Corewise is currently available as source code. The first signed and notarized public binary has not been released yet. Do not treat GitHub's automatic “Source code” archives as installable app downloads.
 
-- Overview status rail derived only from typed, supported live signals; three ranked groups cover Performance, Storage, and the most relevant System signal.
-- No health score or coverage-as-health presentation. Coverage remains a quiet data-quality disclosure.
-- Native grouped sidebar, single-window routing, toolbar refresh, inline errors, redacted first-load skeleton, and `⌘K` Quick Actions.
-- Data Access overview for live, user-selected, planned, unavailable, and avoided data paths. This supports trust but is not the primary first-viewport content.
-- System CPU load and user/system/idle split from macOS CPU ticks.
-- System RAM fields from VM statistics: used, app memory, cached files, wired, compressed, and swap.
-- Live process table with PID, user, thread count, CPU %, observed memory, RSS, and physical footprint when macOS returns it.
-- Swap Insight in `Performance > Memory`: real swap used/total/available, trend, swap in/out rates, swapped VM pages, encryption state, and likely memory-pressure contributors.
-- Performance precision console with genuinely distinct CPU and Memory workflows: CPU shows active processes, CPU Now/Time and threads; Memory shows significant holders, observed memory, footprint, RSS and page-ins. Each mode has its own history treatment, sort set, and contextual inspector.
-- App grouping derived from real process rows, kept separate from individual process rows.
-- Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
-- Battery cycle count, maximum capacity, and condition when safe battery registry keys are present.
-- Startup volume total, used, available, available percent, Finder-style free space, opportunistic space when macOS exposes it, volume name, format, local/internal flags, and read-only state.
-- Startup volume breakdown as used vs available space.
-- Full Storage Analysis after one optional macOS Full Disk Access grant: Corewise checks once when the app becomes active after the permission flow, scans curated scopes without per-folder prompts, and later rescans only when requested. It reports real progress without inventing a percentage and keeps the last completed result on cancellation or failure.
-- Folder Scope fallback for users who prefer approving one folder instead of Full Disk Access; the selected scope is remembered and is not requested again.
-- Short local performance history for sustained CPU interpretation.
-- Live swap usage and Swap Insight. Corewise does not show exact per-process swap ownership because macOS does not expose that through reliable public APIs. Memory pressure remains unavailable until Corewise has a reliable public parity source.
-- Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
-- High-level thermal state from `ProcessInfo.thermalState`.
-- User-selected crash report folder parsing for app crash counts and repeated-crash patterns.
-- Local Diagnostic Report page that copies Summary or Markdown text without uploads, stack traces, file contents, cleanup, or persistence.
-- Compact menu bar continuity surface with the same attention headline, CPU/memory/swap strip, top process rows, and direct routing to Performance.
-- Focused Check for Slow, Hot, Battery Drain, Storage Full, and immediate Just Checking, with continuation across navigation/window closure.
-- Focused results expose duration, freshness, sources, coverage, direct copy, and typed evidence deep links; Performance carries at most three app groups aggregated across the observation window and preserves the raw process table underneath.
-- Stable app-process grouping and typed explanations for helpers, WindowServer, Spotlight, cloud sync, media analysis, Corewise, and unknown processes while preserving raw rows.
-- Storage coverage and attribution that distinguish classified approved-scope space, outside-scope space, inaccessible items, and owner/review guidance.
-- Local Focused Check Summary/Markdown copy with home-directory redaction.
+## What Corewise does
 
-Planned or unavailable areas:
+- **Focused Check** observes supported local signals when a Mac feels slow, hot, battery-hungry, or full, then returns a cautious explanation and one useful next step.
+- **Performance** separates CPU activity, memory context, swap, and live process evidence instead of presenting duplicate rankings.
+- **AI Workloads** attributes supported local tools such as Codex, Claude, Cursor, and Ollama while keeping app footprint, related local work, and shared hosts separate.
+- **Storage** shows startup-volume headroom and can perform a read-only analysis after one optional Full Disk Access grant or a user-selected folder scope.
+- **System diagnostics** cover safe battery basics, launch plist inventory, high-level thermal state, and user-selected crash report patterns where macOS exposes reliable data.
+- **Local reports** copy a plain-language Summary or Markdown report without uploading files, stack traces, prompts, or project details.
 
-- A global health score is intentionally not part of the current product. Cross-section prioritization is provided by the conservative live-only `AttentionSummary` model.
-- Battery energy impact and risk scoring.
-- Whole-disk raw scans, Trash inspection, and unrestricted root/System/private folder classification.
-- Modern login items, background items, privileged helpers, and startup code signing checks.
-- WindowServer interpretation.
-- Thermal contributors beyond high-level public thermal state.
+Corewise deliberately avoids health scores, process killing, automatic deletion, private sensor APIs, hidden folder scans, and claims of exact parity with Activity Monitor.
 
-Unavailable by design in the MVP:
+## Install today: build from source
 
-- Whole-system wattage through private sensors, sudo-only tools, or unsupported APIs.
-- Hidden personal-folder scans without Full Disk Access or explicit folder scope.
-- Automatic diagnostic report scans during refresh.
-- Automatic deletion, forced app quitting, or destructive optimization.
+Requirements:
 
-## Build And Run
+- macOS 14 Sonoma or newer
+- Xcode 15 or newer, or compatible Xcode Command Line Tools
+- Git
 
 ```sh
-swift build
+git clone https://github.com/roccodaffuso/CoreWise.git
+cd CoreWise
 script/build_and_run.sh
 ```
 
-The app target is defined in `Package.swift` and requires macOS 14 or newer.
+The script builds and signs a local development bundle at `dist/Corewise.app`, then opens it. Full Disk Access is not required to run Corewise; it is optional and used only when you explicitly start Full Storage Analysis.
 
-`script/build_and_run.sh` signs the generated app bundle with the first available Apple Development identity so macOS can recognize Corewise consistently across local builds. Set `COREWISE_CODESIGN_IDENTITY` to override the identity; ad-hoc signing is used only when no valid identity exists.
+For the planned signed DMG, Homebrew option, Gatekeeper requirements, and update strategy, see [Installation and distribution](docs/INSTALLATION.md).
 
-## Performance Semantics
+## Privacy and safety model
 
-Corewise uses public macOS APIs, not private `sysmond` internals. Process rows are real, but they are not promised to match Monitoraggio Attività bit-for-bit. The primary memory value is `observed memory`: the larger public value between physical footprint and resident memory, with RSS still shown separately. System memory used is derived from app memory, wired memory, and compressed memory; cached files are shown separately because macOS can reclaim much of that memory.
+Corewise reads supported diagnostics on the Mac where it is running. It has no network client, telemetry SDK, account system, payment flow, or remote database.
 
-Swap Insight explains the system swap context from `vm.swapusage`, VM statistics, and process page-in/memory signals. It ranks likely memory-pressure contributors, but it never says that a process owns a specific amount of swap.
+Every diagnostic source is classified as:
 
-## Product Workflows
+- **Live** — read from a supported local macOS source.
+- **Planned** — intentionally not implemented yet.
+- **Unavailable** — not currently exposed with enough reliability.
+- **Avoided** — intentionally excluded for safety, privacy, or product integrity.
 
-Corewise is organized around three trustworthy workflows:
+Storage and crash-report details require an explicit user action. Corewise does not upload diagnostic data or perform destructive remediation. Read the full [safety and privacy model](docs/SAFETY_PRIVACY.md) and [data-source matrix](docs/DATA_SOURCES.md).
 
-- Focused Check: start from the symptom, observe supported signals for the appropriate window, and continue into typed Performance or Storage evidence.
+## Development
 
-- Performance: understand CPU, memory, swap, and which live process rows are active.
-- Full Storage Analysis: grant Full Disk Access once in macOS; Corewise rechecks on return, classifies curated standard folders locally without folder-by-folder prompts, and does not repeat broad scans during normal refresh.
-- Folder Scope: choose one remembered folder only when the user does not want Full Disk Access; review the largest real files and folders, and reveal items in Finder manually.
-- Diagnostic Report: copy a local Summary or Markdown report for review without collecting stack traces or file contents.
-- Menu Bar: glance at the same live CPU, memory, swap, and top three CPU/memory process rows without opening a second diagnostic surface.
-- Settings: control local display/report preferences; Settings does not enable cleanup, tracking, or broad hidden scans.
+Corewise is a dependency-free Swift Package Manager application targeting macOS 14+.
 
-## Project Docs
+```sh
+swift build
+swift test
+swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
+script/build_and_run.sh --verify
+```
 
-- `PRODUCT.md` defines positioning and design principles.
-- `docs/PROJECT_STATUS.md` records the current product state and risks.
-- `docs/ARCHITECTURE.md` explains the SwiftUI shell, store, collectors, and data flow.
-- `docs/DATA_SOURCES.md` is the source-of-truth matrix for live, planned, unavailable, and avoided signals.
-- `docs/SAFETY_PRIVACY.md` defines the local-first and non-destructive rules.
-- `docs/DESIGN_SYSTEM.md` captures the intended Apple-native diagnostic UI.
-- `docs/PREMIUM_APP_REDESIGN_PLAN.md` records the redesign history and identifies the implemented Signal System as the current direction.
-- `docs/ROADMAP.md` orders the next implementation phases.
-- `docs/DECISIONS.md` records product and technical decisions.
-- `docs/SETTINGS_PLAN.md` defines how Corewise should mature its native macOS Settings window without turning it into another diagnostic page.
-- `docs/SWAP_INSIGHT.md` documents swap sources, limits, and allowed wording.
-- `docs/PERFORMANCE_BASELINE_2026-07-10.md` records the Focused Check CPU baseline, the corrected Storage allocation attribution, and the passing release memory profile.
-- `docs/FOCUSED_DIAGNOSTICS_COMPLETION_AUDIT.md` maps every plan area to current evidence and keeps external/manual release gates explicit.
+The app icon is reproducible from repository-owned drawing code:
 
-## Operating Rule
+```sh
+swift script/generate_app_icon.swift
+```
 
-Every diagnostic value must be labeled honestly as `Live`, `Planned`, `Unavailable`, or `Avoided`. If Corewise cannot read a signal through safe public macOS APIs, it should say so and offer a manual review path instead of implying certainty.
+Useful project documents:
+
+- [Product principles](PRODUCT.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Current project status](docs/PROJECT_STATUS.md)
+- [Design system](docs/DESIGN_SYSTEM.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Decision log](docs/DECISIONS.md)
+
+## Contributing
+
+Issues and focused pull requests are welcome while the public beta is being prepared. Please keep changes narrow, preserve the local-first and non-destructive constraints, and never attach diagnostic reports containing usernames, personal paths, process arguments, prompts, or private file contents.
+
+Before proposing a new diagnostic, document its public macOS source, failure mode, privacy boundary, and user-facing wording.
+
+## Project status and license
+
+Corewise is under active beta development. The source is public for inspection and collaboration, but an open-source license has not yet been selected. Until a `LICENSE` file is added, copyright law reserves reuse and redistribution rights by default.
+
+Selecting an OSI-approved license, freezing the permanent bundle identifier, and producing a Developer ID-signed and notarized release are explicit gates before the first public binary.
