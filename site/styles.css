@@ -135,6 +135,18 @@ nav a:focus-visible { color: var(--ink); }
   content: "";
 }
 
+.hero::after {
+  position: absolute;
+  inset: -18%;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 75% 43%, rgba(104, 222, 212, 0.2), transparent 18%),
+    radial-gradient(circle at 63% 56%, rgba(72, 162, 151, 0.1), transparent 27%);
+  animation: hero-energy 6.5s ease-in-out infinite alternate;
+  pointer-events: none;
+  content: "";
+}
+
 .signal-canvas,
 .cta-canvas {
   position: absolute;
@@ -873,6 +885,11 @@ footer nav { justify-self: end; gap: 20px; }
 @keyframes hero-atmosphere {
   from { opacity: 0.45; transform: rotate(-4deg) scale(0.96); }
   to { opacity: 0.9; transform: rotate(7deg) scale(1.04); }
+}
+
+@keyframes hero-energy {
+  from { opacity: 0.48; transform: translate3d(-1.5%, 1%, 0) scale(0.94); }
+  to { opacity: 0.92; transform: translate3d(1.5%, -1%, 0) scale(1.06); }
 }
 
 @keyframes live-ring {

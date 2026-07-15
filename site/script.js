@@ -68,19 +68,23 @@ const createSignalField = (canvas, options = {}) => {
 
     for (let line = 0; line < lineCount; line += 1) {
       const alpha = (0.045 + line * 0.013) * intensity;
+      const offset = (line - (lineCount - 1) / 2) * 46;
+      const waveY = (normalizedX) => {
+        const distance = Math.abs(normalizedX - pointer.x);
+        const influence = pointer.active ? Math.max(0, 1 - distance * 3.1) : 0.2;
+        const baseWave = Math.sin(normalizedX * 12 + phase * (1 + line * 0.08)) * (9 + line * 2.2);
+        const fineWave = Math.sin(normalizedX * 36 - phase * 1.7 + line) * 3.2;
+        const pointerWave = Math.sin(normalizedX * 54 + phase * 2) * influence * 14;
+        return centerY + offset + baseWave + fineWave + pointerWave;
+      };
+
       context.beginPath();
       context.strokeStyle = `rgba(104, 222, 212, ${alpha})`;
       context.lineWidth = line === Math.floor(lineCount / 2) ? 1.2 : 0.7;
 
       for (let x = -20; x <= width + 20; x += 12) {
         const normalizedX = x / Math.max(width, 1);
-        const distance = Math.abs(normalizedX - pointer.x);
-        const influence = pointer.active ? Math.max(0, 1 - distance * 3.1) : 0.2;
-        const baseWave = Math.sin(normalizedX * 12 + phase * (1 + line * 0.08)) * (9 + line * 2.2);
-        const fineWave = Math.sin(normalizedX * 36 - phase * 1.7 + line) * 3.2;
-        const pointerWave = Math.sin(normalizedX * 54 + phase * 2) * influence * 14;
-        const offset = (line - (lineCount - 1) / 2) * 46;
-        const y = centerY + offset + baseWave + fineWave + pointerWave;
+        const y = waveY(normalizedX);
         if (x === -20) context.moveTo(x, y);
         else context.lineTo(x, y);
       }
@@ -90,18 +94,29 @@ const createSignalField = (canvas, options = {}) => {
       if (!reducedMotion && line % 2 === 0) {
         const dotProgress = (time * (0.000055 + line * 0.000002) + line * 0.19) % 1;
         const dotX = dotProgress * width;
-        const distance = Math.abs(dotProgress - pointer.x);
-        const influence = pointer.active ? Math.max(0, 1 - distance * 3.1) : 0.2;
-        const baseWave = Math.sin(dotProgress * 12 + phase * (1 + line * 0.08)) * (9 + line * 2.2);
-        const fineWave = Math.sin(dotProgress * 36 - phase * 1.7 + line) * 3.2;
-        const pointerWave = Math.sin(dotProgress * 54 + phase * 2) * influence * 14;
-        const offset = (line - (lineCount - 1) / 2) * 46;
-        const dotY = centerY + offset + baseWave + fineWave + pointerWave;
+        const dotY = waveY(dotProgress);
+        const trailStart = Math.max(0, dotProgress - 0.075);
+        const trailGradient = context.createLinearGradient(trailStart * width, 0, dotX, 0);
+        trailGradient.addColorStop(0, "rgba(104, 222, 212, 0)");
+        trailGradient.addColorStop(1, "rgba(138, 243, 233, 0.78)");
         context.beginPath();
-        context.fillStyle = "rgba(138, 243, 233, 0.82)";
-        context.shadowColor = "rgba(104, 222, 212, 0.75)";
-        context.shadowBlur = 14;
-        context.arc(dotX, dotY, 2.2, 0, Math.PI * 2);
+        context.strokeStyle = trailGradient;
+        context.lineWidth = 1.8;
+        context.shadowColor = "rgba(104, 222, 212, 0.52)";
+        context.shadowBlur = 10;
+        for (let progress = trailStart; progress <= dotProgress; progress += 0.006) {
+          const trailX = progress * width;
+          const trailY = waveY(progress);
+          if (progress === trailStart) context.moveTo(trailX, trailY);
+          else context.lineTo(trailX, trailY);
+        }
+        context.stroke();
+
+        context.beginPath();
+        context.fillStyle = "rgba(172, 255, 248, 0.96)";
+        context.shadowColor = "rgba(104, 222, 212, 0.9)";
+        context.shadowBlur = 18;
+        context.arc(dotX, dotY, 2.8, 0, Math.PI * 2);
         context.fill();
         context.shadowBlur = 0;
       }
@@ -153,5 +168,5 @@ const createSignalField = (canvas, options = {}) => {
 const heroCanvas = document.querySelector("[data-signal-canvas]");
 const ctaCanvas = document.querySelector("[data-cta-canvas]");
 
-if (heroCanvas) createSignalField(heroCanvas, { lineCount: 8, centerY: 0.52, intensity: 1.55 });
+if (heroCanvas) createSignalField(heroCanvas, { lineCount: 9, centerY: 0.52, intensity: 1.85 });
 if (ctaCanvas) createSignalField(ctaCanvas, { lineCount: 4, centerY: 0.5 });
