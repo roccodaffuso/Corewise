@@ -6,13 +6,14 @@ Last updated: 2026-07-15
 
 - Release: `v0.1.0-beta.1` (Draft prerelease)
 - Application: `0.1.0 (2)`
+- Status: superseded before publication
 - Commit: `4492478`
 - Bundle identifier: `dev.corewise.Corewise`
 - Artifact: `Corewise-0.1.0-universal.dmg`
 - SHA-256: `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`
 - Apple notarization submission: `8552a9a6-2342-48ee-82a6-a2261016fc62` (`Accepted`)
 
-The candidate must not be rebuilt for publication. A changed application binary requires a new build number and another beta.
+Keyboard QA found that Quick Actions left focus on the existing window instead of its search field, so this candidate must not be published. The minimal focus fix is assigned `0.1.0 (3)` and requires a freshly notarized `v0.1.0-beta.2` artifact. Local build 3 verification confirms `⌘K` focuses the accessible search field, Return routes to Performance for “AI Workloads”, and Escape closes the overlay; these checks must be repeated against the exact notarized beta.2 DMG.
 
 ## Completed evidence
 
@@ -44,7 +45,7 @@ The exact notarized DMG was mounted and copied to `/Applications/Corewise.app` o
 ## Manual gates still open
 
 - Create or use a separate clean local macOS account and repeat DMG open, drag-to-Applications, and first launch.
-- Complete keyboard-only navigation and VoiceOver/Accessibility Inspector review.
+- Repeat the Quick Actions keyboard regression check on the exact notarized beta.2 artifact, then complete the remaining keyboard-only and VoiceOver/Accessibility Inspector review.
 - Verify Reduce Motion, Reduce Transparency, Increase Contrast, and 1440×900.
 - Confirm one external installation before stable promotion.
 - Keep the public beta available for at least seven days with no blocking issue, data loss, or Gatekeeper false positive before promoting the same artifact to `v0.1.0`.

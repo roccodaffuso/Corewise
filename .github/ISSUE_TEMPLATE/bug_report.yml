@@ -13,7 +13,7 @@ body:
     attributes:
       label: Corewise version
       description: Find this under Settings → General → Build.
-      placeholder: 0.1.0 (2)
+      placeholder: 0.1.0 (3)
     validations:
       required: true
   - type: input

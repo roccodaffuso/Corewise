@@ -43,15 +43,16 @@ Every public app bundle must contain:
 - `LICENSE.txt`, the full MPL-2.0 text;
 - `SourceCode.txt`, identifying the canonical corresponding-source repository.
 
-The notarized `0.1.0 (1)` DMG predates the permanent bundle identifier and bundled MPL/source notice. It is stale and must not be published. Public beta starts with a freshly signed and notarized `0.1.0 (2)` artifact.
+The notarized `0.1.0 (1)` DMG predates the permanent bundle identifier and bundled MPL/source notice. The notarized `0.1.0 (2)` candidate was superseded before publication by a keyboard-focus fix. Public beta must start with a freshly signed and notarized build `3` or later.
 
 ## Release evidence and remaining gates
 
-- `0.1.0 (2)` was built from merged commit `4492478`, notarized under Apple submission `8552a9a6-2342-48ee-82a6-a2261016fc62`, and staged as Draft prerelease `v0.1.0-beta.1`.
+- `0.1.0 (2)` was built from merged commit `4492478`, notarized under Apple submission `8552a9a6-2342-48ee-82a6-a2261016fc62`, and staged as Draft prerelease `v0.1.0-beta.1`; it is retained only as superseded release evidence and must not be published.
 - SHA-256 is `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`.
 - The exact Draft Release DMG and checksum passed clean ARM64 and Intel validation in GitHub Actions run `29398616757`.
 - Primary-Mac installation, Gatekeeper, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800 pass; see `docs/BETA_QA_0.1.0.md`.
 - Distribution-signed Full Disk Access grant, relaunch detection, complete read-only scan, revocation, and access-required return pass without folder-by-folder prompts.
+- Package, notarize, and validate `v0.1.0-beta.2` build `3`, including the Quick Actions keyboard regression check.
 - Complete clean-account first-launch, remaining appearance, keyboard, and VoiceOver QA.
 - Obtain at least one external installation confirmation.
 - Observe the public beta for at least seven days before stable promotion.

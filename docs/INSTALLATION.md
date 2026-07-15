@@ -89,7 +89,7 @@ Never commit the `.p8`, Key ID, Issuer ID, Apple ID, app-specific password, or K
 
 The preview filename contains `-preview` so it cannot be confused with a publishable artifact.
 
-## Current notarization result
+## Superseded notarization result
 
 The `0.1.0 (2)` universal beta candidate was accepted by Apple's notary service on 2026-07-15. Submission `8552a9a6-2342-48ee-82a6-a2261016fc62` returned `Accepted`. The DMG ticket was stapled and validated, and local Gatekeeper assessment reported `Notarized Developer ID`.
 
@@ -100,7 +100,7 @@ The `0.1.0 (2)` universal beta candidate was accepted by Apple's notary service 
 - SHA-256: `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`
 - Exact-artifact GitHub validation: ARM64 and Intel passed in [run 29398616757](https://github.com/roccodaffuso/Corewise/actions/runs/29398616757)
 
-The candidate has the permanent `dev.corewise.Corewise` identity and bundled MPL/source notices. It remains a Draft prerelease until the manual gates in `docs/BETA_QA_0.1.0.md` are complete. It must not be rebuilt for publication; any application change requires a new build number and beta candidate.
+The candidate has the permanent `dev.corewise.Corewise` identity and bundled MPL/source notices, but keyboard QA found a Quick Actions focus defect before publication. It must remain unpublished. The correction is build `3` and requires a freshly signed, notarized, stapled, and validated `v0.1.0-beta.2` artifact.
 
 ## Planned user flow for the first beta
 

@@ -14,4 +14,4 @@ Before enabling DNS, verify `corewise.dev` in the GitHub account and configure t
 
 Do not use wildcard DNS records. After propagation, enable **Enforce HTTPS** and verify both `corewise.dev` and `www.corewise.dev` redirect to the canonical HTTPS address.
 
-The beta download links intentionally target `v0.1.0-beta.1`. Do not deploy the public site before that release and its assets exist.
+The beta download links intentionally target `v0.1.0-beta.2`. Do not deploy the public site before that release and its assets exist.

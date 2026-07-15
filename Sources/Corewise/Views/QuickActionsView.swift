@@ -115,7 +115,10 @@ struct QuickActionsView: View {
       }
       .shadow(color: .black.opacity(0.28), radius: 8, y: 5)
     }
-    .onAppear { isSearchFocused = true }
+    .task {
+      await Task.yield()
+      isSearchFocused = true
+    }
     .onChange(of: query) { _, _ in selectedIndex = 0 }
     .onExitCommand { isPresented = false }
     .onMoveCommand { direction in
