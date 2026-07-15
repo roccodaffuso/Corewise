@@ -54,8 +54,12 @@ jobs:
       - name: Resolve release candidate source
         id: candidate
         run: |
-          release="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
-          targetish="$(jq -r '.target_commitish' <<<"$release")"
+          releases="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100")"
+          targetish="$(jq -r --arg tag "$RELEASE_TAG" '.[] | select(.tag_name == $tag) | .target_commitish' <<<"$releases")"
+          if [[ -z "$targetish" || "$targetish" == "null" ]]; then
+            echo "Release not found: $RELEASE_TAG" >&2
+            exit 1
+          fi
           target_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$targetish" --jq '.sha')"
 
           echo "target_sha=$target_sha" >>"$GITHUB_OUTPUT"
