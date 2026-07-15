@@ -37,12 +37,13 @@ The exact notarized DMG was mounted and copied to `/Applications/Corewise.app` o
 - The menu bar monitor opened at 344 points wide and showed the enabled CPU, memory, swap, AI Workloads, Top CPU, and Top Memory sections.
 - AI Workloads observed supported Codex and Claude processes and kept cloud activity outside local attribution.
 - Storage opened without Full Disk Access, showed startup-volume capacity, and offered one-time Full Disk Access without prompting for individual folders.
+- Full Disk Access was granted to the distribution-signed `dev.corewise.Corewise`, detected after relaunch, and reused without folder selection. A complete read-only analysis traversed all 11 curated scopes, reported real file/folder/time counters, finished with zero inaccessible scopes, and exposed category, largest-file, and largest-folder results.
+- Resetting the app's Full Disk Access grant and relaunching returned Storage to the access-required state without presenting the previous in-memory result as current.
 - Storage rendered correctly in Light mode at the 980×680 minimum. Dark mode and 1180×800 were restored after the reversible check.
 
 ## Manual gates still open
 
 - Create or use a separate clean local macOS account and repeat DMG open, drag-to-Applications, and first launch.
-- Grant Full Disk Access to the distribution-signed `dev.corewise.Corewise`, return to Corewise, run Full Storage Analysis, revoke access, and confirm the UI returns to the access-required state.
 - Complete keyboard-only navigation and VoiceOver/Accessibility Inspector review.
 - Verify Reduce Motion, Reduce Transparency, Increase Contrast, and 1440×900.
 - Confirm one external installation before stable promotion.
