@@ -46,11 +46,33 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TAG: ${{ inputs.release_tag || 'v0.1.0-rc.1' }}
       ASSET_NAME: ${{ inputs.asset_name || 'Corewise-0.1.0-universal.dmg' }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - name: Check out validation script
         uses: actions/checkout@v6
 
+      - name: Resolve release candidate source
+        id: candidate
+        run: |
+          release="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          targetish="$(jq -r '.target_commitish' <<<"$release")"
+          target_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$targetish" --jq '.sha')"
+
+          echo "target_sha=$target_sha" >>"$GITHUB_OUTPUT"
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "$target_sha" != "$PR_HEAD_SHA" ]]; then
+            echo "current=false" >>"$GITHUB_OUTPUT"
+            {
+              echo "### Release candidate rebuild required"
+              echo
+              echo "Draft Release \`$RELEASE_TAG\` targets \`$target_sha\`, not this PR head \`$PR_HEAD_SHA\`."
+              echo "The artifact is intentionally not validated against rules introduced after it was built."
+            } >>"$GITHUB_STEP_SUMMARY"
+          else
+            echo "current=true" >>"$GITHUB_OUTPUT"
+          fi
+
       - name: Download release candidate
+        if: steps.candidate.outputs.current == 'true'
         run: |
           mkdir -p "$RUNNER_TEMP/corewise-release"
           releases="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100")"
@@ -79,6 +101,7 @@ jobs:
           download_asset "$ASSET_NAME.sha256"
 
       - name: Validate signed and notarized DMG
+        if: steps.candidate.outputs.current == 'true'
         run: |
           expected_sha256="$(awk '{ print $1; exit }' "$RUNNER_TEMP/corewise-release/$ASSET_NAME.sha256")"
           script/validate_release_candidate.sh \
