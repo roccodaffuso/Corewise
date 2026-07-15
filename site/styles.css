@@ -257,6 +257,19 @@ h2 em {
 .button.ghost:hover { border-color: rgba(104, 222, 212, 0.45); }
 .button.wide { width: 100%; }
 
+.download-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apple-mark {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+}
+
 .release-note {
   margin: 17px 0 0;
   color: var(--faint);
@@ -381,7 +394,7 @@ h2 em {
 .section {
   width: min(100%, var(--max));
   margin: 0 auto;
-  padding: clamp(110px, 14vw, 190px) var(--gutter);
+  padding: clamp(88px, 9vw, 128px) var(--gutter);
   border-bottom: 1px solid var(--line);
 }
 
@@ -402,8 +415,8 @@ h2 span { color: var(--muted); }
   grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
   gap: clamp(58px, 8vw, 116px);
   align-items: start;
-  padding-top: clamp(84px, 9vw, 124px);
-  padding-bottom: clamp(84px, 9vw, 124px);
+  padding-top: clamp(78px, 8vw, 112px);
+  padding-bottom: clamp(78px, 8vw, 112px);
 }
 
 .manifesto-copy .section-label { margin-bottom: 28px; }
@@ -563,7 +576,7 @@ h2 span { color: var(--muted); }
   display: grid;
   width: min(100%, var(--max));
   margin: 0 auto;
-  padding: clamp(110px, 12vw, 170px) var(--gutter);
+  padding: clamp(88px, 9vw, 128px) var(--gutter);
   grid-template-columns: minmax(340px, 0.78fr) minmax(560px, 1.22fr);
   gap: clamp(60px, 8vw, 120px);
   align-items: center;
@@ -951,13 +964,13 @@ footer nav { justify-self: end; gap: 20px; }
   .hero-actions { align-items: stretch; flex-direction: column; }
   .button { width: 100%; }
   .hero-product { top: 610px; width: 132vw; right: -26vw; }
-  .section { padding-top: 100px; padding-bottom: 100px; }
+  .section { padding-top: 78px; padding-bottom: 78px; }
   h2 { font-size: clamp(44px, 14vw, 68px); }
   .ai-map { min-height: 520px; }
   .ai-layer,
   .cloud-boundary { right: 5%; width: 44%; }
   .ai-node { left: 5%; }
-  .privacy-section { padding-top: 100px; padding-bottom: 100px; }
+  .privacy-section { padding-top: 78px; padding-bottom: 78px; }
   .privacy-field { min-height: 560px; }
   .local-boundary {
     inset: 16px;
