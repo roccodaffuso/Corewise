@@ -112,7 +112,7 @@
           </p>
           <div class="hero-actions hero-enter" style="--enter-delay: 320ms">
             <a class="button primary" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.2/Corewise-0.1.0-universal.dmg">
-              Download for Mac
+              <span class="download-label"><span class="apple-mark" aria-hidden="true"></span>Download for Mac</span>
               <span aria-hidden="true">↓</span>
             </a>
             <a class="button ghost" href="https://github.com/roccodaffuso/Corewise">
@@ -123,7 +123,7 @@
           <p class="release-note hero-enter" style="--enter-delay: 400ms">Free · Open source · Universal DMG · No account</p>
         </div>
 
-        <div class="hero-product hero-enter" style="--enter-delay: 260ms" data-product-depth>
+        <div class="hero-product">
           <div class="product-aura" aria-hidden="true"></div>
           <div class="product-window">
             <img
@@ -134,12 +134,6 @@
               fetchpriority="high"
               decoding="async"
             >
-          </div>
-          <div class="signal-label signal-label-performance" aria-hidden="true">
-            <span>Performance</span><strong>Live</strong>
-          </div>
-          <div class="signal-label signal-label-local" aria-hidden="true">
-            <span>Processing</span><strong>On-device</strong>
           </div>
         </div>
 
@@ -167,8 +161,8 @@
       </div>
 
       <section class="manifesto section" id="product" aria-labelledby="manifesto-title">
-        <p class="section-label reveal">01 · Signal console</p>
         <div class="manifesto-copy">
+          <p class="section-label reveal">01 · Signal console</p>
           <h2 id="manifesto-title" class="reveal">Not another cleaner.<br><span>A clearer instrument.</span></h2>
           <p class="reveal">Corewise observes supported local evidence, explains why it matters, and leaves control with you. No invented health score. No panic. No one-click cleanup.</p>
         </div>
@@ -218,12 +212,6 @@
       </section>
 
       <section class="privacy-section" id="privacy" aria-labelledby="privacy-title">
-        <div class="privacy-field" aria-hidden="true">
-          <span class="privacy-ring ring-a"></span>
-          <span class="privacy-ring ring-b"></span>
-          <span class="privacy-ring ring-c"></span>
-          <span class="privacy-core"></span>
-        </div>
         <div class="privacy-copy">
           <p class="section-label reveal">03 · Local-first</p>
           <h2 id="privacy-title" class="reveal">Your Mac stays yours.</h2>
@@ -233,6 +221,31 @@
             <li><span>Optional</span><strong>Read-only storage access</strong></li>
             <li><span>Never</span><strong>Uploads or destructive actions</strong></li>
           </ul>
+        </div>
+        <div class="privacy-field reveal" role="img" aria-label="CPU, memory, storage, and AI workload signals flow into Corewise locally, with no outgoing network path.">
+          <div class="local-boundary" aria-hidden="true">
+            <div class="boundary-header">
+              <span>This Mac</span>
+              <strong><i></i> Local boundary</strong>
+            </div>
+            <div class="privacy-sources">
+              <span>CPU &amp; processes</span>
+              <span>Memory &amp; swap</span>
+              <span>Storage signals</span>
+              <span>AI workloads</span>
+            </div>
+            <div class="privacy-flow" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </div>
+            <div class="privacy-core">
+              <img src="assets/corewise-app-icon.png" width="52" height="52" alt="">
+              <span>Corewise<strong>Observed locally</strong></span>
+            </div>
+            <div class="network-stop">
+              <span>Outgoing network path</span>
+              <strong>None</strong>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -248,7 +261,7 @@
             <div><dt>License</dt><dd>MPL-2.0</dd></div>
             <div><dt>Distribution</dt><dd>Notarized universal DMG</dd></div>
           </dl>
-          <a class="button primary wide" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.2/Corewise-0.1.0-universal.dmg">Download beta <span aria-hidden="true">↓</span></a>
+          <a class="button primary wide" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.2/Corewise-0.1.0-universal.dmg"><span class="download-label"><span class="apple-mark" aria-hidden="true"></span>Download beta</span><span aria-hidden="true">↓</span></a>
           <div class="install-links">
             <a href="https://github.com/roccodaffuso/Corewise/releases/tag/v0.1.0-beta.2">Release notes</a>
             <a href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.2/Corewise-0.1.0-universal.dmg.sha256">SHA-256</a>
@@ -287,7 +300,7 @@
           <p class="kicker reveal"><span class="live-dot" aria-hidden="true"></span> Local signals, clearly</p>
           <h2 id="cta-title" class="reveal">The evidence is already there.<br><em>Make it readable.</em></h2>
           <div class="hero-actions reveal">
-            <a class="button primary" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.2/Corewise-0.1.0-universal.dmg">Download Corewise <span aria-hidden="true">↓</span></a>
+            <a class="button primary" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.2/Corewise-0.1.0-universal.dmg"><span class="download-label"><span class="apple-mark" aria-hidden="true"></span>Download Corewise</span><span aria-hidden="true">↓</span></a>
             <a class="button ghost" href="https://github.com/roccodaffuso/Corewise/issues/new/choose">Report an issue <span aria-hidden="true">↗</span></a>
           </div>
         </div>
