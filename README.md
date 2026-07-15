@@ -1,89 +1,113 @@
-# Corewise
+<p align="center">
+  <img src="docs/assets/corewise-app-icon.png" width="112" height="112" alt="Corewise app icon">
+</p>
 
-Corewise is a SwiftUI macOS utility that explains what a Mac is doing in plain language. It is local-first, has no account, no backend, and no tracking.
+<h1 align="center">Corewise</h1>
 
-The current build is a trust-first product prototype. Runtime values are either live, planned, unavailable, or avoided; Corewise no longer shows synthetic diagnostic data as if it came from the Mac.
+<p align="center">
+  Understand what your Mac is doing, without giving up your data.
+</p>
 
-## Current Truth
+<p align="center">
+  <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-1f6feb?style=flat-square">
+  <img alt="Swift 5.9+" src="https://img.shields.io/badge/Swift-5.9%2B-f05138?style=flat-square">
+  <img alt="License MPL-2.0" src="https://img.shields.io/badge/License-MPL--2.0-7d5fff?style=flat-square">
+  <img alt="Local only" src="https://img.shields.io/badge/Data-local_only-2db8bd?style=flat-square">
+  <img alt="Beta status" src="https://img.shields.io/badge/Status-public_beta_in_preparation-d29922?style=flat-square">
+</p>
 
-Implemented live signals:
+Corewise is a local-first macOS diagnostic utility for understanding performance, storage, battery, startup activity, thermal state, and recurring app issues. It leads with observable signals, explains their limits, and never claims that one number represents the health of your Mac.
 
-- Overview `Live Signals` header plus a first-viewport signal grid for CPU, memory, swap, top CPU process, top memory process, storage free space, battery, and thermal state.
-- Data Access overview for live, user-selected, planned, unavailable, and avoided data paths. This supports trust but is not the primary first-viewport content.
-- System CPU load and user/system/idle split from macOS CPU ticks.
-- System RAM fields from VM statistics: used, app memory, cached files, wired, compressed, and swap.
-- Live process table with PID, user, thread count, CPU %, observed memory, RSS, and physical footprint when macOS returns it.
-- Swap Insight in `Performance > Memory`: real swap used/total/available, trend, swap in/out rates, swapped VM pages, encryption state, and likely memory-pressure contributors.
-- Performance page optimized around the question "what is slowing my Mac right now", with compact top pressure rows and a dense process table.
-- App grouping derived from real process rows, kept separate from individual process rows.
-- Battery charge, power source, and charging state when an internal battery is exposed by macOS power-source data.
-- Battery cycle count, maximum capacity, and condition when safe battery registry keys are present.
-- Startup volume total, used, available, available percent, Finder-style free space, opportunistic space when macOS exposes it, volume name, format, local/internal flags, and read-only state.
-- Startup volume breakdown as used vs available space.
-- User-selected storage folder scan for largest folders/files, item count, unreadable count, and scan size.
-- Short local performance history for sustained CPU interpretation.
-- Live swap usage and Swap Insight. Corewise does not show exact per-process swap ownership because macOS does not expose that through reliable public APIs. Memory pressure remains unavailable until Corewise has a reliable public parity source.
-- Read-only LaunchAgents and LaunchDaemons plist metadata where readable.
-- High-level thermal state from `ProcessInfo.thermalState`.
-- User-selected crash report folder parsing for app crash counts and repeated-crash patterns.
-- Local Diagnostic Report page that copies Summary or Markdown text without uploads, stack traces, file contents, cleanup, or persistence.
-- Lightweight menu bar monitor for CPU, memory, swap, and top process signals from the current app snapshot.
+No account. No backend. No analytics. No automatic cleanup.
 
-Planned or unavailable areas:
+> [!IMPORTANT]
+> Corewise is currently available publicly as source code. A signed and notarized release candidate exists locally, but no binary has been published yet. Do not treat GitHub's automatic “Source code” archives as installable app downloads.
 
-- Overall health score and cross-section prioritization. The Overview does not present this as a primary diagnosis until the scoring model is real.
-- Battery energy impact and risk scoring.
-- Automatic detailed storage folder scans, caches, Trash, and personal folder rankings.
-- Modern login items, background items, privileged helpers, and startup code signing checks.
-- WindowServer interpretation.
-- Thermal contributors beyond high-level public thermal state.
+## What Corewise does
 
-Unavailable by design in the MVP:
+- **Focused Check** observes supported local signals when a Mac feels slow, hot, battery-hungry, or full, then returns a cautious explanation and one useful next step.
+- **Performance** separates CPU activity, memory context, swap, and live process evidence instead of presenting duplicate rankings.
+- **AI Workloads** attributes supported local tools such as Codex, Claude, Cursor, and Ollama while keeping app footprint, related local work, and shared hosts separate.
+- **Storage** shows startup-volume headroom and can perform a read-only analysis after one optional Full Disk Access grant or a user-selected folder scope.
+- **System diagnostics** cover safe battery basics, launch plist inventory, high-level thermal state, and user-selected crash report patterns where macOS exposes reliable data.
+- **Local reports** copy a plain-language Summary or Markdown report without uploading files, stack traces, prompts, or project details.
 
-- Whole-system wattage through private sensors, sudo-only tools, or unsupported APIs.
-- Automatic Downloads or personal-folder scans during refresh.
-- Automatic diagnostic report scans during refresh.
-- Automatic deletion, forced app quitting, or destructive optimization.
+Corewise deliberately avoids health scores, process killing, automatic deletion, private sensor APIs, hidden folder scans, and claims of exact parity with Activity Monitor.
 
-## Build And Run
+## Install today: build from source
+
+Requirements:
+
+- macOS 14 Sonoma or newer
+- Xcode 15 or newer, or compatible Xcode Command Line Tools
+- Git
 
 ```sh
-swift build
+git clone https://github.com/roccodaffuso/Corewise.git
+cd Corewise
 script/build_and_run.sh
 ```
 
-The app target is defined in `Package.swift` and requires macOS 14 or newer.
+The script builds and signs a local development bundle at `dist/Corewise.app`, then opens it. Full Disk Access is not required to run Corewise; it is optional and used only when you explicitly start Full Storage Analysis.
 
-## Performance Semantics
+For the signed DMG workflow, Homebrew option, Gatekeeper requirements, and update strategy, see [Installation and distribution](docs/INSTALLATION.md).
 
-Corewise uses public macOS APIs, not private `sysmond` internals. Process rows are real, but they are not promised to match Monitoraggio Attività bit-for-bit. The primary memory value is `observed memory`: the larger public value between physical footprint and resident memory, with RSS still shown separately. System memory used is derived from app memory, wired memory, and compressed memory; cached files are shown separately because macOS can reclaim much of that memory.
+## Privacy and safety model
 
-Swap Insight explains the system swap context from `vm.swapusage`, VM statistics, and process page-in/memory signals. It ranks likely memory-pressure contributors, but it never says that a process owns a specific amount of swap.
+Corewise reads supported diagnostics on the Mac where it is running. It has no network client, telemetry SDK, account system, payment flow, or remote database.
 
-## Product Workflows
+Every diagnostic source is classified as:
 
-Corewise is organized around three trustworthy workflows:
+- **Live** — read from a supported local macOS source.
+- **Planned** — intentionally not implemented yet.
+- **Unavailable** — not currently exposed with enough reliability.
+- **Avoided** — intentionally excluded for safety, privacy, or product integrity.
 
-- Performance: understand CPU, memory, swap, and which live process rows are active.
-- Storage Scan: choose a folder, inspect the largest real files and folders, and reveal items in Finder manually.
-- Diagnostic Report: copy a local Summary or Markdown report for review without collecting stack traces or file contents.
-- Menu Bar: glance at the same live CPU, memory, swap, and top three CPU/memory process rows without opening a second diagnostic surface.
-- Settings: control local display/report preferences; Settings does not grant new data access or enable automatic scans.
+Storage and crash-report details require an explicit user action. Corewise does not upload diagnostic data or perform destructive remediation. Read the full [safety and privacy model](docs/SAFETY_PRIVACY.md) and [data-source matrix](docs/DATA_SOURCES.md).
 
-## Project Docs
+## Development
 
-- `PRODUCT.md` defines positioning and design principles.
-- `docs/PROJECT_STATUS.md` records the current product state and risks.
-- `docs/ARCHITECTURE.md` explains the SwiftUI shell, store, collectors, and data flow.
-- `docs/DATA_SOURCES.md` is the source-of-truth matrix for live, planned, unavailable, and avoided signals.
-- `docs/SAFETY_PRIVACY.md` defines the local-first and non-destructive rules.
-- `docs/DESIGN_SYSTEM.md` captures the intended Apple-native diagnostic UI.
-- `docs/PREMIUM_APP_REDESIGN_PLAN.md` defines the researched premium redesign direction before UI implementation.
-- `docs/ROADMAP.md` orders the next implementation phases.
-- `docs/DECISIONS.md` records product and technical decisions.
-- `docs/SETTINGS_PLAN.md` defines how Corewise should mature its native macOS Settings window without turning it into another diagnostic page.
-- `docs/SWAP_INSIGHT.md` documents swap sources, limits, and allowed wording.
+Corewise is a dependency-free Swift Package Manager application targeting macOS 14+.
 
-## Operating Rule
+```sh
+swift build
+swift test
+swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
+script/build_and_run.sh --verify
+script/package_release.sh preview
+# Requires a validated notarytool Keychain profile:
+script/package_release.sh release --notary-profile corewise-notary
+```
 
-Every diagnostic value must be labeled honestly as `Live`, `Planned`, `Unavailable`, or `Avoided`. If Corewise cannot read a signal through safe public macOS APIs, it should say so and offer a manual review path instead of implying certainty.
+The app icon is reproducible from repository-owned drawing code:
+
+```sh
+swift script/generate_app_icon.swift
+```
+
+Useful project documents:
+
+- [Product principles](PRODUCT.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Current project status](docs/PROJECT_STATUS.md)
+- [Design system](docs/DESIGN_SYSTEM.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Decision log](docs/DECISIONS.md)
+
+## Contributing
+
+Issues and focused pull requests are welcome while the public beta is being prepared. Read [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before participating. Please keep changes narrow, preserve the local-first and non-destructive constraints, and never attach diagnostic reports containing usernames, personal paths, process arguments, prompts, or private file contents.
+
+Found a reproducible problem? [Report an issue](https://github.com/roccodaffuso/Corewise/issues/new/choose). Security vulnerabilities belong in the [private reporting channel](SECURITY.md), not in a public issue. The issue link is also available in Corewise under **Settings → General → Project & Support**.
+
+Before proposing a new diagnostic, document its public macOS source, failure mode, privacy boundary, and user-facing wording.
+
+## License
+
+Corewise source code is licensed under the [Mozilla Public License 2.0](LICENSE). MPL-2.0 uses file-level copyleft: modified Corewise source files distributed outside an organization remain available under MPL-2.0, while separate files can use other licenses. The Corewise name and logo are covered separately by the [trademark policy](TRADEMARKS.md).
+
+Source files carry machine-readable `SPDX-License-Identifier: MPL-2.0` notices. Public binaries include the complete license and a link to the corresponding source repository.
+
+## Project status
+
+Corewise is under active beta development. The permanent identity is `Corewise`, `dev.corewise.Corewise`, and `corewise.dev`. Completing clean-account QA and validating the exact notarized beta artifact remain explicit gates before the first public binary.

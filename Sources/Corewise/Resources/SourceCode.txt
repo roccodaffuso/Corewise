@@ -1,0 +1,3 @@
+Corewise source code is available at https://github.com/roccodaffuso/Corewise under the Mozilla Public License 2.0 (MPL-2.0).
+
+The complete license text is included in this app bundle as LICENSE.txt and in the public repository as LICENSE.

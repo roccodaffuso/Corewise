@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Darwin
 import Darwin.Mach
 import Foundation
@@ -7,25 +9,27 @@ struct InstantSystemMetrics {
   var memory: SystemMemoryReading
   var processes: [ProcessObservation]
   var appGroups: [AppProcessGroup]
+  var aiWorkloads: [AIWorkloadObservation] = []
   var systemWatts: Double?
   var powerSourceNote: String
 }
 
 enum SystemMetricsSampler {
-  static func sample() async -> InstantSystemMetrics {
+  static func sample() async throws -> InstantSystemMetrics {
     async let cpu = sampleCPU()
     async let processSample = sampleProcesses()
     let memory = sampleMemory()
 
-    let sampledProcesses = await processSample
+    let (sampledCPU, sampledProcesses) = try await (cpu, processSample)
     let processes = sampledProcesses.processes
-    let appGroups = groupProcesses(processes, now: sampledProcesses.now)
+    let appGroups = AppProcessGroupingResolver.groups(processes: processes, now: sampledProcesses.now)
 
-    return await InstantSystemMetrics(
-      cpu: cpu,
+    return InstantSystemMetrics(
+      cpu: sampledCPU,
       memory: memory,
       processes: processes,
       appGroups: appGroups,
+      aiWorkloads: sampledProcesses.aiWorkloads,
       systemWatts: nil,
       powerSourceNote: "macOS does not expose reliable whole-system wattage through a safe public API. Corewise can show battery or power-source context later, but should not invent watts."
     )
@@ -66,13 +70,13 @@ enum SystemMetricsSampler {
     return min(max(Int(max(cpuPercent, memoryGB * 18).rounded()), 0), 100)
   }
 
-  private static func sampleCPU() async -> SystemCPUReading {
+  private static func sampleCPU() async throws -> SystemCPUReading {
     let now = Date()
     guard let first = cpuTicks() else {
       return unavailableCPU(now: now)
     }
 
-    try? await Task.sleep(nanoseconds: 1_000_000_000)
+    try await Task.sleep(for: .seconds(1))
 
     guard let second = cpuTicks() else {
       return unavailableCPU(now: Date())
@@ -223,23 +227,20 @@ enum SystemMetricsSampler {
     )
   }
 
-  private static func sampleProcesses() async -> (processes: [ProcessObservation], now: Date) {
-    let first = processStats()
+  private static func sampleProcesses() async throws -> (processes: [ProcessObservation], aiWorkloads: [AIWorkloadObservation], now: Date) {
+    let first = processCPUStats()
     let start = Date()
 
-    try? await Task.sleep(nanoseconds: 1_000_000_000)
+    try await Task.sleep(for: .seconds(1))
 
     let second = processStats()
     let elapsed = max(Date().timeIntervalSince(start), 0.2)
     let now = Date()
 
-    let observations = second.values.compactMap { current -> ProcessObservation? in
-      guard let previous = first[current.pid] else {
-        return nil
-      }
-
-      let deltaNanoseconds = current.cpuNanoseconds > previous.cpuNanoseconds
-        ? current.cpuNanoseconds - previous.cpuNanoseconds
+    var observations = second.values.map { current -> ProcessObservation in
+      let previousCPUNanoseconds = first[current.pid]
+      let deltaNanoseconds = current.cpuNanoseconds > (previousCPUNanoseconds ?? current.cpuNanoseconds)
+        ? current.cpuNanoseconds - (previousCPUNanoseconds ?? current.cpuNanoseconds)
         : 0
       let cpuPercent = Double(deltaNanoseconds) / 1_000_000_000 / elapsed * 100
       let footprint = current.physicalFootprintBytes
@@ -255,6 +256,8 @@ enum SystemMetricsSampler {
         appName: appName,
         path: current.path,
         user: current.user,
+        parentPID: current.parentPID,
+        cpuSampleAvailable: previousCPUNanoseconds != nil,
         cpuPercent: cpuPercent,
         cpuTimeSeconds: Double(current.cpuNanoseconds) / 1_000_000_000,
         threadCount: current.threadCount,
@@ -272,6 +275,18 @@ enum SystemMetricsSampler {
       )
     }
 
+    let candidatePaths = Set(observations.compactMap { process -> String? in
+      guard AIWorkloadRegistry.descriptors.contains(where: { $0.directRule.matches(process: process) }) else { return nil }
+      return process.path
+    })
+    let signingIdentifiers = await AIWorkloadSigningCache.shared.identifiers(for: candidatePaths)
+    for index in observations.indices {
+      if let path = observations[index].path {
+        observations[index].signingIdentifier = signingIdentifiers[path]
+      }
+    }
+
+    let aiWorkloads = AIWorkloadResolver.resolve(processes: observations)
     let readable = observations
       .filter { $0.cpuPercent >= 0.05 || $0.observedMemoryBytes >= 20 * 1024 * 1024 }
 
@@ -294,24 +309,28 @@ enum SystemMetricsSampler {
       ($0.cpuPercent, $0.observedMemoryBytes) > ($1.cpuPercent, $1.observedMemoryBytes)
     }
 
-    return (Array(sorted), now)
+    return (Array(sorted), aiWorkloads, now)
   }
 
   private static func processStats() -> [Int32: ProcessStat] {
-    let pids = allProcessIDs()
+    let topology = processTopology()
+    let pids = topology.isEmpty ? allProcessIDs() : Array(topology.keys)
     guard !pids.isEmpty else {
       return [:]
     }
     var stats: [Int32: ProcessStat] = [:]
+    var nameBuffer = [CChar](repeating: 0, count: Int(2 * MAXCOMLEN))
+    var pathBuffer = [CChar](repeating: 0, count: 4096)
+    var userNames: [uid_t: String] = [:]
 
     for pid in pids where pid > 0 {
       guard let taskInfo = taskInfo(pid: pid) else {
         continue
       }
 
-      let name = processName(pid: pid)
-      let path = processPath(pid: pid)
-      let user = userName(pid: pid)
+      let name = processName(pid: pid, buffer: &nameBuffer)
+      let path = processPath(pid: pid, buffer: &pathBuffer)
+      let user = userName(pid: pid, cache: &userNames)
       let cpuNanoseconds = machTicksToNanoseconds(taskInfo.pti_total_user + taskInfo.pti_total_system)
       let usage = resourceUsage(pid: pid)
 
@@ -320,6 +339,7 @@ enum SystemMetricsSampler {
         name: name,
         path: path,
         user: user,
+        parentPID: topology[pid] ?? 0,
         cpuNanoseconds: cpuNanoseconds,
         threadCount: taskInfo.pti_threadnum,
         residentBytes: UInt64(taskInfo.pti_resident_size),
@@ -328,6 +348,17 @@ enum SystemMetricsSampler {
       )
     }
 
+    return stats
+  }
+
+  private static func processCPUStats() -> [Int32: UInt64] {
+    var stats: [Int32: UInt64] = [:]
+    for pid in allProcessIDs() where pid > 0 {
+      guard let taskInfo = taskInfo(pid: pid) else {
+        continue
+      }
+      stats[pid] = machTicksToNanoseconds(taskInfo.pti_total_user + taskInfo.pti_total_system)
+    }
     return stats
   }
 
@@ -341,20 +372,34 @@ enum SystemMetricsSampler {
   }
 
   private static func sysctlProcessIDs() -> [pid_t] {
+    Array(processTopology().keys)
+  }
+
+  private static func processTopology() -> [pid_t: pid_t] {
     var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
     var size = 0
 
     guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else {
-      return []
+      return [:]
     }
 
-    var processes = Array(repeating: kinfo_proc(), count: size / MemoryLayout<kinfo_proc>.stride)
-    guard sysctl(&mib, u_int(mib.count), &processes, &size, nil, 0) == 0 else {
-      return []
+    let stride = MemoryLayout<kinfo_proc>.stride
+    let capacity = (size + stride - 1) / stride
+    var processes = Array(repeating: kinfo_proc(), count: capacity)
+    let result = processes.withUnsafeMutableBytes { buffer in
+      sysctl(&mib, u_int(mib.count), buffer.baseAddress, &size, nil, 0)
+    }
+    guard result == 0 else {
+      return [:]
     }
 
-    let count = min(size / MemoryLayout<kinfo_proc>.stride, processes.count)
-    return Array(Set(processes.prefix(count).map(\.kp_proc.p_pid).filter { $0 > 0 }))
+    let count = min(size / stride, processes.count)
+    var topology: [pid_t: pid_t] = [:]
+    topology.reserveCapacity(count)
+    for process in processes.prefix(count) where process.kp_proc.p_pid > 0 {
+      topology[process.kp_proc.p_pid] = process.kp_eproc.e_ppid
+    }
+    return topology
   }
 
   private static func listAllProcessIDs() -> [pid_t] {
@@ -405,14 +450,21 @@ enum SystemMetricsSampler {
   }
 
   static func machTicksToNanoseconds(_ ticks: UInt64) -> UInt64 {
-    var timebase = mach_timebase_info_data_t()
-    guard mach_timebase_info(&timebase) == KERN_SUCCESS, timebase.denom > 0 else {
+    guard machTimebase.denom > 0 else {
       return ticks
     }
 
-    let converted = Double(ticks) * Double(timebase.numer) / Double(timebase.denom)
+    let converted = Double(ticks) * Double(machTimebase.numer) / Double(machTimebase.denom)
     return UInt64(converted)
   }
+
+  private static let machTimebase: mach_timebase_info_data_t = {
+    var timebase = mach_timebase_info_data_t()
+    guard mach_timebase_info(&timebase) == KERN_SUCCESS else {
+      return mach_timebase_info_data_t(numer: 1, denom: 1)
+    }
+    return timebase
+  }()
 
   private static func resourceUsage(pid: pid_t) -> ProcessResourceUsage? {
     guard pid > 0 else {
@@ -436,7 +488,7 @@ enum SystemMetricsSampler {
     )
   }
 
-  private static func userName(pid: pid_t) -> String {
+  private static func userName(pid: pid_t, cache: inout [uid_t: String]) -> String {
     var info = proc_bsdshortinfo()
     let infoSize = MemoryLayout<proc_bsdshortinfo>.stride
     let result = withUnsafeMutablePointer(to: &info) { pointer in
@@ -449,15 +501,20 @@ enum SystemMetricsSampler {
       return "unknown"
     }
 
+    if let cached = cache[info.pbsi_uid] {
+      return cached
+    }
+
     guard let entry = getpwuid(info.pbsi_uid), let name = entry.pointee.pw_name else {
       return "\(info.pbsi_uid)"
     }
 
-    return String(cString: name)
+    let value = String(cString: name)
+    cache[info.pbsi_uid] = value
+    return value
   }
 
-  private static func processName(pid: pid_t) -> String {
-    var buffer = [CChar](repeating: 0, count: Int(2 * MAXCOMLEN))
+  private static func processName(pid: pid_t, buffer: inout [CChar]) -> String {
     let capacity = UInt32(buffer.count)
     let count = buffer.withUnsafeMutableBufferPointer { pointer in
       proc_name(pid, pointer.baseAddress, capacity)
@@ -470,8 +527,7 @@ enum SystemMetricsSampler {
     return "pid \(pid)"
   }
 
-  private static func processPath(pid: pid_t) -> String? {
-    var buffer = [CChar](repeating: 0, count: 4096)
+  private static func processPath(pid: pid_t, buffer: inout [CChar]) -> String? {
     let capacity = UInt32(buffer.count)
     let count = buffer.withUnsafeMutableBufferPointer { pointer in
       proc_pidpath(pid, pointer.baseAddress, capacity)
@@ -498,41 +554,6 @@ enum SystemMetricsSampler {
     return appName.isEmpty ? nil : String(appName)
   }
 
-  private static func groupProcesses(_ processes: [ProcessObservation], now: Date) -> [AppProcessGroup] {
-    var grouped: [String: [ProcessObservation]] = [:]
-
-    for process in processes {
-      let name = process.appName ?? process.processName
-      grouped[name, default: []].append(process)
-    }
-
-    return grouped.map { name, rows in
-      let cpu = rows.reduce(0) { $0 + $1.cpuPercent }
-      let resident = rows.reduce(UInt64(0)) { $0 + $1.residentMemoryBytes }
-      let footprints = rows.compactMap(\.physicalFootprintBytes)
-      let footprint = footprints.isEmpty ? nil : footprints.reduce(UInt64(0), +)
-      let observedMemory = max(footprint ?? 0, resident)
-      let status = processStatus(cpuPercent: cpu, memoryBytes: observedMemory)
-
-      return AppProcessGroup(
-        name: name,
-        processCount: rows.count,
-        cpuPercent: cpu,
-        residentMemoryBytes: resident,
-        physicalFootprintBytes: footprint,
-        dataMode: .live,
-        status: status,
-        severityScore: processSeverity(cpuPercent: cpu, memoryBytes: observedMemory),
-        source: "Derived from live process rows",
-        confidence: footprint == nil ? "Live / medium" : "Live / high",
-        lastUpdated: now
-      )
-    }
-    .sorted {
-      ($0.cpuPercent, $0.observedMemoryBytes) > ($1.cpuPercent, $1.observedMemoryBytes)
-    }
-  }
-
   private static func vmPageSize() -> vm_size_t {
     var size: vm_size_t = 0
     host_page_size(mach_host_self(), &size)
@@ -555,6 +576,7 @@ private struct ProcessStat {
   var name: String
   var path: String?
   var user: String
+  var parentPID: pid_t
   var cpuNanoseconds: UInt64
   var threadCount: Int32
   var residentBytes: UInt64

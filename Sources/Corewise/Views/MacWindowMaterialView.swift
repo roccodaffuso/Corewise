@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import AppKit
 import SwiftUI
 
@@ -18,31 +20,5 @@ struct MacWindowMaterialView: NSViewRepresentable {
     view.material = material
     view.blendingMode = blendingMode
     view.state = .active
-  }
-}
-
-struct WindowTransparencyConfigurator: NSViewRepresentable {
-  func makeNSView(context: Context) -> NSView {
-    let view = NSView(frame: .zero)
-    DispatchQueue.main.async {
-      configure(window: view.window)
-    }
-    return view
-  }
-
-  func updateNSView(_ view: NSView, context: Context) {
-    DispatchQueue.main.async {
-      configure(window: view.window)
-    }
-  }
-
-  private func configure(window: NSWindow?) {
-    guard let window else {
-      return
-    }
-
-    window.isOpaque = false
-    window.backgroundColor = .clear
-    window.titlebarAppearsTransparent = true
   }
 }

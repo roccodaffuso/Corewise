@@ -1,9 +1,11 @@
 // swift-tools-version: 5.9
+// SPDX-License-Identifier: MPL-2.0
 
 import PackageDescription
 
 let package = Package(
   name: "Corewise",
+  defaultLocalization: "en",
   platforms: [
     .macOS(.v14)
   ],
@@ -13,7 +15,8 @@ let package = Package(
   targets: [
     .executableTarget(
       name: "Corewise",
-      path: "Sources/Corewise"
+      path: "Sources/Corewise",
+      resources: [.process("Resources")]
     ),
     .testTarget(
       name: "CorewiseTests",

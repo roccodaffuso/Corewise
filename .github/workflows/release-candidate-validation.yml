@@ -1,0 +1,117 @@
+# SPDX-License-Identifier: MPL-2.0
+name: Release Candidate Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Draft or published GitHub Release tag
+        required: true
+        default: v0.1.0-beta.1
+      asset_name:
+        description: DMG asset name
+        required: true
+        default: Corewise-0.1.0-universal.dmg
+
+permissions: {}
+
+concurrency:
+  group: release-candidate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate DMG (${{ matrix.runner }})
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    # GitHub exposes Draft Releases only to tokens with push access. Fork PRs
+    # are excluded above, so no untrusted fork receives this permission.
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - macos-26
+          - macos-26-intel
+    runs-on: ${{ matrix.runner }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.release_tag || 'v0.1.0-beta.1' }}
+      ASSET_NAME: ${{ inputs.asset_name || 'Corewise-0.1.0-universal.dmg' }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      COREWISE_EXPECTED_VERSION: 0.1.0
+      COREWISE_EXPECTED_BUILD: 2
+    steps:
+      - name: Check out validation script
+        uses: actions/checkout@v6
+
+      - name: Resolve release candidate source
+        id: candidate
+        run: |
+          releases="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100")"
+          targetish="$(jq -r --arg tag "$RELEASE_TAG" '.[] | select(.tag_name == $tag) | .target_commitish' <<<"$releases")"
+          if [[ -z "$targetish" || "$targetish" == "null" ]]; then
+            echo "current=false" >>"$GITHUB_OUTPUT"
+            {
+              echo "### Release candidate not available yet"
+              echo
+              echo "Release \`$RELEASE_TAG\` does not exist. Build and notarize it from the merged public baseline before publication."
+            } >>"$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          target_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$targetish" --jq '.sha')"
+
+          echo "target_sha=$target_sha" >>"$GITHUB_OUTPUT"
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "$target_sha" != "$PR_HEAD_SHA" ]]; then
+            echo "current=false" >>"$GITHUB_OUTPUT"
+            {
+              echo "### Release candidate rebuild required"
+              echo
+              echo "Draft Release \`$RELEASE_TAG\` targets \`$target_sha\`, not this PR head \`$PR_HEAD_SHA\`."
+              echo "The artifact is intentionally not validated against rules introduced after it was built."
+            } >>"$GITHUB_STEP_SUMMARY"
+          else
+            echo "current=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Download release candidate
+        if: steps.candidate.outputs.current == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/corewise-release"
+          releases="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100")"
+
+          download_asset() {
+            local name="$1"
+            local asset_id
+            asset_id="$(jq -r \
+              --arg tag "$RELEASE_TAG" \
+              --arg name "$name" \
+              '.[] | select(.tag_name == $tag) | .assets[] | select(.name == $name) | .id' \
+              <<<"$releases")"
+
+            if [[ -z "$asset_id" || "$asset_id" == "null" ]]; then
+              echo "Asset not found in release $RELEASE_TAG: $name" >&2
+              exit 1
+            fi
+
+            gh api \
+              -H "Accept: application/octet-stream" \
+              "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" \
+              >"$RUNNER_TEMP/corewise-release/$name"
+          }
+
+          download_asset "$ASSET_NAME"
+          download_asset "$ASSET_NAME.sha256"
+
+      - name: Validate signed and notarized DMG
+        if: steps.candidate.outputs.current == 'true'
+        run: |
+          expected_sha256="$(awk '{ print $1; exit }' "$RUNNER_TEMP/corewise-release/$ASSET_NAME.sha256")"
+          script/validate_release_candidate.sh \
+            "$RUNNER_TEMP/corewise-release/$ASSET_NAME" \
+            "$expected_sha256"

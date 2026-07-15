@@ -35,17 +35,19 @@ Reason:
 
 Implemented:
 
-- `CorewiseApp` declares `Settings { SettingsView() }`.
+- `CorewiseApp` declares `Settings { SettingsView(store: store) }`; the store is observed only for live preview values.
 - `SettingsView` lives in its own view file.
-- Settings uses a compact `TabView` with native `Form`, `Section`, `Picker`, and `Toggle` controls.
+- Settings uses a native `TabView` with grouped `Form`, `Section`, `Picker`, `Toggle`, and `Stepper` controls, plus one functional live menu-bar layout preview.
 - Settings contains General, Privacy & Data, Performance, Report, and Menu Bar tabs.
+- Every pane now has a consistent title, purpose statement, and semantic icon so the window reads as a deliberate utility surface rather than an unfinished form.
+- General includes native links to the public GitHub repository and the new-issue page so source and support remain discoverable without entering the diagnostic navigation.
 - The sidebar footer exposes a small native `SettingsLink` row so Settings is discoverable without adding it as a diagnostic navigation item.
 
 Planned:
 
 - Launch at login only if implemented through safe user-visible macOS APIs.
 - Refresh interval only if refresh behavior becomes deliberately configurable.
-- Remember selected folders only after security-scoped bookmark consent is designed.
+- Storage access controls remain outside Settings. Full Disk Access is granted in macOS System Settings; Folder Scope fallback has its own visible `Forget` path in Storage.
 
 Avoided:
 
@@ -74,8 +76,10 @@ Settings uses a small macOS utility window footprint and avoids deep navigation.
 - `settings.menuBar.showCPU`: `true` by default.
 - `settings.menuBar.showMemory`: `true` by default.
 - `settings.menuBar.showSwap`: `true` by default.
+- `settings.menuBar.showAIWorkloads`: `true` by default.
 - `settings.menuBar.showTopCPU`: `true` by default.
 - `settings.menuBar.showTopMemory`: `true` by default.
+- `settings.menuBar.processRowCount`: `3` by default, normalized to `1...5`.
 
 ## General
 
@@ -91,6 +95,7 @@ Possible preferences:
 Default stance:
 
 - Keep this tab sparse.
+- Keep project and issue-reporting links visible under Project & Support.
 - Do not add preferences just to fill space.
 
 ## Privacy & Data
@@ -106,12 +111,13 @@ Content:
 
 Possible controls:
 
-- Clear session scan results: planned; clears only in-memory selected-folder/report state.
-- Remember selected folders: planned and off by default; requires explicit security-scoped bookmark design before implementation.
+- Clear session scan results: planned; clears only in-memory Folder Scope/report state and never revokes Full Disk Access.
+- Full Disk Access: not a Settings toggle. Corewise opens macOS System Settings and checks likely access from Storage.
+- Folder Scope fallback: remembered only after explicit folder choice and revocable from Storage, not configured as a generic Settings preference.
 
 Avoided:
 
-- Any broad "scan my Mac automatically" toggle.
+- Any broad "scan my Mac automatically" Settings toggle.
 - Any setting that grants or implies durable access without explicit consent.
 
 ## Performance
@@ -120,7 +126,7 @@ Purpose: let users tune how performance diagnostics are displayed, not how data 
 
 Possible preferences:
 
-- Default Performance tab: implemented as CPU or Memory.
+- Default Performance tab: implemented as CPU, Memory, or AI Workloads.
 - Show system/root processes: planned; default should be visible because hiding them can reduce trust.
 - Highlight this app: implemented behavior can remain always on; a setting is probably unnecessary.
 - High CPU threshold for explanations: planned only if users need it.
@@ -158,8 +164,12 @@ Possible preferences:
 - Show swap in menu bar popover: implemented.
 - Show top CPU rows: implemented.
 - Show top memory rows: implemented.
+- Show AI Workloads: implemented with local app footprint, current CPU, related local work, and the cloud-coverage boundary.
+- Rows per list: implemented from one to five for AI Workloads, Top CPU, and Top Memory.
+- Restore the menu bar layout defaults: implemented as an explicit local action.
 - Keep popover compact: always on.
 - Open Corewise from menu bar: implemented behavior should remain.
+- Open Settings directly from the menu bar monitor: implemented as `Customize`.
 
 Avoided:
 

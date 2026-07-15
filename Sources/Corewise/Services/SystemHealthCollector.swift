@@ -1,35 +1,49 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Foundation
 
 struct SystemHealthCollector: SystemHealthCollecting {
   private let performanceHistory = PerformanceHistoryTracker()
+  private let slowSnapshotCache = SlowHealthSnapshotCache()
 
   func currentSnapshot() async throws -> HealthSnapshot {
     let now = Date()
-    let instant = await SystemMetricsSampler.sample()
+    let instant = try await SystemMetricsSampler.sample()
+    let slowSnapshot = slowSnapshotCache.snapshot(now: now)
     let historySummary = performanceHistory.record(instant: instant, now: now)
     let swapInsight = historySummary.swapInsight
+    let memoryContext = MemoryPressureContext(memory: instant.memory, swapInsight: swapInsight)
     let cpuValue = instant.cpu.totalPercent.map { number($0) } ?? "N/A"
     let memoryUsedValue = number(instant.memory.usedGB)
     let memoryTotalValue = number(instant.memory.physicalGB)
-    let memoryPercentValue = number(instant.memory.usedPercent)
-    let batteryHealth = BatteryDiagnosticsCollector().currentBattery(now: now)
-    let storageHealth = StorageDiagnosticsCollector().currentStorage(now: now)
-    let startupHealth = StartupDiagnosticsCollector().currentStartup(now: now)
-    let appIssuesHealth = CrashReportDiagnosticsCollector().unavailableAppIssues(now: now)
+    var batteryHealth = slowSnapshot.battery
+    var storageHealth = slowSnapshot.storage
+    var startupHealth = slowSnapshot.startup
+    var appIssuesHealth = slowSnapshot.appIssues
+    batteryHealth.summary.role = .batteryState
+    storageHealth.summary.role = .storageHeadroom
+    startupHealth.summary.role = .startupLoad
+    appIssuesHealth.summary.role = .appIssuePattern
     let thermalState = ProcessInfo.processInfo.thermalState
     let thermalStateValue = thermalStateLabel(thermalState)
     let thermalStateStatus = thermalStatus(thermalState)
     let uptimeDays = ProcessInfo.processInfo.systemUptime / 86_400
-    let sustainedCPU = sustainedCPUMetric(historySummary, now: now)
+    var sustainedCPU = sustainedCPUMetric(historySummary, now: now)
+    sustainedCPU.role = .sustainedCPU
     let processes = instant.processes
     let appGroups = instant.appGroups
     let cpuProcesses = processes.sorted { $0.cpuPercent > $1.cpuPercent }
 
+    let cpuNowMetric = metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU load sampled over a 1 second window from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Watch sustained high CPU, not a single short spike.", now, dataMode: instant.cpu.dataMode, role: .cpuNow)
+    let memoryNowMetric = metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is app memory, wired memory, or compressed memory in Corewise's public VM view.", instant.memory.source, instant.memory.confidence, "Use process memory, wired, compressed, cached files, and swap together before blaming an app.", now, dataMode: instant.memory.dataMode, role: .memoryNow)
+    var swapTrend = swapTrendMetric(swapInsight, now: now)
+    swapTrend.role = .swapTrend
+
     let performanceMetrics = [
-      metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU load sampled over a 1 second window from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Watch sustained high CPU, not a single short spike.", now, dataMode: instant.cpu.dataMode),
+      cpuNowMetric,
       metric("CPU User", instant.cpu.userPercent.map { number($0) } ?? "Unavailable", "%", .info, cpuSeverity(instant.cpu.userPercent), "User CPU share from the same live CPU tick window.", instant.cpu.source, instant.cpu.confidence, "Use with system CPU to understand where load comes from.", now, dataMode: instant.cpu.dataMode),
       metric("CPU System", instant.cpu.systemPercent.map { number($0) } ?? "Unavailable", "%", .info, cpuSeverity(instant.cpu.systemPercent), "System CPU share from the same live CPU tick window.", instant.cpu.source, instant.cpu.confidence, "High system CPU can be normal during indexing, I/O, or monitoring.", now, dataMode: instant.cpu.dataMode),
-      metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryUsedValue) GB of \(memoryTotalValue) GB physical memory is app memory, wired memory, or compressed memory in Corewise's public VM view.", instant.memory.source, instant.memory.confidence, "Use process memory, wired, compressed, cached files, and swap together before blaming an app.", now, dataMode: instant.memory.dataMode),
+      memoryNowMetric,
       metric("App Memory", number(instant.memory.appMemoryGB), "GB", .info, 0, "Anonymous/internal pages from macOS VM statistics; this is the closest public component to Activity Monitor's App Memory.", instant.memory.source, instant.memory.confidence, "Use it as a system component, not a per-app blame signal.", now, dataMode: instant.memory.dataMode),
       metric("Cached Files", number(instant.memory.cachedFilesGB), "GB", .info, 0, "File-backed pages from macOS VM statistics. macOS can reclaim much of this when needed.", instant.memory.source, instant.memory.confidence, "Cached files are normal and are not a cleanup target.", now, dataMode: instant.memory.dataMode),
       metric("Wired Memory", number(instant.memory.wiredGB), "GB", .info, 0, "Wired memory reported by macOS VM statistics.", instant.memory.source, instant.memory.confidence, "Wired memory is managed by macOS and is not a cleanup target.", now, dataMode: instant.memory.dataMode),
@@ -39,14 +53,14 @@ struct SystemHealthCollector: SystemHealthCollecting {
       swapMetric(instant.memory.swap, now: now),
       swapTotalMetric(instant.memory.swap, now: now),
       swapAvailableMetric(instant.memory.swap, now: now),
-      swapTrendMetric(swapInsight, now: now),
+      swapTrend,
       metric("Uptime", number(uptimeDays), "days", .info, min(max(Int(uptimeDays.rounded()), 0), 100), "Current system uptime reported by ProcessInfo.", "ProcessInfo.systemUptime", "Live / high", "Restart only if performance symptoms persist.", now, dataMode: .live),
       sustainedCPU,
       metric("WindowServer Impact", "Planned", "", .info, 0, "WindowServer interpretation needs careful live process context before Corewise can present it.", "Process interpretation", "Planned / low", "Use live CPU rows as context, not a WindowServer diagnosis.", now, dataMode: .planned)
     ]
 
     let thermalMetrics = [
-      metric("Thermal State", thermalStateValue, "", thermalStateStatus, thermalSeverity(thermalState), "macOS high-level thermal pressure state.", "ProcessInfo.thermalState", "Live / high", "No action needed unless macOS reports elevated thermal pressure.", now, dataMode: .live),
+      metric("Thermal State", thermalStateValue, "", thermalStateStatus, thermalSeverity(thermalState), "macOS high-level thermal pressure state.", "ProcessInfo.thermalState", "Live / high", "No action needed unless macOS reports elevated thermal pressure.", now, dataMode: .live, role: .thermalState),
       metric("Low Power Mode", "Planned", "", .info, 0, "Low Power Mode is not collected in this build.", "Power settings", "Planned / medium", "Use macOS settings when battery life matters more than peak speed.", now, dataMode: .planned),
       metric("Likely Contributors", "Planned", "", .info, 0, "Corewise needs sustained live process history before attributing heat to apps.", "Process correlation", "Planned / low", "Use live CPU rows as context, not a thermal diagnosis.", now, dataMode: .planned)
     ]
@@ -71,58 +85,63 @@ struct SystemHealthCollector: SystemHealthCollecting {
       )
     )
     let scoreConfidence = ScoreConfidenceCalculator.metric(summary: coverageSummary, now: now)
+    let attentionMetrics = performanceMetrics + [
+      storageHealth.summary,
+      batteryHealth.summary,
+      thermalMetrics[0],
+      startupHealth.summary,
+      appIssuesHealth.summary
+    ]
+    let attentionSummary = AttentionSummaryResolver.resolve(metrics: attentionMetrics)
+    let thermalContributors = ThermalContributorResolver.contributors(
+      stateLabel: thermalStateValue,
+      status: thermalStateStatus,
+      severityScore: thermalSeverity(thermalState),
+      hasSustainedCPU: historySummary.hasSustainedHighCPU
+    )
 
     return HealthSnapshot(
       generatedAt: now,
-      healthScore: 0,
-      overallStatus: .notScored,
+      attentionSummary: attentionSummary,
       coverageSummary: coverageSummary,
-      overviewMetrics: [
-        metric("Global Score", "Planned", "", .info, 0, "Corewise will calculate a global score only after enough live signals are stable.", "Corewise scoring model", "Planned / high", "Use section-level Live badges instead of a global score for now.", now, dataMode: .planned),
-        metric("CPU Now", cpuValue, "%", cpuStatus(instant.cpu.totalPercent), cpuSeverity(instant.cpu.totalPercent), "Live CPU usage sampled from macOS CPU ticks.", instant.cpu.source, instant.cpu.confidence, "Refresh or wait a few seconds to see whether this is sustained.", now, dataMode: instant.cpu.dataMode),
-        metric("RAM Used Now", memoryUsedValue, "GB", memoryStatus(instant.memory.usedPercent), memorySeverity(instant.memory.usedPercent), "\(memoryPercentValue)% of physical memory is app memory, wired memory, or compressed memory in Corewise's VM view.", instant.memory.source, instant.memory.confidence, "Check process memory and swap before blaming a single app.", now, dataMode: instant.memory.dataMode),
-        metric("System Power", "N/A", "W", .info, 0, instant.powerSourceNote, "Safe public API check", "Unavailable / high", "Do not show unsupported or elevated-tool wattage readings in the MVP.", now, dataMode: .unavailable),
-        metric("Main Attention Area", "Unavailable", "", .info, 0, "Corewise has not implemented real cross-section prioritization yet.", "Corewise scoring model", "Unavailable / high", "Review section-level live data instead of a generated priority.", now, dataMode: .unavailable),
-        scoreConfidence,
-        metric("Synthetic Runtime Data", "None", "", .good, 0, "Corewise runtime values are now live, planned, unavailable, or avoided; synthetic diagnostic rows are not used.", "App build", "Live / high", "Treat missing areas as intentionally not implemented, not hidden diagnostics.", now, dataMode: .live)
-      ],
+      overviewMetrics: attentionMetrics.filter { $0.role != nil } + [scoreConfidence],
       dataAccess: dataAccess,
       battery: batteryHealth,
       storage: storageHealth,
       performance: PerformanceHealth(
-        summary: performanceMetrics[0],
+        summary: cpuNowMetric,
         cpu: instant.cpu,
         memory: instant.memory,
         swapInsight: swapInsight,
+        memoryContext: memoryContext,
+        history: historySummary.recentPoints,
         metrics: performanceMetrics,
         processes: cpuProcesses,
         appGroups: appGroups,
+        aiWorkloads: instant.aiWorkloads,
         insights: ProcessInsightBuilder().insights(for: processes),
         findings: performanceFindings(historySummary, processes: processes),
         actions: [
           SafeAction(title: "Pause unused development services", body: "Stop containers and simulators you are not actively using.", systemImage: "pause.circle", status: .info),
           SafeAction(title: "Restart only when symptoms persist", body: "A restart can clear stuck work, but Corewise should present it as a manual troubleshooting step.", systemImage: "power", status: .info)
         ],
-        sourceNote: "Live data. CPU split, process rows, thread count, resident memory, physical footprint when macOS returns it, page-ins, observed memory, system VM memory, uptime, swap totals, swap trend, and sustained CPU history are read locally. Swap contributors are inferred from public memory signals and are not per-process swap ownership. Memory pressure and WindowServer interpretation remain unavailable/planned until a reliable public source is selected."
+        sourceNote: "Live data. CPU split, process rows, parent-process topology, AI workload attribution, thread count, resident memory, physical footprint when macOS returns it, page-ins, observed memory, system VM memory, uptime, swap totals, swap trend, and sustained CPU history are read locally. AI app footprint, attributable descendants, and shared hosts remain separate; logical and cloud agents are not counted. Swap contributors are inferred from public memory signals and are not per-process swap ownership."
       ),
       startup: startupHealth,
       thermal: ThermalHealth(
         summary: thermalMetrics[0],
         metrics: thermalMetrics,
-        contributors: [
-          DiagnosticFinding(title: "Thermal state is \(thermalStateValue.lowercased())", detail: "The safe public signal is read from ProcessInfo.", status: thermalStateStatus, severityScore: thermalSeverity(thermalState)),
-          DiagnosticFinding(title: "Low-level readings are intentionally absent", detail: "Corewise should not rely on unsupported hardware APIs for a consumer MVP.", status: .info, severityScore: 12),
-          DiagnosticFinding(title: "CPU-heavy tools can still create heat", detail: "Xcode, builds, and background developer tasks are likely contributors if fans are audible.", status: .warning, severityScore: 44)
-        ],
+        contributors: thermalContributors,
         actions: [
           SafeAction(title: "Trust macOS thermal pressure", body: "Use ProcessInfo thermal state for safe high-level thermal status.", systemImage: "thermometer.medium", status: .good),
           SafeAction(title: "Reduce sustained load", body: "Pause long builds or containers if the Mac feels hot for a long period.", systemImage: "speedometer", status: .info)
         ],
-        sourceNote: "Mixed data. Thermal state is live from ProcessInfo.thermalState; low power mode and likely contributors remain planned. Corewise avoids unsupported low-level hardware readings."
+        sourceNote: "Mixed data. Thermal state is live from ProcessInfo.thermalState; low power mode and likely contributors remain planned. Corewise avoids unsupported low-level hardware readings.",
+        level: typedThermalLevel(thermalState)
       ),
       appIssues: appIssuesHealth,
       suggestions: [
-        Suggestion(title: "Keep storage review manual", body: "Corewise now reads startup volume capacity without opening personal folders automatically.", severity: .good),
+        Suggestion(title: "Enable Full Storage Analysis", body: "Corewise can classify standard storage folders locally after Full Disk Access is granted in macOS.", severity: .good),
         Suggestion(title: "Watch repeated CPU load", body: "Process history is more useful than a single spike once a few refreshes have been collected.", severity: .info),
         Suggestion(title: "Treat values as diagnostic context", body: "Corewise explains what is likely happening and leaves all cleanup decisions to you.", severity: .good)
       ]
@@ -306,7 +325,7 @@ struct SystemHealthCollector: SystemHealthCollecting {
       DataAccessCapability(title: "Battery basics", dataMode: .live, source: "IOKit power sources", reason: "Charge, power source, and charging state are read when macOS exposes an internal battery.", actionLabel: nil),
       DataAccessCapability(title: "Thermal state", dataMode: .live, source: "ProcessInfo.thermalState", reason: "Safe high-level pressure signal, not a low-level hardware reading.", actionLabel: nil),
       DataAccessCapability(title: "Launch plist inventory", dataMode: .live, source: "LaunchAgents and LaunchDaemons", reason: "Reads accessible plist metadata only.", actionLabel: nil),
-      DataAccessCapability(title: "Storage folder details", dataMode: .unavailable, source: "User-selected folder", reason: "Corewise waits for you to choose a folder before scanning personal files.", actionLabel: "Choose Folder"),
+      DataAccessCapability(title: "Storage folder details", dataMode: .unavailable, source: "Full Disk Access or Folder Scope", reason: "Full Storage Analysis uses optional macOS Full Disk Access; folder scope remains a fallback.", actionLabel: "Enable"),
       DataAccessCapability(title: "Crash report patterns", dataMode: .unavailable, source: "User-selected report folder", reason: "Crash reports may contain sensitive metadata, so Corewise reads them only after manual selection.", actionLabel: "Choose Reports"),
       DataAccessCapability(title: "Detailed battery health", dataMode: .planned, source: "IOKit battery registry", reason: "Cycle count, condition, and capacity are used only when safe keys are present.", actionLabel: nil),
       DataAccessCapability(title: "System watts and low-level readings", dataMode: .avoided, source: "Unsupported or elevated sources", reason: "Corewise avoids private hardware paths, elevated tools, and unsupported claims.", actionLabel: nil)
@@ -434,12 +453,14 @@ struct SystemHealthCollector: SystemHealthCollecting {
     _ confidence: String,
     _ recommendedAction: String,
     _ lastUpdated: Date,
-    dataMode: DataMode = .unavailable
+    dataMode: DataMode = .unavailable,
+    role: DiagnosticMetricRole? = nil
   ) -> DiagnosticMetric {
     DiagnosticMetric(
       title: title,
       value: value,
       unit: unit,
+      role: role,
       dataMode: dataMode,
       status: status,
       severityScore: severityScore,
@@ -525,6 +546,16 @@ struct SystemHealthCollector: SystemHealthCollecting {
       return .critical
     @unknown default:
       return .info
+    }
+  }
+
+  private func typedThermalLevel(_ state: ProcessInfo.ThermalState) -> ThermalLevel {
+    switch state {
+    case .nominal: .nominal
+    case .fair: .fair
+    case .serious: .serious
+    case .critical: .critical
+    @unknown default: .unavailable
     }
   }
 

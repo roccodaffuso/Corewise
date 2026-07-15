@@ -1,0 +1,194 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#08110f">
+    <meta name="description" content="Corewise explains local Mac performance, storage, and AI workloads without accounts, analytics, or automatic cleanup.">
+    <meta property="og:title" content="Corewise — Know what your Mac is doing">
+    <meta property="og:description" content="A local-first signal console for macOS performance, storage, and AI workloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://corewise.dev/">
+    <meta property="og:image" content="https://corewise.dev/assets/corewise-overview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://corewise.dev/">
+    <link rel="icon" href="assets/corewise-app-icon.png">
+    <link rel="stylesheet" href="styles.css">
+    <title>Corewise — Local Mac signals, explained</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Corewise",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "macOS 14 or newer",
+        "isAccessibleForFree": true,
+        "license": "https://www.mozilla.org/MPL/2.0/",
+        "downloadUrl": "https://github.com/roccodaffuso/Corewise/releases/tag/v0.1.0-beta.1",
+        "url": "https://corewise.dev/"
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="Corewise home">
+        <img src="assets/corewise-app-icon.png" width="34" height="34" alt="">
+        <span>Corewise</span>
+      </a>
+      <nav>
+        <a href="#signals">Signals</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://github.com/roccodaffuso/Corewise">Source</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-copy reveal">
+          <p class="eyebrow"><span></span> Public beta for macOS 14+</p>
+          <h1 id="hero-title">Know what your Mac is really doing.</h1>
+          <p class="hero-lede">Corewise turns local performance, storage, and AI workload signals into a calm explanation and one useful next step.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.1/Corewise-0.1.0-universal.dmg">
+              Download beta
+              <span aria-hidden="true">↓</span>
+            </a>
+            <a class="text-link" href="https://github.com/roccodaffuso/Corewise">
+              View source
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <p class="release-note">Free and open source · Universal DMG · No account</p>
+        </div>
+
+        <div class="hero-stage reveal" data-depth>
+          <div class="window-light" aria-hidden="true"></div>
+          <img src="assets/corewise-overview.png" alt="Corewise Overview showing local signals, performance, storage, and process activity." width="1600" height="1000">
+        </div>
+      </section>
+
+      <section class="signal-intro section" id="signals" aria-labelledby="signals-title">
+        <div class="section-index reveal">01 / Signals</div>
+        <div class="section-copy reveal">
+          <h2 id="signals-title">Observe first.<br>Explain second.</h2>
+          <p>Corewise does not compress your Mac into a health score. It keeps live evidence, coverage, and limitations visible.</p>
+        </div>
+        <dl class="signal-list reveal">
+          <div>
+            <dt>Performance</dt>
+            <dd>CPU activity, memory context, swap, and the processes shaping the current sample.</dd>
+          </div>
+          <div>
+            <dt>AI Workloads</dt>
+            <dd>Codex, Claude, Cursor, Ollama, and other supported local tools—with app footprint and related work kept separate.</dd>
+          </div>
+          <div>
+            <dt>Storage</dt>
+            <dd>Volume headroom immediately, with read-only file analysis only after an explicit permission or folder choice.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="ai-field section" aria-labelledby="ai-title">
+        <div class="ai-orbit" aria-hidden="true">
+          <span class="orbit orbit-one"></span>
+          <span class="orbit orbit-two"></span>
+          <span class="pulse"></span>
+        </div>
+        <div class="ai-copy reveal">
+          <p class="eyebrow"><span></span> AI Workloads</p>
+          <h2 id="ai-title">See the local cost of the tools building beside you.</h2>
+          <p>Measure directly identified app memory, attributable child work, current CPU, and shared hosts—without pretending local processes equal cloud agents.</p>
+          <a class="text-link" href="https://github.com/roccodaffuso/Corewise#what-corewise-does">How attribution works <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+
+      <section class="privacy section" id="privacy" aria-labelledby="privacy-title">
+        <div class="section-index reveal">02 / Privacy</div>
+        <div class="privacy-statement reveal">
+          <h2 id="privacy-title">Your diagnostics stay on your Mac.</h2>
+          <p>No backend. No analytics. No account. No automatic cleanup. Corewise uses supported local macOS sources and copies a report only when you ask.</p>
+        </div>
+        <ul class="boundary-list reveal">
+          <li><span>Automatic reads</span><strong>Safe local signals</strong></li>
+          <li><span>Optional permission</span><strong>Full Storage Analysis</strong></li>
+          <li><span>Always avoided</span><strong>Uploads and destructive actions</strong></li>
+        </ul>
+      </section>
+
+      <section class="install section" aria-labelledby="install-title">
+        <div class="install-copy reveal">
+          <p class="eyebrow"><span></span> Direct distribution</p>
+          <h2 id="install-title">One DMG.<br>One transparent source.</h2>
+          <ol>
+            <li><span>01</span> Download the signed universal DMG.</li>
+            <li><span>02</span> Drag Corewise into Applications.</li>
+            <li><span>03</span> Open normally—Gatekeeper verifies the notarized build.</li>
+          </ol>
+        </div>
+        <div class="install-meta reveal">
+          <dl>
+            <div><dt>Requires</dt><dd>macOS 14+</dd></div>
+            <div><dt>Architectures</dt><dd>Apple Silicon + Intel</dd></div>
+            <div><dt>License</dt><dd>MPL-2.0</dd></div>
+            <div><dt>Updates</dt><dd>Manual for 0.1.x</dd></div>
+          </dl>
+          <a class="button primary" href="https://github.com/roccodaffuso/Corewise/releases/tag/v0.1.0-beta.1">Release notes <span aria-hidden="true">↗</span></a>
+          <a class="checksum" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.1/Corewise-0.1.0-universal.dmg.sha256">Verify SHA-256</a>
+        </div>
+      </section>
+
+      <section class="faq section" aria-labelledby="faq-title">
+        <div class="section-index reveal">03 / Details</div>
+        <h2 id="faq-title" class="reveal">Before you install.</h2>
+        <div class="faq-list reveal">
+          <details>
+            <summary>Does Corewise require Full Disk Access?</summary>
+            <p>No. Normal diagnostics work without it. Full Disk Access is optional and used only when you explicitly start read-only Full Storage Analysis.</p>
+          </details>
+          <details>
+            <summary>Can Corewise see my cloud AI agents?</summary>
+            <p>No. AI Workloads observes attributable local processes. It does not read prompts, projects, agent threads, cloud usage, process arguments, or working directories.</p>
+          </details>
+          <details>
+            <summary>Does Corewise fix or delete anything?</summary>
+            <p>No. Corewise explains supported signals and points to safe next steps. It does not kill processes, delete files, or claim a single health verdict.</p>
+          </details>
+          <details>
+            <summary>How are updates delivered?</summary>
+            <p>The first release line uses manual updates from GitHub Releases. An updater will not be added until its networking and trust model are explicitly reviewed.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="final-cta section" aria-labelledby="cta-title">
+        <p class="eyebrow reveal"><span></span> Local signals, clearly</p>
+        <h2 id="cta-title" class="reveal">Your Mac already has the evidence.<br>Corewise makes it readable.</h2>
+        <div class="hero-actions reveal">
+          <a class="button primary" href="https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.1/Corewise-0.1.0-universal.dmg">Download beta <span aria-hidden="true">↓</span></a>
+          <a class="text-link" href="https://github.com/roccodaffuso/Corewise/issues/new/choose">Report an issue <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="brand footer-brand">
+        <img src="assets/corewise-app-icon.png" width="30" height="30" alt="">
+        <span>Corewise</span>
+      </div>
+      <p>Copyright © 2026 Rocco D’Affuso.</p>
+      <nav aria-label="Footer navigation">
+        <a href="https://github.com/roccodaffuso/Corewise">GitHub</a>
+        <a href="https://github.com/roccodaffuso/Corewise/blob/main/LICENSE">MPL‑2.0</a>
+        <a href="https://github.com/roccodaffuso/Corewise/blob/main/SECURITY.md">Security</a>
+      </nav>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

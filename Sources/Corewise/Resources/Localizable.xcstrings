@@ -1,0 +1,2580 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "focusedCheck.intent.aiWorkloads": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observe AI Session"
+          }
+        }
+      }
+    },
+    "focusedCheck.intent.batteryDrain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battery drains quickly"
+          }
+        }
+      }
+    },
+    "focusedCheck.intent.general": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just checking"
+          }
+        }
+      }
+    },
+    "focusedCheck.intent.hot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Mac feels hot"
+          }
+        }
+      }
+    },
+    "focusedCheck.intent.slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Mac feels slow"
+          }
+        }
+      }
+    },
+    "focusedCheck.intent.storageFull": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage is full"
+          }
+        }
+      }
+    },
+    "quickActions.search": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search actions"
+          }
+        }
+      }
+    },
+    "status.clear.headline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No urgent live signals detected"
+          }
+        }
+      }
+    },
+    "status.unavailable.headline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live signals unavailable"
+          }
+        }
+      }
+    },
+    "Reading report metadata…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading report metadata…"
+          }
+        }
+      }
+    },
+    "%@ files · %@ folders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ files · %2$@ folders"
+          }
+        }
+      }
+    },
+    "FOCUSED CHECK": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FOCUSED CHECK"
+          }
+        }
+      }
+    },
+    "No app group accumulated enough readable activity in this check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No app group accumulated enough readable activity in this check."
+          }
+        }
+      }
+    },
+    "No report folder selected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No report folder selected"
+          }
+        }
+      }
+    },
+    "QUICK ACTIONS": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QUICK ACTIONS"
+          }
+        }
+      }
+    },
+    "%@ · %@ samples · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ samples · %3$@"
+          }
+        }
+      }
+    },
+    "esc Close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esc Close"
+          }
+        }
+      }
+    },
+    "%@ files · %@ folders · %@ unreadable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ files · %2$@ folders · %3$@ unreadable"
+          }
+        }
+      }
+    },
+    "No readable process rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No readable process rows"
+          }
+        }
+      }
+    },
+    "Checking this Mac…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking this Mac…"
+          }
+        }
+      }
+    },
+    "%@ GB used of %@ GB": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ GB used of %2$@ GB"
+          }
+        }
+      }
+    },
+    "Choose one folder once. Corewise stores a security-scoped bookmark and reuses that same read-only scope for later scans.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose one folder once. Corewise stores a security-scoped bookmark and reuses that same read-only scope for later scans."
+          }
+        }
+      }
+    },
+    "Signal console": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signal console"
+          }
+        }
+      }
+    },
+    "%@ observed processes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ observed processes"
+          }
+        }
+      }
+    },
+    "The menu bar monitor reuses the current Corewise snapshot and does not start another collector.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The menu bar monitor reuses the current Corewise snapshot and does not start another collector."
+          }
+        }
+      }
+    },
+    "%@ rows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ rows"
+          }
+        }
+      }
+    },
+    "Reports never include raw crash bodies, stack traces, uploads, or file contents.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports never include raw crash bodies, stack traces, uploads, or file contents."
+          }
+        }
+      }
+    },
+    "This scope did not return items for the selected group.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This scope did not return items for the selected group."
+          }
+        }
+      }
+    },
+    "%@ confidence · %@ samples · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ confidence · %2$@ samples · %3$@"
+          }
+        }
+      }
+    },
+    "LOCAL SIGNALS": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LOCAL SIGNALS"
+          }
+        }
+      }
+    },
+    "Expected contexts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected contexts"
+          }
+        }
+      }
+    },
+    "This only chooses the initial Performance view. It does not change collection or hide real process rows.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This only chooses the initial Performance view. It does not change collection or hide real process rows."
+          }
+        }
+      }
+    },
+    "%@. Outside this scan means unclassified by this result, not removable. Source: %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. Outside this scan means unclassified by this result, not removable. Source: %2$@."
+          }
+        }
+      }
+    },
+    "No readable regular files were classified in this scope.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No readable regular files were classified in this scope."
+          }
+        }
+      }
+    },
+    "Unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable"
+          }
+        }
+      }
+    },
+    "COREWISE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "COREWISE"
+          }
+        }
+      }
+    },
+    "Updated %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %@"
+          }
+        }
+      }
+    },
+    "Choose a row to inspect its local metadata.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a row to inspect its local metadata."
+          }
+        }
+      }
+    },
+    "%@ GB": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ GB"
+          }
+        }
+      }
+    },
+    "Corewise can summarize repeated crashes after you choose a DiagnosticReports folder. It reads app name, version, dates, and repetition only.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise can summarize repeated crashes after you choose a DiagnosticReports folder. It reads app name, version, dates, and repetition only."
+          }
+        }
+      }
+    },
+    "Corewise cannot know the total file count in advance, so it does not show a fabricated percentage.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise cannot know the total file count in advance, so it does not show a fabricated percentage."
+          }
+        }
+      }
+    },
+    "AVAILABLE": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AVAILABLE"
+          }
+        }
+      }
+    },
+    "This Mac did not expose an internal battery through the supported power-source APIs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac did not expose an internal battery through the supported power-source APIs."
+          }
+        }
+      }
+    },
+    "↩ Run": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↩ Run"
+          }
+        }
+      }
+    },
+    "%@% occupied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@%2$ occupied"
+          }
+        }
+      }
+    },
+    "%@ GB available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ GB available"
+          }
+        }
+      }
+    },
+    "OBSERVED SO FAR": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OBSERVED SO FAR"
+          }
+        }
+      }
+    },
+    "%@ — %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ — %2$@"
+          }
+        }
+      }
+    },
+    "↑↓ Navigate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↑↓ Navigate"
+          }
+        }
+      }
+    },
+    "Corewise includes its own refresh and rendering cost so the sample stays transparent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise includes its own refresh and rendering cost so the sample stays transparent."
+          }
+        }
+      }
+    },
+    "Photo or media imports": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo or media imports"
+          }
+        }
+      }
+    },
+    "Review the leading signal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the leading signal"
+          }
+        }
+      }
+    },
+    "Run the check again while the symptom is visible.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run the check again while the symptom is visible."
+          }
+        }
+      }
+    },
+    "No typed interpretation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No typed interpretation"
+          }
+        }
+      }
+    },
+    "This process is commonly associated with file indexing. Repeated activity is more useful than a single spike.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This process is commonly associated with file indexing. Repeated activity is more useful than a single spike."
+          }
+        }
+      }
+    },
+    "Media library": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media library"
+          }
+        }
+      }
+    },
+    "URL volume capacity values": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL volume capacity values"
+          }
+        }
+      }
+    },
+    "WindowServer draws windows, displays, spaces, and visual effects. Activity here may coincide with display-heavy work.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WindowServer draws windows, displays, spaces, and visual effects. Activity here may coincide with display-heavy work."
+          }
+        }
+      }
+    },
+    "Media may belong to a Photos, Music, or video library. Review it in the owning app when it is library-managed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media may belong to a Photos, Music, or video library. Review it in the owning app when it is library-managed."
+          }
+        }
+      }
+    },
+    "Review in developer tool": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review in developer tool"
+          }
+        }
+      }
+    },
+    "Corewise will not infer what uses space before a real approved-scope scan completes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise will not infer what uses space before a real approved-scope scan completes."
+          }
+        }
+      }
+    },
+    "Repeat during the drain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat during the drain"
+          }
+        }
+      }
+    },
+    "Inspect context": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspect context"
+          }
+        }
+      }
+    },
+    "Current signals are not available for this check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current signals are not available for this check."
+          }
+        }
+      }
+    },
+    "Moving or resizing windows": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving or resizing windows"
+          }
+        }
+      }
+    },
+    "Compare Corewise activity while idle and while an explicit check is running.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare Corewise activity while idle and while an explicit check is running."
+          }
+        }
+      }
+    },
+    "Read-only approved-scope scan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read-only approved-scope scan"
+          }
+        }
+      }
+    },
+    "The path resembles cache or temporary data. Its category does not establish that removal is appropriate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The path resembles cache or temporary data. Its category does not establish that removal is appropriate."
+          }
+        }
+      }
+    },
+    "Power-source or charge readings were not consistently available during this check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power-source or charge readings were not consistently available during this check."
+          }
+        }
+      }
+    },
+    "%@ average": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ average"
+          }
+        }
+      }
+    },
+    "No whole-percent change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No whole-percent change"
+          }
+        }
+      }
+    },
+    "Corewise cannot assign a reliable owner from the available metadata. Inspect the path before making any change.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise cannot assign a reliable owner from the available metadata. Inspect the path before making any change."
+          }
+        }
+      }
+    },
+    "Observed charge change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed charge change"
+          }
+        }
+      }
+    },
+    "Current sample only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current sample only"
+          }
+        }
+      }
+    },
+    "CPU activity coincided with thermal pressure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU activity coincided with thermal pressure"
+          }
+        }
+      }
+    },
+    "Keep the check running for at least 15 seconds and five live samples.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the check running for at least 15 seconds and five live samples."
+          }
+        }
+      }
+    },
+    "This is a current live signal from Corewise's normal snapshot.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a current live signal from Corewise's normal snapshot."
+          }
+        }
+      }
+    },
+    "This was the largest category inside the approved scan scope; Corewise makes no removal recommendation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This was the largest category inside the approved scan scope; Corewise makes no removal recommendation."
+          }
+        }
+      }
+    },
+    "Review the owning app group and its workload before acting on this helper alone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the owning app group and its workload before acting on this helper alone."
+          }
+        }
+      }
+    },
+    "The battery observation was interrupted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The battery observation was interrupted."
+          }
+        }
+      }
+    },
+    "Cache or temporary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache or temporary"
+          }
+        }
+      }
+    },
+    "Apps can split work into helper, renderer, and service processes. Review the owning app group before treating this row independently.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps can split work into helper, renderer, and service processes. Review the owning app group before treating this row independently."
+          }
+        }
+      }
+    },
+    "This path is managed as support or container data for an application. Review it through the owning app or its documented uninstall flow.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This path is managed as support or container data for an application. Review it through the owning app or its documented uninstall flow."
+          }
+        }
+      }
+    },
+    "Application": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application"
+          }
+        }
+      }
+    },
+    "A large sync queue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A large sync queue"
+          }
+        }
+      }
+    },
+    "A battery-drain observation cannot be interpreted while the Mac is connected to AC or another external power source.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A battery-drain observation cannot be interpreted while the Mac is connected to AC or another external power source."
+          }
+        }
+      }
+    },
+    "Check whether a related media task is active and repeat the observation after it finishes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check whether a related media task is active and repeat the observation after it finishes."
+          }
+        }
+      }
+    },
+    "Repeated during this check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeated during this check"
+          }
+        }
+      }
+    },
+    "Start a new battery check after macOS reports Battery Power.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new battery check after macOS reports Battery Power."
+          }
+        }
+      }
+    },
+    "Installed app bundles and files inside application paths. Review the app and its uninstaller before changing bundle contents.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed app bundles and files inside application paths. Review the app and its uninstaller before changing bundle contents."
+          }
+        }
+      }
+    },
+    "Media or photo analysis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media or photo analysis"
+          }
+        }
+      }
+    },
+    "Corewise has live resource values for this process but no reliable explanatory family. The raw process row remains the source of truth.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise has live resource values for this process but no reliable explanatory family. The raw process row remains the source of truth."
+          }
+        }
+      }
+    },
+    "Elevated memory use was observed; swap did not show a rising signal in this window.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevated memory use was observed; swap did not show a rising signal in this window."
+          }
+        }
+      }
+    },
+    "Open Storage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Storage"
+          }
+        }
+      }
+    },
+    "Rendering Corewise views": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendering Corewise views"
+          }
+        }
+      }
+    },
+    "System-managed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System-managed"
+          }
+        }
+      }
+    },
+    "Live performance signals are unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live performance signals are unavailable."
+          }
+        }
+      }
+    },
+    "The path is managed by macOS or an app container. Corewise does not recommend modifying it directly.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The path is managed by macOS or an app container. Corewise does not recommend modifying it directly."
+          }
+        }
+      }
+    },
+    "Files commonly managed directly by the user. Confirm their contents and backups in Finder.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files commonly managed directly by the user. Confirm their contents and backups in Finder."
+          }
+        }
+      }
+    },
+    "Public VM statistics": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public VM statistics"
+          }
+        }
+      }
+    },
+    "Approved scan coverage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approved scan coverage"
+          }
+        }
+      }
+    },
+    "Review battery context": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review battery context"
+          }
+        }
+      }
+    },
+    "Web or document rendering": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web or document rendering"
+          }
+        }
+      }
+    },
+    "Corewise reports only the actual charge change and coincident supported signals.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise reports only the actual charge change and coincident supported signals."
+          }
+        }
+      }
+    },
+    "Memory use stayed worth reviewing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory use stayed worth reviewing"
+          }
+        }
+      }
+    },
+    "Medium": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium"
+          }
+        }
+      }
+    },
+    "Review in Finder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review in Finder"
+          }
+        }
+      }
+    },
+    "An explicit Storage analysis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An explicit Storage analysis"
+          }
+        }
+      }
+    },
+    "No strong battery-drain signal appeared in this window.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No strong battery-drain signal appeared in this window."
+          }
+        }
+      }
+    },
+    "Run this check while using battery power.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run this check while using battery power."
+          }
+        }
+      }
+    },
+    "Storage headroom is not urgent in the current volume reading.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage headroom is not urgent in the current volume reading."
+          }
+        }
+      }
+    },
+    "Video playback or calls": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video playback or calls"
+          }
+        }
+      }
+    },
+    "These signals were observed in the same window. They indicate what is worth reviewing, not a proven cause.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These signals were observed in the same window. They indicate what is worth reviewing, not a proven cause."
+          }
+        }
+      }
+    },
+    "Low": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low"
+          }
+        }
+      }
+    },
+    "Live thermal pressure is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live thermal pressure is unavailable."
+          }
+        }
+      }
+    },
+    "Just checking uses the current Overview summary rather than a timed observation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just checking uses the current Overview summary rather than a timed observation."
+          }
+        }
+      }
+    },
+    "This result uses the current supported live snapshot. Data coverage remains separate from the conclusion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This result uses the current supported live snapshot. Data coverage remains separate from the conclusion."
+          }
+        }
+      }
+    },
+    "Elevated system CPU was observed during this check; this alone does not identify a cause.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevated system CPU was observed during this check; this alone does not identify a cause."
+          }
+        }
+      }
+    },
+    "Observed briefly in this check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed briefly in this check"
+          }
+        }
+      }
+    },
+    "Serious": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serious"
+          }
+        }
+      }
+    },
+    "System CPU stayed elevated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System CPU stayed elevated"
+          }
+        }
+      }
+    },
+    "%@ was observed in the approved scope. Review it in context before changing anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ was observed in the approved scope. Review it in context before changing anything."
+          }
+        }
+      }
+    },
+    "Critical": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Critical"
+          }
+        }
+      }
+    },
+    "The slowdown may have been intermittent or may not have occurred in this observation window.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The slowdown may have been intermittent or may not have occurred in this observation window."
+          }
+        }
+      }
+    },
+    "macOS display work": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS display work"
+          }
+        }
+      }
+    },
+    "Open the owning sync service and review its current queue or status.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the owning sync service and review its current queue or status."
+          }
+        }
+      }
+    },
+    "Allow indexing to settle, then repeat the check if the activity remains persistent.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow indexing to settle, then repeat the check if the activity remains persistent."
+          }
+        }
+      }
+    },
+    "Background library analysis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background library analysis"
+          }
+        }
+      }
+    },
+    "Review in owning app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review in owning app"
+          }
+        }
+      }
+    },
+    "The observed charge change is worth reviewing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The observed charge change is worth reviewing."
+          }
+        }
+      }
+    },
+    "Low storage headroom is worth reviewing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low storage headroom is worth reviewing."
+          }
+        }
+      }
+    },
+    "Local in-memory process history": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local in-memory process history"
+          }
+        }
+      }
+    },
+    "Elevated memory use coincided with rising swap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevated memory use coincided with rising swap."
+          }
+        }
+      }
+    },
+    "Complete Full Storage Analysis or scan the remembered folder scope.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete Full Storage Analysis or scan the remembered folder scope."
+          }
+        }
+      }
+    },
+    "This CPU activity coincided with the battery observation. Corewise does not measure per-app energy impact.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This CPU activity coincided with the battery observation. Corewise does not measure per-app energy impact."
+          }
+        }
+      }
+    },
+    "Compare the activity after closing optional display-heavy windows or disconnecting an unused display.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare the activity after closing optional display-heavy windows or disconnecting an unused display."
+          }
+        }
+      }
+    },
+    " %@ refresh intervals were missing and confidence was reduced.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " %@ refresh intervals were missing and confidence was reduced."
+          }
+        }
+      }
+    },
+    "Inspect manually": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspect manually"
+          }
+        }
+      }
+    },
+    "Multiple app windows or tabs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple app windows or tabs"
+          }
+        }
+      }
+    },
+    "Live signal refresh": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live signal refresh"
+          }
+        }
+      }
+    },
+    "Spotlight indexing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight indexing"
+          }
+        }
+      }
+    },
+    "This process is commonly associated with file synchronization. Review it with the owning service rather than as a removal target.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This process is commonly associated with file synchronization. Review it with the owning service rather than as a removal target."
+          }
+        }
+      }
+    },
+    "Items outside the approved scope or inaccessible to the scan remain unclassified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items outside the approved scope or inaccessible to the scan remain unclassified."
+          }
+        }
+      }
+    },
+    "No persistent live signal appeared during this check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No persistent live signal appeared during this check."
+          }
+        }
+      }
+    },
+    "Largest observed file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Largest observed file"
+          }
+        }
+      }
+    },
+    "Elevated thermal pressure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevated thermal pressure"
+          }
+        }
+      }
+    },
+    "ProcessInfo.thermalState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ProcessInfo.thermalState"
+          }
+        }
+      }
+    },
+    "A recent macOS update": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A recent macOS update"
+          }
+        }
+      }
+    },
+    "Disconnect power and start again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect power and start again"
+          }
+        }
+      }
+    },
+    "Review sustained activity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review sustained activity"
+          }
+        }
+      }
+    },
+    "An internal battery reading is unavailable.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An internal battery reading is unavailable."
+          }
+        }
+      }
+    },
+    "Return to Overview to inspect the current supported signals.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to Overview to inspect the current supported signals."
+          }
+        }
+      }
+    },
+    "Rising swap was observed in the same window. Public macOS data does not expose exact per-process swap ownership.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rising swap was observed in the same window. Public macOS data does not expose exact per-process swap ownership."
+          }
+        }
+      }
+    },
+    "Uploading or downloading files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploading or downloading files"
+          }
+        }
+      }
+    },
+    "New or changed files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New or changed files"
+          }
+        }
+      }
+    },
+    "Volume headroom": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volume headroom"
+          }
+        }
+      }
+    },
+    "macOS reported %@ thermal pressure during this observation window.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS reported %@ thermal pressure during this observation window."
+          }
+        }
+      }
+    },
+    "Review observed storage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review observed storage"
+          }
+        }
+      }
+    },
+    "Run another check while the unexpected drain is visible.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run another check while the unexpected drain is visible."
+          }
+        }
+      }
+    },
+    "Sustained during this check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sustained during this check"
+          }
+        }
+      }
+    },
+    "Fair": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fair"
+          }
+        }
+      }
+    },
+    "Repeat while it feels slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat while it feels slow"
+          }
+        }
+      }
+    },
+    "Review memory context": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review memory context"
+          }
+        }
+      }
+    },
+    "Open Memory and compare observed memory with swap trend.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Memory and compare observed memory with swap trend."
+          }
+        }
+      }
+    },
+    "Corewise cannot infer physical temperature from CPU activity alone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise cannot infer physical temperature from CPU activity alone."
+          }
+        }
+      }
+    },
+    "Review Overview": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review Overview"
+          }
+        }
+      }
+    },
+    "Swap increased during the check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap increased during the check"
+          }
+        }
+      }
+    },
+    "Open Performance and check whether the observed work is expected.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Performance and check whether the observed work is expected."
+          }
+        }
+      }
+    },
+    "User-managed files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User-managed files"
+          }
+        }
+      }
+    },
+    "Repeat while the Mac feels hot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat while the Mac feels hot"
+          }
+        }
+      }
+    },
+    "This process may appear during playback, calls, imports, previews, or photo analysis. Corewise does not identify it as the source of the current symptom.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This process may appear during playback, calls, imports, previews, or photo analysis. Corewise does not identify it as the source of the current symptom."
+          }
+        }
+      }
+    },
+    "macOS reported nominal thermal pressure during this check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS reported nominal thermal pressure during this check."
+          }
+        }
+      }
+    },
+    "Leave the check running while the symptom is visible.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave the check running while the symptom is visible."
+          }
+        }
+      }
+    },
+    "No whole-percent charge change appeared in this window; Corewise does not extrapolate a rate from it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No whole-percent charge change appeared in this window; Corewise does not extrapolate a rate from it."
+          }
+        }
+      }
+    },
+    "More observation is needed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More observation is needed."
+          }
+        }
+      }
+    },
+    "Sustained CPU activity was observed in the same window. This is coincidence, not proof of cause.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sustained CPU activity was observed in the same window. This is coincidence, not proof of cause."
+          }
+        }
+      }
+    },
+    "Refresh Corewise to try the live checks again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Corewise to try the live checks again."
+          }
+        }
+      }
+    },
+    "Local in-memory swap history": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local in-memory swap history"
+          }
+        }
+      }
+    },
+    "Nominal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nominal"
+          }
+        }
+      }
+    },
+    "Cloud or file-provider work": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud or file-provider work"
+          }
+        }
+      }
+    },
+    "Live CPU tick samples": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live CPU tick samples"
+          }
+        }
+      }
+    },
+    "Review app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review app"
+          }
+        }
+      }
+    },
+    "Reduce sustained work": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reduce sustained work"
+          }
+        }
+      }
+    },
+    "Refresh signals": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh signals"
+          }
+        }
+      }
+    },
+    "High": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High"
+          }
+        }
+      }
+    },
+    "Build products, dependencies, simulators, or source-related data. Review them in the tool or project that created them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build products, dependencies, simulators, or source-related data. Review them in the tool or project that created them."
+          }
+        }
+      }
+    },
+    "Keep the Mac on battery for at least five minutes and five distinct battery readings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the Mac on battery for at least five minutes and five distinct battery readings."
+          }
+        }
+      }
+    },
+    "Elevated thermal pressure was observed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevated thermal pressure was observed."
+          }
+        }
+      }
+    },
+    "Reconnecting after being offline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecting after being offline"
+          }
+        }
+      }
+    },
+    "Pause optional heavy work and see whether macOS thermal pressure returns toward nominal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause optional heavy work and see whether macOS thermal pressure returns toward nominal."
+          }
+        }
+      }
+    },
+    "Corewise did not receive a supported internal battery reading for this check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise did not receive a supported internal battery reading for this check."
+          }
+        }
+      }
+    },
+    "Part of an app process group": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part of an app process group"
+          }
+        }
+      }
+    },
+    "Extensions and background services": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensions and background services"
+          }
+        }
+      }
+    },
+    "The scan shows observed size inside %@; it does not estimate removable space.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The scan shows observed size inside %@; it does not estimate removable space."
+          }
+        }
+      }
+    },
+    "This is live startup-volume headroom reported by macOS.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is live startup-volume headroom reported by macOS."
+          }
+        }
+      }
+    },
+    "%@ stayed active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ stayed active"
+          }
+        }
+      }
+    },
+    "Inspect ownership and usefulness before removing anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspect ownership and usefulness before removing anything."
+          }
+        }
+      }
+    },
+    "Keep observing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep observing"
+          }
+        }
+      }
+    },
+    "up to %@ CPU": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "up to %@ CPU"
+          }
+        }
+      }
+    },
+    "Rising": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rising"
+          }
+        }
+      }
+    },
+    "Use the executable path and owning app as context before deciding whether the activity is expected.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the executable path and owning app as context before deciding whether the activity is expected."
+          }
+        }
+      }
+    },
+    "Corewise did not receive supported CPU or memory readings during this check.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise did not receive supported CPU or memory readings during this check."
+          }
+        }
+      }
+    },
+    "Review the largest observed items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the largest observed items"
+          }
+        }
+      }
+    },
+    "Application support": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application support"
+          }
+        }
+      }
+    },
+    "Unknown owner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown owner"
+          }
+        }
+      }
+    },
+    "Corewise monitoring work": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise monitoring work"
+          }
+        }
+      }
+    },
+    "Leave to macOS or owning app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave to macOS or owning app"
+          }
+        }
+      }
+    },
+    "Corewise does not infer physical temperature from CPU activity when the supported thermal state is nominal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corewise does not infer physical temperature from CPU activity when the supported thermal state is nominal."
+          }
+        }
+      }
+    },
+    "Repeated CPU activity was observed across %@ samples. Treat it as coincident activity, not an explanation by itself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeated CPU activity was observed across %@ samples. Treat it as coincident activity, not an explanation by itself."
+          }
+        }
+      }
+    },
+    "A completed storage scan is required.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A completed storage scan is required."
+          }
+        }
+      }
+    },
+    "Animation and screen sharing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animation and screen sharing"
+          }
+        }
+      }
+    },
+    "Refresh Corewise and try the check again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh Corewise and try the check again."
+          }
+        }
+      }
+    },
+    "Multiple displays or spaces": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple displays or spaces"
+          }
+        }
+      }
+    },
+    "IOKit power source readings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IOKit power source readings"
+          }
+        }
+      }
+    },
+    "%@ GB classified": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ GB classified"
+          }
+        }
+      }
+    },
+    "This is the charge change observed in this window, not an extrapolated hourly rate.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the charge change observed in this window, not an extrapolated hourly rate."
+          }
+        }
+      }
+    },
+    "Developer data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer data"
+          }
+        }
+      }
+    },
+    "Elevated thermal pressure coincided with sustained CPU activity.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elevated thermal pressure coincided with sustained CPU activity."
+          }
+        }
+      }
+    },
+    "Persistent activity is worth reviewing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persistent activity is worth reviewing."
+          }
+        }
+      }
+    },
+    "Compare this observation with macOS Battery settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare this observation with macOS Battery settings."
+          }
+        }
+      }
+    },
+    "An attached or restored volume": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An attached or restored volume"
+          }
+        }
+      }
+    },
+    "Largest observed folder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Largest observed folder"
+          }
+        }
+      }
+    },
+    "Compare this result with macOS Battery settings and repeat under the same workload.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare this result with macOS Battery settings and repeat under the same workload."
+          }
+        }
+      }
+    },
+    "%@ distinct battery readings over %@. Per-app energy impact is not measured.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ distinct battery readings over %2$@. Per-app energy impact is not measured."
+          }
+        }
+      }
+    },
+    "%@ GB classified in the approved scope; %@ items were inaccessible. Space outside the scope remains unclassified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ GB classified in the approved scope; %2$@ items were inaccessible. Space outside the scope remains unclassified."
+          }
+        }
+      }
+    },
+    "%@ supported system samples over %@.%@ History is local, volatile, and discarded when Corewise quits.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ supported system samples over %2$@.%3$@ History is local, volatile, and discarded when Corewise quits."
+          }
+        }
+      }
+    },
+    "Copy check summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy check summary"
+          }
+        }
+      }
+    },
+    "Copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        }
+      }
+    },
+    "Collecting recent %@ history": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collecting recent %1$@ history"
+          }
+        }
+      }
+    },
+    "%@ points over %@, from %@ to %@ percent, maximum %@ percent, %@ trend": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ points over %2$@, from %3$@ to %4$@ percent, maximum %5$@ percent, %6$@ trend"
+          }
+        }
+      }
+    },
+    "Recent %@ performance history": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent %1$@ performance history"
+          }
+        }
+      }
+    },
+    "%@ share of classified storage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ share of classified storage"
+          }
+        }
+      }
+    },
+    "%@ gigabytes; largest category is %@ gigabytes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ gigabytes; largest category is %2$@ gigabytes"
+          }
+        }
+      }
+    },
+    "Copy completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy completed"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

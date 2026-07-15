@@ -1,61 +1,15 @@
+// SPDX-License-Identifier: MPL-2.0
+
+import AppKit
 import SwiftUI
-
-enum DashboardSection: String, CaseIterable, Identifiable {
-  case overview
-  case battery
-  case storage
-  case performance
-  case startup
-  case thermal
-  case issues
-  case report
-
-  var id: String { rawValue }
-
-  var title: String {
-    switch self {
-    case .overview: "Overview"
-    case .battery: "Battery"
-    case .storage: "Storage"
-    case .performance: "Performance"
-    case .startup: "Startup"
-    case .thermal: "Thermal"
-    case .issues: "App Issues"
-    case .report: "Report"
-    }
-  }
-
-  var detail: String {
-    switch self {
-    case .overview: "Health status"
-    case .battery: "Cycles and capacity"
-    case .storage: "Space and large files"
-    case .performance: "CPU and memory"
-    case .startup: "Login items"
-    case .thermal: "Safe signals"
-    case .issues: "Crash patterns"
-    case .report: "Read-only summary"
-    }
-  }
-
-  var systemImage: String {
-    switch self {
-    case .overview: "gauge.with.dots.needle.bottom.50percent"
-    case .battery: "battery.75percent"
-    case .storage: "internaldrive"
-    case .performance: "cpu"
-    case .startup: "power"
-    case .thermal: "thermometer.medium"
-    case .issues: "app.badge"
-    case .report: "doc.text.magnifyingglass"
-    }
-  }
-}
 
 struct ContentView: View {
   @ObservedObject var store: HealthDashboardStore
-  @SceneStorage("selectedSection") private var selectedSectionID = DashboardSection.overview.rawValue
-  @Environment(\.colorScheme) private var colorScheme
+  @Environment(AppRouteStore.self) private var routeStore
+  @SceneStorage("navigation.selectedSection") private var selectedSectionID = DashboardSection.overview.rawValue
+  @State private var isShowingQuickActions = false
+  @State private var requestedPerformanceMode: PerformanceMode?
+  @State private var requestedFocus: DashboardFocus?
 
   private var selectedSection: DashboardSection {
     DashboardSection(rawValue: selectedSectionID) ?? .overview
@@ -63,190 +17,155 @@ struct ContentView: View {
 
   var body: some View {
     NavigationSplitView {
-      SidebarView(selectedSectionID: $selectedSectionID)
-      .navigationSplitViewColumnWidth(min: 240, ideal: 268)
+      CorewiseSidebar(selectedSectionID: $selectedSectionID)
+        .navigationSplitViewColumnWidth(min: 218, ideal: 218, max: 218)
     } detail: {
-      ZStack {
-        MacWindowMaterialView()
-          .ignoresSafeArea()
-        Rectangle()
-          .fill(CorewiseVisual.pageWash(colorScheme: colorScheme))
-          .ignoresSafeArea()
-          .allowsHitTesting(false)
-        WindowTransparencyConfigurator()
-          .frame(width: 0, height: 0)
+      ZStack(alignment: .top) {
+        CorewiseBackdrop()
 
-        Group {
-          if let snapshot = store.snapshot {
-            DetailRouter(section: selectedSection, snapshot: snapshot, store: store)
-          } else {
-            ProgressView("Checking your Mac...")
-              .frame(maxWidth: .infinity, maxHeight: .infinity)
-          }
+        if let snapshot = store.snapshot {
+          DetailRouter(section: selectedSection, snapshot: snapshot, store: store, requestedPerformanceMode: requestedPerformanceMode, requestedFocus: requestedFocus)
+        } else {
+          LoadingDashboardView()
+        }
+
+        if let errorMessage = store.errorMessage {
+          NoticeBanner(message: errorMessage, dismiss: store.clearError)
+            .padding(CorewiseLayout.space16)
+            .frame(maxWidth: 680)
         }
       }
+      .navigationTitle(selectedSection.title)
+    }
+    .background(CorewiseVisual.contentBackground)
+    .tint(CorewiseVisual.accent)
+    .overlay {
+      if isShowingQuickActions {
+        QuickActionsView(store: store, isPresented: $isShowingQuickActions)
+          .transition(.opacity)
+      }
+    }
+    .focusedSceneValue(
+      \.showCorewiseQuickActions,
+      ShowCorewiseQuickActionsAction { isShowingQuickActions = true }
+    )
+    .onChange(of: routeStore.requestedRoute) { _, route in
+      guard let route else { return }
+      selectedSectionID = route.section.rawValue
+      requestedPerformanceMode = route.performanceMode
+      requestedFocus = route.focus
+      routeStore.consume()
+    }
+    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+      Task { await store.applicationDidBecomeActive() }
     }
   }
 }
 
-private struct SidebarView: View {
-  @Binding var selectedSectionID: DashboardSection.RawValue
+private struct CorewiseSidebar: View {
+  @Binding var selectedSectionID: String
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
-      SidebarHeader()
-        .padding(.horizontal, 14)
+    VStack(spacing: 0) {
+      CorewiseSidebarBrand()
+        .padding(.horizontal, CorewiseLayout.space12)
+        .padding(.top, 44)
+        .padding(.bottom, CorewiseLayout.space12)
 
-      VStack(spacing: 4) {
-        ForEach(DashboardSection.allCases) { section in
-          SidebarSectionRow(
-            section: section,
-            isSelected: section.rawValue == selectedSectionID
-          ) {
-            selectedSectionID = section.rawValue
-          }
+      List(selection: $selectedSectionID) {
+        Section("Primary") {
+          sectionRows(DashboardSection.primary)
+        }
+        Section("System") {
+          sectionRows(DashboardSection.system)
+        }
+        Section("Utility") {
+          sectionRows(DashboardSection.utility)
         }
       }
-      .padding(.horizontal, 10)
+      .listStyle(.sidebar)
+      .scrollContentBackground(.hidden)
 
       Spacer(minLength: 0)
 
-      SidebarSettingsLink()
-        .padding(.horizontal, 10)
+      SettingsLink {
+        SidebarDestinationRow(title: "Settings", systemImage: "gearshape", isSelected: false)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      .buttonStyle(.plain)
+      .padding(CorewiseLayout.space8)
     }
-    .padding(.top, 16)
-    .padding(.bottom, 12)
+    .background {
+      ZStack {
+        Rectangle().fill(CorewiseVisual.windowBackground)
+        CorewiseVisual.sidebarFill(colorScheme: colorScheme)
+      }
+      .ignoresSafeArea()
+    }
+  }
+
+  @ViewBuilder
+  private func sectionRows(_ sections: [DashboardSection]) -> some View {
+    ForEach(sections) { section in
+      SidebarDestinationRow(
+        title: section.title,
+        systemImage: section.systemImage,
+        isSelected: selectedSectionID == section.rawValue
+      )
+        .tag(section.rawValue)
+        .accessibilityLabel(section.title)
+        .listRowBackground(Color.clear)
+    }
   }
 }
 
-private struct SidebarSettingsLink: View {
-  @State private var isHovering = false
-  @Environment(\.colorScheme) private var colorScheme
-
+private struct CorewiseSidebarBrand: View {
   var body: some View {
-    SettingsLink {
-      HStack(spacing: 11) {
-        RoundedRectangle(cornerRadius: 2, style: .continuous)
-          .fill(Color.clear)
-          .frame(width: 3, height: 24)
-
-        Image(systemName: "gearshape")
-          .font(.system(size: 13, weight: .semibold))
-          .symbolRenderingMode(.hierarchical)
+    HStack(spacing: CorewiseLayout.space12) {
+      CorewiseBrandGlyph(size: 38)
+      VStack(alignment: .leading, spacing: 2) {
+        Text("COREWISE")
+          .font(.headline)
+          .tracking(0.7)
+        Text("Signal console")
+          .font(.callout)
           .foregroundStyle(.secondary)
-          .frame(width: 23, height: 23)
-
-        VStack(alignment: .leading, spacing: 1) {
-          Text("Settings")
-            .font(.callout.weight(.medium))
-            .foregroundStyle(.primary)
-          Text("Preferences")
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-        }
-
-        Spacer(minLength: 0)
       }
-      .padding(.horizontal, 8)
-      .padding(.vertical, 6)
-      .frame(minHeight: CorewiseLayout.sidebarRowHeight)
-      .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-      .background(rowFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+      Spacer(minLength: 0)
     }
-    .buttonStyle(.plain)
-    .onHover { isHovering = $0 }
-    .help("Open Corewise Settings")
-  }
-
-  private var rowFill: Color {
-    isHovering ? CorewiseVisual.sidebarHoverFill(colorScheme: colorScheme) : .clear
+    .accessibilityElement(children: .combine)
   }
 }
 
-private struct SidebarHeader: View {
-  var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      HStack(spacing: 8) {
-        Image(systemName: "waveform.path.ecg")
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(CorewiseVisual.accent)
-        Text("Corewise")
-          .font(.headline.weight(.semibold))
-          .foregroundStyle(.primary)
-      }
-
-      Text("Know what your Mac is really doing.")
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .textCase(nil)
-        .lineLimit(2)
-    }
-    .padding(.top, 8)
-    .padding(.bottom, 4)
-  }
-}
-
-private struct SidebarSectionRow: View {
-  var section: DashboardSection
+private struct SidebarDestinationRow: View {
+  var title: String
+  var systemImage: String
   var isSelected: Bool
-  var select: () -> Void
-  @State private var isHovering = false
-  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    Button(action: select) {
-      HStack(spacing: 11) {
-        RoundedRectangle(cornerRadius: 2, style: .continuous)
-          .fill(isSelected ? CorewiseVisual.accentSoft : Color.clear)
-          .frame(width: 3, height: 22)
-
-        Image(systemName: section.systemImage)
+    HStack(spacing: CorewiseLayout.space8) {
+      ZStack {
+        RoundedRectangle(cornerRadius: 6)
+          .fill(isSelected ? CorewiseVisual.accent.opacity(0.16) : CorewiseVisual.quietSurface.opacity(0.55))
+        Image(systemName: systemImage)
           .font(.system(size: 13, weight: .semibold))
-          .symbolRenderingMode(.hierarchical)
-          .foregroundStyle(isSelected ? CorewiseVisual.accentSoft : Color.secondary.opacity(0.68))
-          .frame(width: 23, height: 23)
-
-        VStack(alignment: .leading, spacing: 1) {
-          Text(section.title)
-            .font(.callout.weight(isSelected ? .semibold : .medium))
-            .foregroundStyle(isSelected ? .primary : .secondary)
-          Text(section.detail)
-            .font(.caption2)
-            .foregroundStyle(isSelected ? .secondary : .tertiary)
-            .lineLimit(1)
-        }
-
-        Spacer(minLength: 0)
+          .foregroundStyle(isSelected ? CorewiseVisual.accent : .secondary)
       }
-      .padding(.horizontal, 8)
-      .padding(.vertical, 6)
-      .frame(minHeight: CorewiseLayout.sidebarRowHeight)
-      .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-      .background(rowFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-      .overlay {
-        RoundedRectangle(cornerRadius: 9, style: .continuous)
-          .stroke(rowStroke, lineWidth: 0.7)
+      .frame(width: 26, height: 26)
+      Text(title)
+        .fontWeight(isSelected ? .semibold : .regular)
+      Spacer(minLength: 0)
+      if isSelected {
+        Circle()
+          .fill(CorewiseVisual.accent)
+          .frame(width: 5, height: 5)
+          .accessibilityHidden(true)
       }
     }
-    .buttonStyle(.plain)
-    .onHover { isHovering = $0 }
-    .accessibilityLabel(section.title)
-    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-  }
-
-  private var rowFill: Color {
-    if isSelected {
-      return CorewiseVisual.sidebarSelectionFill(colorScheme: colorScheme)
-    }
-    if isHovering {
-      return CorewiseVisual.sidebarHoverFill(colorScheme: colorScheme)
-    }
-    return .clear
-  }
-
-  private var rowStroke: Color {
-    isSelected ? CorewiseVisual.hairline(colorScheme: colorScheme) : .clear
+    .padding(.horizontal, CorewiseLayout.space8)
+    .padding(.vertical, CorewiseLayout.space4)
+    .contentShape(.rect)
   }
 }
 
@@ -254,45 +173,69 @@ private struct DetailRouter: View {
   var section: DashboardSection
   var snapshot: HealthSnapshot
   @ObservedObject var store: HealthDashboardStore
+  var requestedPerformanceMode: PerformanceMode?
+  var requestedFocus: DashboardFocus?
 
   var body: some View {
+    switch section {
+    case .overview:
+      OverviewView(snapshot: snapshot, store: store)
+    case .performance:
+      PerformanceView(
+        performance: snapshot.performance,
+        store: store,
+        focusedCheckSession: store.focusedCheckSession,
+        requestedMode: requestedPerformanceMode,
+        requestedFocus: requestedFocus
+      )
+    case .storage:
+      StorageView(storage: snapshot.storage, store: store, requestedFocus: requestedFocus)
+    case .battery:
+      BatteryView(battery: snapshot.battery)
+    case .startup:
+      StartupView(startup: snapshot.startup)
+    case .thermal:
+      ThermalView(thermal: snapshot.thermal)
+    case .issues:
+      IssuesView(appIssues: snapshot.appIssues, store: store)
+    case .report:
+      ReportView(snapshot: snapshot, focusedCheckResult: store.lastFocusedCheckResult)
+    }
+  }
+}
+
+private struct LoadingDashboardView: View {
+  var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: CorewiseLayout.pageSpacing) {
-        switch section {
-        case .overview:
-          OverviewView(snapshot: snapshot)
-        case .battery:
-          BatteryView(battery: snapshot.battery)
-        case .storage:
-          StorageView(
-            storage: snapshot.storage,
-            scanSession: store.storageScanSession,
-            isScanning: store.isScanningStorage,
-            scanFolder: { Task { await store.scanStorageFolder() } },
-            scanDownloads: { Task { await store.scanDownloadsFolder() } },
-            scanDeveloperData: { Task { await store.scanDeveloperFolder() } },
-            scanFolderAt: { url in Task { await store.scanStorageSessionFolder(url) } },
-            scanParent: { Task { await store.scanStorageParentFolder() } }
-          )
-        case .performance:
-          PerformanceView(performance: snapshot.performance)
-        case .startup:
-          StartupView(startup: snapshot.startup)
-        case .thermal:
-          ThermalView(thermal: snapshot.thermal)
-        case .issues:
-          IssuesView(
-            appIssues: snapshot.appIssues,
-            isScanningReports: store.isScanningReports,
-            scanReports: { Task { await store.scanCrashReportsFolder() } }
-          )
-        case .report:
-          ReportView(snapshot: snapshot)
+      VStack(alignment: .leading, spacing: CorewiseLayout.space16) {
+        PageHeader(title: "Checking this Mac", subtitle: "Collecting supported local signals.", systemImage: "waveform.path.ecg")
+        ForEach(0..<4, id: \.self) { _ in
+          RoundedRectangle(cornerRadius: CorewiseVisual.contentRadius)
+            .fill(CorewiseVisual.elevatedSurface)
+            .frame(height: 92)
+            .corewisePanel(instrument: true)
         }
       }
-      .padding(CorewiseLayout.contentPadding)
+      .redacted(reason: .placeholder)
+      .padding(CorewiseLayout.pagePadding)
       .frame(maxWidth: CorewiseLayout.contentMaxWidth, alignment: .leading)
     }
-    .navigationTitle(section.title)
+    .accessibilityLabel("Checking this Mac")
   }
+}
+
+#Preview("App — initial loading") {
+  LoadingDashboardView()
+    .frame(width: 1180, height: 800)
+}
+
+#Preview("App — inline error") {
+  ZStack(alignment: .top) {
+    CorewiseBackdrop()
+    LoadingDashboardView()
+    NoticeBanner(message: "The latest local refresh could not complete. The previous snapshot remains visible.", dismiss: {})
+      .padding()
+      .frame(maxWidth: 680)
+  }
+  .frame(width: 1180, height: 800)
 }

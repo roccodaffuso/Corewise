@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Foundation
 import IOKit
 import IOKit.ps
@@ -43,7 +45,13 @@ struct BatteryDiagnosticsCollector {
         SafeAction(title: "Use macOS for service status", body: "For battery service decisions, rely on System Settings until Corewise can read documented health data safely.", systemImage: "battery.75percent", status: .info),
         SafeAction(title: "Watch live charge state", body: "Use the live charge and charging state as context, not as a battery-health diagnosis.", systemImage: "bolt.horizontal", status: .good)
       ],
-      sourceNote: "Mixed data. Charge, power source, and charging state are live from IOKit power source APIs when an internal battery is present. Health details appear only when safe registry values are present and plausible."
+      sourceNote: "Mixed data. Charge, power source, and charging state are live from IOKit power source APIs when an internal battery is present. Health details appear only when safe registry values are present and plausible.",
+      liveReading: BatteryLiveReading(
+        chargePercent: battery.chargePercent,
+        powerSource: typedPowerSource(battery.powerSourceState),
+        isCharging: battery.isCharging,
+        timestamp: now
+      )
     )
   }
 
@@ -209,6 +217,15 @@ struct BatteryDiagnosticsCollector {
       return "Battery Power"
     default:
       return state.localizedCaseInsensitiveContains("ups") ? "UPS Power" : "Unknown"
+    }
+  }
+
+  private func typedPowerSource(_ state: String?) -> BatteryPowerSource {
+    switch state {
+    case "Battery Power": .battery
+    case "AC Power": .ac
+    case let value? where value.localizedCaseInsensitiveContains("ups"): .ups
+    default: .unknown
     }
   }
 

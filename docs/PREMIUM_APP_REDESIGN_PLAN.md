@@ -2,6 +2,8 @@
 
 Last updated: 2026-07-09
 
+> Implementation status: superseded and completed by the **Corewise Signal System** defined in `design-audit/COREWISE_PREMIUM_DIRECTION.md` and `docs/DESIGN_SYSTEM.md`. The older hero/card-heavy recommendations below are retained as design history only. Current implementation uses a live-only attention resolver, native sidebar/tables/inspectors, solid content surfaces, truthful Storage progress, and `⌘K` Quick Actions.
+
 ## Summary
 
 Corewise deve evolvere da MVP diagnostico funzionante a utility macOS premium: piu chiara, piu calma, piu trasparente nel senso nativo del termine, e piu affidabile a colpo d'occhio.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Darwin
 import Foundation
 import Testing
@@ -19,7 +21,60 @@ import Testing
   #expect(storage.developerCaches.isEmpty)
   #expect(storage.browserCaches.isEmpty)
   #expect(storage.spaceOffenders.isEmpty)
-  #expect(storage.sourceNote.contains("not scanned automatically"))
+  #expect(storage.sourceNote.contains("Full Disk Access"))
+}
+
+@Test func slowHealthSnapshotCacheUsesConfiguredRefreshCadence() {
+  let now = Date()
+
+  #expect(SlowHealthSnapshotCache.shouldRefresh(lastUpdated: nil, now: now, interval: 60))
+  #expect(SlowHealthSnapshotCache.shouldRefresh(lastUpdated: now.addingTimeInterval(-59), now: now, interval: 60) == false)
+  #expect(SlowHealthSnapshotCache.shouldRefresh(lastUpdated: now.addingTimeInterval(-60), now: now, interval: 60))
+}
+
+@Test func semanticModelIdentityIsStableAcrossRefreshes() {
+  let firstMetric = DiagnosticMetric(
+    title: "CPU Now",
+    value: "10",
+    unit: "%",
+    dataMode: .live,
+    status: .good,
+    severityScore: 10,
+    explanation: "First sample",
+    source: "Unit test",
+    confidence: "Live / high",
+    recommendedAction: "None",
+    lastUpdated: .now
+  )
+  let secondMetric = DiagnosticMetric(
+    title: "CPU Now",
+    value: "20",
+    unit: "%",
+    dataMode: .live,
+    status: .info,
+    severityScore: 20,
+    explanation: "Second sample",
+    source: "Unit test",
+    confidence: "Live / high",
+    recommendedAction: "None",
+    lastUpdated: .now
+  )
+  let firstItem = StorageItem(title: "Cache", path: "~/Library/Caches", sizeGB: 1, status: .info, severityScore: 10, explanation: "First", source: "Unit test", confidence: "Live / high", recommendedAction: "None", lastUpdated: .now)
+  let secondItem = StorageItem(title: "Cache", path: "~/Library/Caches", sizeGB: 2, status: .warning, severityScore: 20, explanation: "Second", source: "Unit test", confidence: "Live / high", recommendedAction: "None", lastUpdated: .now)
+
+  #expect(firstMetric.id == secondMetric.id)
+  #expect(firstItem.id == secondItem.id)
+}
+
+@Test func systemMetricsSamplingPropagatesCancellation() async {
+  let task = Task {
+    try await SystemMetricsSampler.sample()
+  }
+  task.cancel()
+
+  await #expect(throws: CancellationError.self) {
+    try await task.value
+  }
 }
 
 @Test func performanceHistoryIsUnavailableUntilEnoughSamples() {
@@ -198,6 +253,8 @@ import Testing
     process("WindowServer", cpu: 8, path: "/System/Library/PrivateFrameworks/SkyLight.framework/WindowServer"),
     process("mdworker_shared", cpu: 2),
     process("fileproviderd", cpu: 2, path: "/System/Library/Frameworks/FileProvider.framework/Support/fileproviderd"),
+    process("bird", cpu: 18),
+    process("VTDecoderXPCService", cpu: 2, path: "/System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc"),
     process("Corewise", cpu: 1)
   ]
 
@@ -208,9 +265,59 @@ import Testing
   #expect(titles.contains("WindowServer is display work"))
   #expect(titles.contains("Spotlight may be indexing"))
   #expect(titles.contains("Cloud sync can be visible"))
+  #expect(titles.contains("Media services can spike briefly"))
   #expect(titles.contains("Corewise includes itself"))
+  #expect(insights.contains { $0.interpretation == "Worth watching" })
   #expect(insights.allSatisfy { $0.dataMode == .live })
   #expect(!insights.map(\.detail).joined(separator: " ").localizedCaseInsensitiveContains("kill"))
+  #expect(!insights.map(\.detail).joined(separator: " ").localizedCaseInsensitiveContains("cleanup"))
+}
+
+@Test func memoryPressureContextUsesPublicSignalsWithoutActivityMonitorParityClaim() {
+  let context = MemoryPressureContext(
+    memory: memoryReading(
+      swap: swap(usedMB: 2_048),
+      now: Date()
+    ),
+    swapInsight: SwapInsight(
+      reading: swap(usedMB: 2_048),
+      trend: .stable,
+      swapInRateBytesPerSecond: 0,
+      swapOutRateBytesPerSecond: 0,
+      contributors: [],
+      explanation: "Unit test",
+      source: "Unit test",
+      confidence: "Live / medium",
+      dataMode: .live,
+      lastUpdated: Date()
+    )
+  )
+
+  #expect(context.state == .usingSwap)
+  #expect(context.dataMode == .live)
+  #expect(context.detail.localizedCaseInsensitiveContains("swap"))
+  #expect(!context.detail.localizedCaseInsensitiveContains("Activity Monitor"))
+}
+
+@Test func memoryPressureContextDetectsGrowingSwap() {
+  let reading = swap(usedMB: 3_000)
+  let context = MemoryPressureContext(
+    memory: memoryReading(swap: reading),
+    swapInsight: SwapInsight(
+      reading: reading,
+      trend: .rising,
+      swapInRateBytesPerSecond: 0,
+      swapOutRateBytesPerSecond: 10,
+      contributors: [],
+      explanation: "Unit test",
+      source: "Unit test",
+      confidence: "Live / medium",
+      dataMode: .live,
+      lastUpdated: Date()
+    )
+  )
+
+  #expect(context.state == .swapGrowing)
 }
 
 @Test func dataCoverageSummaryCountsModes() {
@@ -302,8 +409,7 @@ import Testing
   let overviewText = snapshot.overviewMetrics.map { "\($0.title) \($0.value) \($0.explanation)" }.joined(separator: " ")
 
   #expect(modes.allSatisfy { DataMode.allCases.contains($0) })
-  #expect(snapshot.overallStatus == .notScored)
-  #expect(snapshot.healthScore == 0)
+  #expect(snapshot.attentionSummary.state != .unavailable)
   #expect(snapshot.coverageSummary.total > 0)
   #expect(snapshot.coverageSummary.live > 0)
   #expect(snapshot.coverageSummary.total < 80)
@@ -311,7 +417,7 @@ import Testing
   #expect(snapshot.appIssues.crashesByApp.isEmpty)
   #expect(!overviewText.contains("Health Score 74"))
   #expect(!overviewText.contains("Not Scored Yet"))
-  #expect(snapshot.overviewMetrics.first { $0.title == "Global Score" }?.value == "Planned")
+  #expect(!snapshot.overviewMetrics.contains { $0.title == "Global Score" })
   #expect(!snapshot.overviewMetrics.contains { $0.title == "Data Mode" })
   #expect(!overviewText.contains("Example" + "App"))
   #expect(!overviewText.contains("Photo" + "Tool"))
@@ -330,15 +436,17 @@ import Testing
   #expect(report.contains("Corewise Diagnostic Report"))
   #expect(report.contains("## Summary"))
   #expect(report.contains("## Performance"))
+  #expect(report.contains("## Memory And Swap"))
   #expect(report.contains("## Storage"))
   #expect(report.contains("## Battery"))
   #expect(report.contains("## Thermal"))
   #expect(report.contains("## Startup"))
   #expect(report.contains("## App Issues"))
   #expect(report.contains("## Limits"))
-  #expect(report.contains("Global score is planned"))
+  #expect(report.contains("does not calculate a global health score"))
   #expect(report.contains("Source:"))
   #expect(report.contains("Confidence:"))
+  #expect(report.contains("not Activity Monitor's private memory-pressure graph"))
   #expect(!summary.localizedCaseInsensitiveContains("Thread 0 Crashed"))
   #expect(!summary.localizedCaseInsensitiveContains("Binary Images"))
   #expect(!report.localizedCaseInsensitiveContains("Thread 0 Crashed"))
@@ -474,6 +582,7 @@ private func allDataModes(in snapshot: HealthSnapshot) -> [DataMode] {
     + snapshot.storage.browserCaches.map(\.dataMode)
     + snapshot.storage.spaceOffenders.map(\.dataMode)
     + snapshot.performance.metrics.map(\.dataMode)
+    + [snapshot.performance.memoryContext.dataMode]
     + snapshot.performance.processes.map(\.dataMode)
     + snapshot.performance.appGroups.map(\.dataMode)
     + snapshot.performance.insights.map(\.dataMode)

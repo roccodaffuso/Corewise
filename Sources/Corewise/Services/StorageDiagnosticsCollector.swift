@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Foundation
 
 struct StorageDiagnosticsCollector {
@@ -25,7 +27,7 @@ struct StorageDiagnosticsCollector {
     ]
 
     return StorageHealth(
-      summary: metrics[1],
+      summary: metrics[2],
       totalGB: volume.totalGB,
       availableGB: volume.availableGB,
       usedGB: volume.usedGB,
@@ -43,9 +45,9 @@ struct StorageDiagnosticsCollector {
       findings: findings(availablePercent: availablePercent),
       actions: [
         SafeAction(title: "Review Downloads manually", body: "Open Downloads in Finder only when you choose to review personal files.", systemImage: "folder", status: .good),
-        SafeAction(title: "Enable targeted scan later", body: "Future storage scans should be explicit, scoped, and permission-aware.", systemImage: "hand.raised", status: .info)
+        SafeAction(title: "Enable Full Storage Analysis", body: "Grant Full Disk Access in macOS for local read-only size classification.", systemImage: "externaldrive.badge.checkmark", status: .info)
       ],
-      sourceNote: "Live storage data. Corewise reads startup volume capacity only during automatic refresh. Personal folders such as Downloads are not scanned automatically."
+      sourceNote: "Live storage data. Corewise reads startup volume capacity automatically. Full Storage Analysis requires optional Full Disk Access and stays local/read-only."
     )
   }
 
@@ -109,8 +111,8 @@ struct StorageDiagnosticsCollector {
         severityScore: severity
       ),
       DiagnosticFinding(
-        title: "Personal folders are not scanned automatically",
-        detail: "Downloads, caches, Trash, and developer folders stay unscanned until Corewise has an explicit targeted review flow.",
+        title: "Full Storage Analysis needs consent",
+        detail: "Corewise can classify standard folders after Full Disk Access is granted in macOS. It does not silently scan protected folders before that.",
         status: .info,
         severityScore: 0
       )

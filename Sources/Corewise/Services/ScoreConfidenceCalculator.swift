@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Foundation
 
 enum ScoreConfidenceCalculator {
@@ -26,7 +28,7 @@ enum ScoreConfidenceCalculator {
     }
 
     return DiagnosticMetric(
-      title: "Score Confidence",
+      title: "Data Coverage",
       value: label,
       unit: "",
       dataMode: .live,
@@ -35,7 +37,7 @@ enum ScoreConfidenceCalculator {
       explanation: "\(summary.live) of \(max(summary.total, 1)) diagnostic signal families are live; \(summary.planned) planned, \(summary.unavailable) unavailable, \(summary.avoided) avoided.",
       source: "DataMode signal family coverage",
       confidence: "Live calculation / high",
-      recommendedAction: "Use section-level Live badges before trusting the global score.",
+      recommendedAction: "Use section-level sources to understand which conclusions are supported.",
       lastUpdated: now
     )
   }

@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: MPL-2.0
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift:
+    name: Swift (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - macos-26
+          - macos-26-intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check patch whitespace
+        run: git diff --check "$(git merge-base HEAD origin/main)" HEAD
+
+      - name: Audit public release surface
+        run: script/audit_public_release.sh
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build with strict concurrency
+        run: >-
+          swift build
+          -Xswiftc -strict-concurrency=complete
+          -Xswiftc -warnings-as-errors
