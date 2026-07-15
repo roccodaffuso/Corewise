@@ -9,6 +9,12 @@
 </p>
 
 <p align="center">
+  <a href="https://corewise.dev">Website</a> ·
+  <a href="https://github.com/roccodaffuso/Corewise/releases/tag/v0.1.0-beta.2">Download beta</a> ·
+  <a href="https://github.com/roccodaffuso/Corewise/issues/new/choose">Report an issue</a>
+</p>
+
+<p align="center">
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-1f6feb?style=flat-square">
   <img alt="Swift 5.9+" src="https://img.shields.io/badge/Swift-5.9%2B-f05138?style=flat-square">
   <img alt="License MPL-2.0" src="https://img.shields.io/badge/License-MPL--2.0-7d5fff?style=flat-square">
@@ -23,6 +29,10 @@ No account. No backend. No analytics. No automatic cleanup.
 > [!IMPORTANT]
 > Corewise is now available as a public beta. Download the signed, notarized universal DMG from [GitHub Releases](https://github.com/roccodaffuso/Corewise/releases/tag/v0.1.0-beta.2). GitHub's automatic “Source code” archives are not installable app downloads.
 
+<p align="center">
+  <img src="docs/assets/corewise-overview.png" alt="Corewise Overview showing Focused Check, a cautious attention summary, and live local signals">
+</p>
+
 ## What Corewise does
 
 - **Focused Check** observes supported local signals when a Mac feels slow, hot, battery-hungry, or full, then returns a cautious explanation and one useful next step.
@@ -33,6 +43,23 @@ No account. No backend. No analytics. No automatic cleanup.
 - **Local reports** copy a plain-language Summary or Markdown report without uploading files, stack traces, prompts, or project details.
 
 Corewise deliberately avoids health scores, process killing, automatic deletion, private sensor APIs, hidden folder scans, and claims of exact parity with Activity Monitor.
+
+## Product tour
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/corewise-ai-workloads.png" alt="Corewise AI Workloads observing attributable local Codex and Claude activity">
+    </td>
+    <td width="50%">
+      <img src="docs/assets/corewise-storage.png" alt="Corewise Storage showing startup-volume headroom and read-only analysis access">
+    </td>
+  </tr>
+  <tr>
+    <td><strong>AI Workloads</strong><br>Separate direct app footprint, related local work, and shared hosts without pretending to count cloud agents.</td>
+    <td><strong>Storage</strong><br>See volume headroom first, then start an explicit read-only analysis with reusable permission.</td>
+  </tr>
+</table>
 
 ## Install the public beta
 
