@@ -25,7 +25,6 @@ jobs:
         run: |
           mkdir -p _site/assets
           cp -R site/. _site/
-          cp docs/assets/corewise-app-icon.png _site/assets/corewise-app-icon.png
           cp docs/assets/corewise-overview.png _site/assets/corewise-overview.png
 
       - name: Upload GitHub Pages artifact
