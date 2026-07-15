@@ -89,18 +89,18 @@ Never commit the `.p8`, Key ID, Issuer ID, Apple ID, app-specific password, or K
 
 The preview filename contains `-preview` so it cannot be confused with a publishable artifact.
 
-## Superseded notarization result
+## Current notarization result
 
-The `0.1.0 (2)` universal beta candidate was accepted by Apple's notary service on 2026-07-15. Submission `8552a9a6-2342-48ee-82a6-a2261016fc62` returned `Accepted`. The DMG ticket was stapled and validated, and local Gatekeeper assessment reported `Notarized Developer ID`.
+The `0.1.0 (3)` universal beta candidate was accepted by Apple's notary service on 2026-07-15. Submission `52df1d9c-5ca7-40f5-8f29-82c800a1f687` returned `Accepted`. The DMG ticket was stapled and validated, and local Gatekeeper assessment reported `Notarized Developer ID`.
 
-- Draft release: `v0.1.0-beta.1`
-- Source commit: `4492478`
+- Draft release: `v0.1.0-beta.2`
+- Source commit: `5d810de384d8e8726ec027c1f1f35f79045e3d4f`
 - Artifact: `dist/releases/Corewise-0.1.0-universal.dmg`
 - Architectures: `arm64`, `x86_64`
-- SHA-256: `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`
-- Exact-artifact GitHub validation: ARM64 and Intel passed in [run 29398616757](https://github.com/roccodaffuso/Corewise/actions/runs/29398616757)
+- SHA-256: `00444d9577db1b4708ab9ae6aa7a50bb55340b30bd5d978df2187ecb4d184389`
+- Exact-artifact GitHub validation: ARM64 and Intel passed in [run 29404942676](https://github.com/roccodaffuso/Corewise/actions/runs/29404942676)
 
-The candidate has the permanent `dev.corewise.Corewise` identity and bundled MPL/source notices, but keyboard QA found a Quick Actions focus defect before publication. It must remain unpublished. The correction is build `3` and requires a freshly signed, notarized, stapled, and validated `v0.1.0-beta.2` artifact.
+The candidate has the permanent `dev.corewise.Corewise` identity and bundled MPL/source notices. It remains a Draft prerelease until the remaining manual gates in `docs/BETA_QA_0.1.0.md` are complete. It must not be rebuilt for publication; any application change requires a new build number and beta candidate.
 
 ## Planned user flow for the first beta
 
