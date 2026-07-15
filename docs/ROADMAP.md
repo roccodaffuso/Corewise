@@ -9,6 +9,8 @@
 - [x] Freeze the permanent bundle identifier, versioning policy, copyright metadata, and trademark boundary.
 - [x] Add universal Developer ID-signed, hardened-runtime, timestamped DMG packaging with checksum and mounted-artifact verification.
 - [x] Validate the `notarytool` Keychain profile, Apple acceptance, zero-issue log, stapling, and local Gatekeeper assessment in public release mode.
+- [x] Validate the exact `0.1.0 (2)` Draft Release artifact and checksum on clean GitHub-hosted ARM64 and Intel runners.
+- [x] Validate primary-Mac installation, first launch, menu bar, Settings, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800.
 - [ ] Validate the distribution artifact on a clean account and through at least one external installation before publishing the stable binary.
 
 ## Implemented: Focused Diagnostics technical foundation
@@ -36,7 +38,7 @@
 
 ## Next validation work
 
-- [ ] Run the documented screenshot matrix on physical macOS in light/dark and 980×680, 1180×800, and 1440×900 windows.
+- [ ] Finish the documented screenshot matrix; Light/Dark at 980×680 and Dark at 1180×800 pass, while 1440×900 remains.
 - [ ] Complete keyboard-only and Accessibility Inspector QA with Reduce Motion, Reduce Transparency, and Increase Contrast.
 - [x] Measure sustained two-second refresh CPU with five-minute idle and Focused Check Time Profiler recordings.
 - [ ] Measure energy impact and a ten-minute Battery check while physically running on battery power.

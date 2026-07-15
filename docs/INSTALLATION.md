@@ -91,13 +91,16 @@ The preview filename contains `-preview` so it cannot be confused with a publish
 
 ## Current notarization result
 
-The local `0.1.0 (1)` universal release candidate was accepted by Apple's notary service on 2026-07-14. Submission `bac00019-d99a-431e-b13a-8db5e1bd8d39` returned `Ready for distribution`, status code `0`, and no issues. The DMG ticket was stapled and validated, and local Gatekeeper assessment reported `Notarized Developer ID`.
+The `0.1.0 (2)` universal beta candidate was accepted by Apple's notary service on 2026-07-15. Submission `8552a9a6-2342-48ee-82a6-a2261016fc62` returned `Accepted`. The DMG ticket was stapled and validated, and local Gatekeeper assessment reported `Notarized Developer ID`.
 
+- Draft release: `v0.1.0-beta.1`
+- Source commit: `4492478`
 - Artifact: `dist/releases/Corewise-0.1.0-universal.dmg`
 - Architectures: `arm64`, `x86_64`
-- SHA-256: `66f15cb20959267e3fc835cf4f7e4aafc52de87f4bac61e66c1e54cb9248078f`
+- SHA-256: `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`
+- Exact-artifact GitHub validation: ARM64 and Intel passed in [run 29398616757](https://github.com/roccodaffuso/Corewise/actions/runs/29398616757)
 
-This is a stale local release candidate, not a published binary. It predates the bundled license/source notice and the permanent `dev.corewise.Corewise` identity, so it must never be published. A fresh `0.1.0 (2)` beta candidate must be built and notarized. Repository audit, clean-account validation, external installation confirmation, and Full Disk Access return-flow QA remain release gates.
+The candidate has the permanent `dev.corewise.Corewise` identity and bundled MPL/source notices. It remains a Draft prerelease until the manual gates in `docs/BETA_QA_0.1.0.md` are complete. It must not be rebuilt for publication; any application change requires a new build number and beta candidate.
 
 ## Planned user flow for the first beta
 
@@ -139,8 +142,10 @@ Before publishing an installable Corewise beta:
 - [x] Submit the packaged DMG with `notarytool` using a Keychain profile.
 - [x] Review the zero-issue notarization log and staple the accepted ticket.
 - [x] Verify the release candidate locally with `codesign`, `stapler`, and `spctl`.
-- [ ] Validate installation and first launch with a clean user account and at least one external tester; clean ARM64 and Intel runners cover architecture-level artifact validation.
-- [ ] Publish SHA-256 checksums and release notes with supported macOS versions and known limitations.
+- [x] Validate the exact Draft Release asset and published checksum on clean ARM64 and Intel runners.
+- [x] Validate installation, Gatekeeper, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Dark mode, Light mode, 980×680, and 1180×800 on the primary Mac.
+- [ ] Repeat installation and first launch with a clean user account; obtain at least one external installation before stable promotion.
+- [x] Prepare the Draft Release checksum and release notes with supported macOS versions and known limitations.
 - [ ] Test the optional Full Disk Access return flow on the exact distribution-signed bundle identifier.
 
 The existing development bundle is not a substitute for these gates: it currently allows Apple Development or ad-hoc signing and disables timestamping.

@@ -45,10 +45,12 @@ Every public app bundle must contain:
 
 The notarized `0.1.0 (1)` DMG predates the permanent bundle identifier and bundled MPL/source notice. It is stale and must not be published. Public beta starts with a freshly signed and notarized `0.1.0 (2)` artifact.
 
-## Remaining release evidence
+## Release evidence and remaining gates
 
-- Build and notarize `0.1.0 (2)` from the merged public baseline.
-- Validate the exact DMG on clean ARM64 and Intel GitHub runners.
+- `0.1.0 (2)` was built from merged commit `4492478`, notarized under Apple submission `8552a9a6-2342-48ee-82a6-a2261016fc62`, and staged as Draft prerelease `v0.1.0-beta.1`.
+- SHA-256 is `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`.
+- The exact Draft Release DMG and checksum passed clean ARM64 and Intel validation in GitHub Actions run `29398616757`.
+- Primary-Mac installation, Gatekeeper, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800 pass; see `docs/BETA_QA_0.1.0.md`.
 - Complete clean-account first-launch, Full Disk Access/TCC, appearance, keyboard, and VoiceOver QA.
 - Obtain at least one external installation confirmation.
 - Observe the public beta for at least seven days before stable promotion.
