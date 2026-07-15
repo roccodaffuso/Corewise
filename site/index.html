@@ -125,6 +125,8 @@
 
         <div class="hero-product hero-enter" style="--enter-delay: 260ms" data-product-depth>
           <div class="product-aura" aria-hidden="true"></div>
+          <span class="product-orbit orbit-a" aria-hidden="true"></span>
+          <span class="product-orbit orbit-b" aria-hidden="true"></span>
           <div class="product-window">
             <img
               src="assets/corewise-overview.jpg"
@@ -134,12 +136,8 @@
               fetchpriority="high"
               decoding="async"
             >
-          </div>
-          <div class="signal-label signal-label-performance" aria-hidden="true">
-            <span>Performance</span><strong>Live</strong>
-          </div>
-          <div class="signal-label signal-label-local" aria-hidden="true">
-            <span>Processing</span><strong>On-device</strong>
+            <span class="window-scan" aria-hidden="true"></span>
+            <span class="window-glint" aria-hidden="true"></span>
           </div>
         </div>
 
@@ -167,8 +165,8 @@
       </div>
 
       <section class="manifesto section" id="product" aria-labelledby="manifesto-title">
-        <p class="section-label reveal">01 · Signal console</p>
         <div class="manifesto-copy">
+          <p class="section-label reveal">01 · Signal console</p>
           <h2 id="manifesto-title" class="reveal">Not another cleaner.<br><span>A clearer instrument.</span></h2>
           <p class="reveal">Corewise observes supported local evidence, explains why it matters, and leaves control with you. No invented health score. No panic. No one-click cleanup.</p>
         </div>
@@ -218,12 +216,6 @@
       </section>
 
       <section class="privacy-section" id="privacy" aria-labelledby="privacy-title">
-        <div class="privacy-field" aria-hidden="true">
-          <span class="privacy-ring ring-a"></span>
-          <span class="privacy-ring ring-b"></span>
-          <span class="privacy-ring ring-c"></span>
-          <span class="privacy-core"></span>
-        </div>
         <div class="privacy-copy">
           <p class="section-label reveal">03 · Local-first</p>
           <h2 id="privacy-title" class="reveal">Your Mac stays yours.</h2>
@@ -233,6 +225,31 @@
             <li><span>Optional</span><strong>Read-only storage access</strong></li>
             <li><span>Never</span><strong>Uploads or destructive actions</strong></li>
           </ul>
+        </div>
+        <div class="privacy-field reveal" role="img" aria-label="CPU, memory, storage, and AI workload signals flow into Corewise locally, with no outgoing network path.">
+          <div class="local-boundary" aria-hidden="true">
+            <div class="boundary-header">
+              <span>This Mac</span>
+              <strong><i></i> Local boundary</strong>
+            </div>
+            <div class="privacy-sources">
+              <span>CPU &amp; processes</span>
+              <span>Memory &amp; swap</span>
+              <span>Storage signals</span>
+              <span>AI workloads</span>
+            </div>
+            <div class="privacy-flow" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </div>
+            <div class="privacy-core">
+              <img src="assets/corewise-app-icon.png" width="52" height="52" alt="">
+              <span>Corewise<strong>Observed locally</strong></span>
+            </div>
+            <div class="network-stop">
+              <span>Outgoing network path</span>
+              <strong>None</strong>
+            </div>
+          </div>
         </div>
       </section>
 

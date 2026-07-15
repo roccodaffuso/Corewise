@@ -26,6 +26,28 @@ window.addEventListener("scroll", () => {
 
 updateChrome();
 
+if (product && !reducedMotion) {
+  const hero = product.closest(".hero");
+  let pointerFrame = 0;
+
+  hero?.addEventListener("pointermove", (event) => {
+    if (pointerFrame) return;
+    pointerFrame = window.requestAnimationFrame(() => {
+      const bounds = hero.getBoundingClientRect();
+      const x = (event.clientX - bounds.left) / Math.max(bounds.width, 1) - 0.5;
+      const y = (event.clientY - bounds.top) / Math.max(bounds.height, 1) - 0.5;
+      product.style.setProperty("--product-pointer-x", `${x * 18}px`);
+      product.style.setProperty("--product-pointer-y", `${y * 12}px`);
+      pointerFrame = 0;
+    });
+  }, { passive: true });
+
+  hero?.addEventListener("pointerleave", () => {
+    product.style.setProperty("--product-pointer-x", "0px");
+    product.style.setProperty("--product-pointer-y", "0px");
+  }, { passive: true });
+}
+
 if (reducedMotion || !("IntersectionObserver" in window)) {
   reveals.forEach((element) => element.classList.add("is-visible"));
 } else {
@@ -71,9 +93,10 @@ const createSignalField = (canvas, options = {}) => {
     const phase = reducedMotion ? 0 : time * 0.00045;
     const centerY = height * (options.centerY || 0.55);
     const lineCount = options.lineCount || 6;
+    const intensity = options.intensity || 1;
 
     for (let line = 0; line < lineCount; line += 1) {
-      const alpha = 0.045 + line * 0.013;
+      const alpha = (0.045 + line * 0.013) * intensity;
       context.beginPath();
       context.strokeStyle = `rgba(104, 222, 212, ${alpha})`;
       context.lineWidth = line === Math.floor(lineCount / 2) ? 1.2 : 0.7;
@@ -92,6 +115,35 @@ const createSignalField = (canvas, options = {}) => {
       }
 
       context.stroke();
+
+      if (!reducedMotion && line % 2 === 0) {
+        const dotProgress = (time * (0.000055 + line * 0.000002) + line * 0.19) % 1;
+        const dotX = dotProgress * width;
+        const distance = Math.abs(dotProgress - pointer.x);
+        const influence = pointer.active ? Math.max(0, 1 - distance * 3.1) : 0.2;
+        const baseWave = Math.sin(dotProgress * 12 + phase * (1 + line * 0.08)) * (9 + line * 2.2);
+        const fineWave = Math.sin(dotProgress * 36 - phase * 1.7 + line) * 3.2;
+        const pointerWave = Math.sin(dotProgress * 54 + phase * 2) * influence * 14;
+        const offset = (line - (lineCount - 1) / 2) * 46;
+        const dotY = centerY + offset + baseWave + fineWave + pointerWave;
+        context.beginPath();
+        context.fillStyle = "rgba(138, 243, 233, 0.82)";
+        context.shadowColor = "rgba(104, 222, 212, 0.75)";
+        context.shadowBlur = 14;
+        context.arc(dotX, dotY, 2.2, 0, Math.PI * 2);
+        context.fill();
+        context.shadowBlur = 0;
+      }
+    }
+
+    if (options.sweep && !reducedMotion) {
+      const sweepX = ((time * 0.000075) % 1) * width;
+      const sweep = context.createLinearGradient(sweepX - 54, 0, sweepX + 8, 0);
+      sweep.addColorStop(0, "rgba(104, 222, 212, 0)");
+      sweep.addColorStop(0.88, "rgba(104, 222, 212, 0.025)");
+      sweep.addColorStop(1, "rgba(138, 243, 233, 0.18)");
+      context.fillStyle = sweep;
+      context.fillRect(sweepX - 54, 0, 62, height);
     }
 
     const gradient = context.createRadialGradient(
@@ -140,5 +192,5 @@ const createSignalField = (canvas, options = {}) => {
 const heroCanvas = document.querySelector("[data-signal-canvas]");
 const ctaCanvas = document.querySelector("[data-cta-canvas]");
 
-if (heroCanvas) createSignalField(heroCanvas, { lineCount: 7, centerY: 0.52 });
+if (heroCanvas) createSignalField(heroCanvas, { lineCount: 8, centerY: 0.52, intensity: 1.55, sweep: true });
 if (ctaCanvas) createSignalField(ctaCanvas, { lineCount: 4, centerY: 0.5 });
