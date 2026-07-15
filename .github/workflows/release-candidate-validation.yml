@@ -5,9 +5,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - .github/workflows/release-candidate-validation.yml
-      - script/validate_release_candidate.sh
   workflow_dispatch:
     inputs:
       release_tag:
