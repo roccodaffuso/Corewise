@@ -8,12 +8,12 @@ Last updated: 2026-07-15
 - Rebuilt the public README around the current product truth, privacy boundary, source-build path, and the absence of a published binary.
 - Documented the recommended consumer path as a universal Developer ID-signed and notarized DMG on GitHub Releases, with Homebrew Cask following only after the release artifact is stable.
 - Added separate preview and release packaging modes. Both build arm64 and x86_64, merge one universal executable, sign with Developer ID and hardened runtime, create and remount a compressed DMG, and write a SHA-256 checksum.
-- The `0.1.0 (1)` release candidate was accepted by Apple under submission `bac00019-d99a-431e-b13a-8db5e1bd8d39`. The notarization log reports `Ready for distribution`, status code `0`, and no issues; stapling, ticket validation, local Gatekeeper assessment, signature verification, and checksum verification all pass. SHA-256: `66f15cb20959267e3fc835cf4f7e4aafc52de87f4bac61e66c1e54cb9248078f`.
+- The publishable `0.1.0 (2)` beta candidate was accepted by Apple under submission `8552a9a6-2342-48ee-82a6-a2261016fc62`; stapling, Gatekeeper, signature, notice, metadata, and checksum verification pass. SHA-256: `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`.
 - Added GitHub Actions gates for Swift tests and strict concurrency on clean ARM64 and Intel macOS runners, plus exact-DMG release-candidate validation from a Draft Release without exposing Apple credentials to GitHub.
 - Licensed Corewise source under MPL-2.0 with per-file SPDX notices. Development and release bundles now include the complete license and a source-repository notice; Settings links directly to both the public source and license.
-- The notarized `0.1.0 (1)` candidate predates the bundled MPL/source notice and must be rebuilt before publication.
+- GitHub Actions validated the exact Draft Release DMG on clean ARM64 and Intel runners. Primary-Mac QA passes for installation, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800; details and remaining manual gates are in `docs/BETA_QA_0.1.0.md`.
 - Permanent public identity is frozen as Corewise, `dev.corewise.Corewise`, `corewise.dev`, and © 2026 Rocco D’Affuso. The repository/history/assets audit is documented in `docs/PUBLIC_RELEASE_AUDIT.md`.
-- Remaining public-release blockers are explicit: rebuild and notarize `0.1.0 (2)`, validate it on a clean account, confirm one external installation, and retest Full Disk Access on the exact distribution-signed bundle.
+- Remaining beta-publication blockers are explicit: clean-account first launch, Full Disk Access grant/revoke return flow, and the outstanding assistive-technology matrix. One external installation and seven public beta days gate stable promotion.
 
 ## Focused Diagnostics technical implementation
 
