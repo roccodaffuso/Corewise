@@ -13,7 +13,7 @@
   <img alt="Swift 5.9+" src="https://img.shields.io/badge/Swift-5.9%2B-f05138?style=flat-square">
   <img alt="License MPL-2.0" src="https://img.shields.io/badge/License-MPL--2.0-7d5fff?style=flat-square">
   <img alt="Local only" src="https://img.shields.io/badge/Data-local_only-2db8bd?style=flat-square">
-  <img alt="Beta status" src="https://img.shields.io/badge/Status-public_beta_in_preparation-d29922?style=flat-square">
+  <img alt="Beta status" src="https://img.shields.io/badge/Status-public_beta-d29922?style=flat-square">
 </p>
 
 Corewise is a local-first macOS diagnostic utility for understanding performance, storage, battery, startup activity, thermal state, and recurring app issues. It leads with observable signals, explains their limits, and never claims that one number represents the health of your Mac.
@@ -21,7 +21,7 @@ Corewise is a local-first macOS diagnostic utility for understanding performance
 No account. No backend. No analytics. No automatic cleanup.
 
 > [!IMPORTANT]
-> Corewise is currently available publicly as source code. A signed and notarized release candidate exists locally, but no binary has been published yet. Do not treat GitHub's automatic “Source code” archives as installable app downloads.
+> Corewise is now available as a public beta. Download the signed, notarized universal DMG from [GitHub Releases](https://github.com/roccodaffuso/Corewise/releases/tag/v0.1.0-beta.2). GitHub's automatic “Source code” archives are not installable app downloads.
 
 ## What Corewise does
 
@@ -34,7 +34,17 @@ No account. No backend. No analytics. No automatic cleanup.
 
 Corewise deliberately avoids health scores, process killing, automatic deletion, private sensor APIs, hidden folder scans, and claims of exact parity with Activity Monitor.
 
-## Install today: build from source
+## Install the public beta
+
+1. Download [`Corewise-0.1.0-universal.dmg`](https://github.com/roccodaffuso/Corewise/releases/download/v0.1.0-beta.2/Corewise-0.1.0-universal.dmg).
+2. Open the DMG and drag Corewise into Applications.
+3. Open Corewise normally. The app is signed with Developer ID and notarized by Apple.
+
+SHA-256: `00444d9577db1b4708ab9ae6aa7a50bb55340b30bd5d978df2187ecb4d184389`
+
+Full Disk Access is not required to run Corewise. It is optional and used only when you explicitly start Full Storage Analysis. Beta feedback and reproducible problems belong in [GitHub Issues](https://github.com/roccodaffuso/Corewise/issues/new/choose).
+
+## Build from source
 
 Requirements:
 
@@ -48,7 +58,7 @@ cd Corewise
 script/build_and_run.sh
 ```
 
-The script builds and signs a local development bundle at `dist/Corewise.app`, then opens it. Full Disk Access is not required to run Corewise; it is optional and used only when you explicitly start Full Storage Analysis.
+The script builds and signs a local development bundle at `dist/Corewise.app`, then opens it.
 
 For the signed DMG workflow, Homebrew option, Gatekeeper requirements, and update strategy, see [Installation and distribution](docs/INSTALLATION.md).
 
@@ -96,7 +106,7 @@ Useful project documents:
 
 ## Contributing
 
-Issues and focused pull requests are welcome while the public beta is being prepared. Read [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before participating. Please keep changes narrow, preserve the local-first and non-destructive constraints, and never attach diagnostic reports containing usernames, personal paths, process arguments, prompts, or private file contents.
+Issues and focused pull requests are welcome during the public beta. Read [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before participating. Please keep changes narrow, preserve the local-first and non-destructive constraints, and never attach diagnostic reports containing usernames, personal paths, process arguments, prompts, or private file contents.
 
 Found a reproducible problem? [Report an issue](https://github.com/roccodaffuso/Corewise/issues/new/choose). Security vulnerabilities belong in the [private reporting channel](SECURITY.md), not in a public issue. The issue link is also available in Corewise under **Settings → General → Project & Support**.
 
@@ -110,4 +120,4 @@ Source files carry machine-readable `SPDX-License-Identifier: MPL-2.0` notices. 
 
 ## Project status
 
-Corewise is under active beta development. The permanent identity is `Corewise`, `dev.corewise.Corewise`, and `corewise.dev`. Completing clean-account QA and validating the exact notarized beta artifact remain explicit gates before the first public binary.
+Corewise is in public beta. The permanent identity is `Corewise`, `dev.corewise.Corewise`, and `corewise.dev`. The exact notarized beta artifact passed local Gatekeeper plus clean ARM64 and Intel validation; external feedback is tracked through GitHub Issues before stable promotion.

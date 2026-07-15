@@ -2,11 +2,11 @@
 
 Last updated: 2026-07-15
 
-## Candidate under test
+## Public beta under test
 
-- Release: `v0.1.0-beta.2` (Draft prerelease)
+- Release: `v0.1.0-beta.2` (public prerelease)
 - Application: `0.1.0 (3)`
-- Status: current candidate, not yet public
+- Status: published 2026-07-15
 - Commit: `5d810de384d8e8726ec027c1f1f35f79045e3d4f`
 - Bundle identifier: `dev.corewise.Corewise`
 - Artifact: `Corewise-0.1.0-universal.dmg`
@@ -25,7 +25,8 @@ The superseded `v0.1.0-beta.1` build 2 passed artifact validation but must not b
 - The DMG has a valid stapled notarization ticket and passes Gatekeeper as `Notarized Developer ID`.
 - The mounted app passes strict Developer ID signature verification with hardened runtime and a secure timestamp.
 - The application is universal (`arm64` and `x86_64`), targets macOS 14+, and contains `LICENSE.txt` and canonical `SourceCode.txt` notices.
-- GitHub Actions run [29404942676](https://github.com/roccodaffuso/Corewise/actions/runs/29404942676) validated the exact beta.2 Draft Release asset and checksum on both `macos-26` ARM64 and `macos-26-intel`.
+- GitHub Actions run [29404942676](https://github.com/roccodaffuso/Corewise/actions/runs/29404942676) validated the exact beta.2 release asset and checksum on both `macos-26` ARM64 and `macos-26-intel`.
+- The public release page and unauthenticated DMG download both return HTTP 200.
 
 ### Physical Mac validation
 
@@ -43,12 +44,12 @@ The exact beta.2 notarized DMG was mounted and copied to `/Applications/Corewise
 - Resetting that grant and relaunching returned Storage to the access-required state without presenting the previous in-memory result as current.
 - Storage rendered correctly in Light mode at the 980×680 minimum. Dark mode and 1180×800 were restored after the reversible check.
 
-## Manual gates still open
+## Post-public beta validation
 
 - Create or use a separate clean local macOS account and repeat DMG open, drag-to-Applications, and first launch.
 - Complete the remaining keyboard-only and VoiceOver/Accessibility Inspector review.
 - Verify Reduce Motion, Reduce Transparency, Increase Contrast, and 1440×900.
-- Confirm one external installation before stable promotion.
+- Collect external installation and workflow feedback through GitHub Issues before stable promotion.
 - Keep the public beta available for at least seven days with no blocking issue, data loss, or Gatekeeper false positive before promoting the same artifact to `v0.1.0`.
 
 The absence of a second physical Mac is not an architecture blocker for the beta because the exact artifact passed clean GitHub-hosted ARM64 and Intel validation. It remains documented as a physical-device coverage limitation.

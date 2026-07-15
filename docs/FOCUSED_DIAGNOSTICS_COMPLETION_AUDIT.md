@@ -35,7 +35,7 @@ This document distinguishes implemented behavior from evidence that still requir
 | 8-12 external trigger-based sessions | Open — external | Requires recruited users and observed workflows; deterministic previews and local smoke tests are not substitutes. |
 | Full manual visual/accessibility matrix | Open — manual | Light/dark, all three target sizes, keyboard-only, VoiceOver/Accessibility Inspector, Reduce Motion, Reduce Transparency, Increase Contrast, and Differentiate Without Color must be recorded on the release candidate. |
 | Ten-minute Battery check on battery power | Open — physical condition | `pmset -g batt` currently reports AC Power and a charged internal battery. The gate requires five or more distinct real readings while disconnected from external power; AC gating is already unit-tested. |
-| Final distribution-signed profile | Open — release artifact | The local development/ad-hoc signed bundles pass; `security find-identity -v -p codesigning` currently reports zero valid signing identities, so a distribution-signed candidate cannot yet be produced or profiled. |
+| Final distribution-signed profile | Open — profiling | A Developer ID-signed, notarized, stapled universal beta is public and passes Gatekeeper. A final Instruments capture against that exact distribution build remains pending. |
 
 ## Automated gates
 

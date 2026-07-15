@@ -93,14 +93,14 @@ The preview filename contains `-preview` so it cannot be confused with a publish
 
 The `0.1.0 (3)` universal beta candidate was accepted by Apple's notary service on 2026-07-15. Submission `52df1d9c-5ca7-40f5-8f29-82c800a1f687` returned `Accepted`. The DMG ticket was stapled and validated, and local Gatekeeper assessment reported `Notarized Developer ID`.
 
-- Draft release: `v0.1.0-beta.2`
+- Public prerelease: `v0.1.0-beta.2`
 - Source commit: `5d810de384d8e8726ec027c1f1f35f79045e3d4f`
 - Artifact: `dist/releases/Corewise-0.1.0-universal.dmg`
 - Architectures: `arm64`, `x86_64`
 - SHA-256: `00444d9577db1b4708ab9ae6aa7a50bb55340b30bd5d978df2187ecb4d184389`
 - Exact-artifact GitHub validation: ARM64 and Intel passed in [run 29404942676](https://github.com/roccodaffuso/Corewise/actions/runs/29404942676)
 
-The candidate has the permanent `dev.corewise.Corewise` identity and bundled MPL/source notices. It remains a Draft prerelease until the remaining manual gates in `docs/BETA_QA_0.1.0.md` are complete. It must not be rebuilt for publication; any application change requires a new build number and beta candidate.
+The public beta has the permanent `dev.corewise.Corewise` identity and bundled MPL/source notices. External feedback is collected through GitHub Issues. Any application change requires a new build number, a newly notarized beta, and repeat artifact validation.
 
 ## Planned user flow for the first beta
 
@@ -142,10 +142,10 @@ Before publishing an installable Corewise beta:
 - [x] Submit the packaged DMG with `notarytool` using a Keychain profile.
 - [x] Review the zero-issue notarization log and staple the accepted ticket.
 - [x] Verify the release candidate locally with `codesign`, `stapler`, and `spctl`.
-- [x] Validate the exact Draft Release asset and published checksum on clean ARM64 and Intel runners.
+- [x] Validate the exact release asset and published checksum on clean ARM64 and Intel runners.
 - [x] Validate installation, Gatekeeper, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Dark mode, Light mode, 980×680, and 1180×800 on the primary Mac.
 - [ ] Repeat installation and first launch with a clean user account; obtain at least one external installation before stable promotion.
-- [x] Prepare the Draft Release checksum and release notes with supported macOS versions and known limitations.
+- [x] Publish the prerelease checksum and release notes with supported macOS versions and known limitations.
 - [x] Test grant, detection, complete read-only analysis, revocation, and access-required return on the exact distribution-signed bundle identifier.
 
 The existing development bundle is not a substitute for these gates: it currently allows Apple Development or ad-hoc signing and disables timestamping.

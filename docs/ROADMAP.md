@@ -13,6 +13,9 @@
 - [x] Replace the superseded beta.1 candidate with notarized `0.1.0 (3)` beta.2 and repeat exact-artifact ARM64, Intel, Gatekeeper, and Quick Actions keyboard validation.
 - [x] Validate primary-Mac installation, first launch, menu bar, Settings, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800.
 - [x] Validate Full Disk Access grant, relaunch detection, complete read-only scan without folder prompts, revocation, and access-required return on the distribution-signed app.
+- [x] Publish `v0.1.0-beta.2` with the exact notarized DMG and checksum.
+- [x] Deploy the static site through GitHub Pages and configure `corewise.dev` as its custom domain.
+- [ ] Replace Hostinger DNS records with GitHub Pages records and verify HTTPS for the apex and `www` hostnames.
 - [ ] Validate the distribution artifact on a clean account and through at least one external installation before publishing the stable binary.
 
 ## Implemented: Focused Diagnostics technical foundation
