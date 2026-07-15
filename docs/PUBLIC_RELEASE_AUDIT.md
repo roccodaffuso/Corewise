@@ -48,12 +48,11 @@ The notarized `0.1.0 (1)` DMG predates the permanent bundle identifier and bundl
 ## Release evidence and remaining gates
 
 - `0.1.0 (2)` was built from merged commit `4492478`, notarized under Apple submission `8552a9a6-2342-48ee-82a6-a2261016fc62`, and staged as Draft prerelease `v0.1.0-beta.1`; it is retained only as superseded release evidence and must not be published.
-- `0.1.0 (3)` was built from merged commit `5d810de`, accepted under Apple submission `52df1d9c-5ca7-40f5-8f29-82c800a1f687`, and staged as Draft prerelease `v0.1.0-beta.2`.
+- `0.1.0 (3)` was built from merged commit `5d810de`, accepted under Apple submission `52df1d9c-5ca7-40f5-8f29-82c800a1f687`, and published as prerelease `v0.1.0-beta.2` on 2026-07-15.
 - Current SHA-256 is `00444d9577db1b4708ab9ae6aa7a50bb55340b30bd5d978df2187ecb4d184389`.
-- The exact beta.2 Draft Release DMG and checksum passed clean ARM64 and Intel validation in GitHub Actions run `29404942676`.
+- The exact beta.2 release DMG and checksum passed clean ARM64 and Intel validation in GitHub Actions run `29404942676`.
 - Primary-Mac installation, Gatekeeper, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800 pass; see `docs/BETA_QA_0.1.0.md`.
 - Distribution-signed Full Disk Access grant, relaunch detection, complete read-only scan, revocation, and access-required return pass without folder-by-folder prompts.
 - Beta.2 installation, Gatekeeper, Quick Actions search focus, AI Workloads routing, and Escape dismissal pass on the primary Mac.
-- Complete clean-account first-launch, remaining appearance, keyboard, and VoiceOver QA.
-- Obtain at least one external installation confirmation.
+- Collect clean-account, appearance, keyboard, VoiceOver, and external workflow feedback during the public beta through GitHub Issues.
 - Observe the public beta for at least seven days before stable promotion.
