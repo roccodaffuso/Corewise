@@ -65,7 +65,7 @@ Pull requests run the Swift test suite and strict-concurrency build on clean ARM
 - bundle identifier, version, build number, minimum macOS version, and universal architectures;
 - a non-interactive launch smoke test on both runner architectures.
 
-The workflow intentionally receives no Apple signing or notarization secrets. Signing and notarization remain local until the release process has been audited further. Full Disk Access, TCC prompts, and visual first-launch behavior still require manual macOS QA.
+The workflow intentionally receives no Apple signing or notarization secrets. Signing and notarization remain local until the release process has been audited further. Clean-user first launch and assistive-technology behavior still require manual macOS QA; the distribution-signed Full Disk Access grant/revoke flow has passed on the primary Mac.
 
 `release` additionally submits the DMG to Apple's notary service, waits for acceptance, staples the ticket, validates it, and runs a Gatekeeper assessment. It fails before packaging if the notary profile is missing. Notarization credentials stay in the login Keychain and must never be committed.
 
@@ -146,6 +146,6 @@ Before publishing an installable Corewise beta:
 - [x] Validate installation, Gatekeeper, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Dark mode, Light mode, 980×680, and 1180×800 on the primary Mac.
 - [ ] Repeat installation and first launch with a clean user account; obtain at least one external installation before stable promotion.
 - [x] Prepare the Draft Release checksum and release notes with supported macOS versions and known limitations.
-- [ ] Test the optional Full Disk Access return flow on the exact distribution-signed bundle identifier.
+- [x] Test grant, detection, complete read-only analysis, revocation, and access-required return on the exact distribution-signed bundle identifier.
 
 The existing development bundle is not a substitute for these gates: it currently allows Apple Development or ad-hoc signing and disables timestamping.

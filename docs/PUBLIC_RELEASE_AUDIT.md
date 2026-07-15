@@ -51,6 +51,7 @@ The notarized `0.1.0 (1)` DMG predates the permanent bundle identifier and bundl
 - SHA-256 is `90f5f1b16d2507f819468c91eeecab8d490df407ea53cbda27df91bb80ac498b`.
 - The exact Draft Release DMG and checksum passed clean ARM64 and Intel validation in GitHub Actions run `29398616757`.
 - Primary-Mac installation, Gatekeeper, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800 pass; see `docs/BETA_QA_0.1.0.md`.
-- Complete clean-account first-launch, Full Disk Access/TCC, appearance, keyboard, and VoiceOver QA.
+- Distribution-signed Full Disk Access grant, relaunch detection, complete read-only scan, revocation, and access-required return pass without folder-by-folder prompts.
+- Complete clean-account first-launch, remaining appearance, keyboard, and VoiceOver QA.
 - Obtain at least one external installation confirmation.
 - Observe the public beta for at least seven days before stable promotion.

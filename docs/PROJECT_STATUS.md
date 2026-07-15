@@ -13,7 +13,7 @@ Last updated: 2026-07-15
 - Licensed Corewise source under MPL-2.0 with per-file SPDX notices. Development and release bundles now include the complete license and a source-repository notice; Settings links directly to both the public source and license.
 - GitHub Actions validated the exact Draft Release DMG on clean ARM64 and Intel runners. Primary-Mac QA passes for installation, first launch, Settings, menu bar, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800; details and remaining manual gates are in `docs/BETA_QA_0.1.0.md`.
 - Permanent public identity is frozen as Corewise, `dev.corewise.Corewise`, `corewise.dev`, and © 2026 Rocco D’Affuso. The repository/history/assets audit is documented in `docs/PUBLIC_RELEASE_AUDIT.md`.
-- Remaining beta-publication blockers are explicit: clean-account first launch, Full Disk Access grant/revoke return flow, and the outstanding assistive-technology matrix. One external installation and seven public beta days gate stable promotion.
+- The distribution-signed Full Disk Access flow passes grant, relaunch detection, a complete 11-scope read-only analysis without folder prompts, revocation, and return to the access-required state. Remaining beta-publication blockers are clean-account first launch and the outstanding assistive-technology matrix. One external installation and seven public beta days gate stable promotion.
 
 ## Focused Diagnostics technical implementation
 
