@@ -10,6 +10,7 @@
 - [x] Add universal Developer ID-signed, hardened-runtime, timestamped DMG packaging with checksum and mounted-artifact verification.
 - [x] Validate the `notarytool` Keychain profile, Apple acceptance, zero-issue log, stapling, and local Gatekeeper assessment in public release mode.
 - [x] Validate the exact `0.1.0 (2)` Draft Release artifact and checksum on clean GitHub-hosted ARM64 and Intel runners.
+- [ ] Replace the superseded beta.1 candidate with notarized `0.1.0 (3)` beta.2 and repeat exact-artifact ARM64, Intel, Gatekeeper, and Quick Actions keyboard validation.
 - [x] Validate primary-Mac installation, first launch, menu bar, Settings, Storage pre-consent, AI Workloads, Light/Dark, 980×680, and 1180×800.
 - [x] Validate Full Disk Access grant, relaunch detection, complete read-only scan without folder prompts, revocation, and access-required return on the distribution-signed app.
 - [ ] Validate the distribution artifact on a clean account and through at least one external installation before publishing the stable binary.
