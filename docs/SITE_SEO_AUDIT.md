@@ -2,7 +2,7 @@
 
 # Corewise site SEO audit
 
-Date: 2026-07-15  
+Date: 2026-07-15
 Scope: the single-page public product site in `site/`
 
 ## Current assessment
