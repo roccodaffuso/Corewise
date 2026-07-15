@@ -48,7 +48,8 @@ if git grep -I -n -E '(AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|gi
   fail "credential-shaped content detected in the tracked tree"
 fi
 
-if git grep -I -n '/Users/roccodaffuso' -- . >/dev/null; then
+PERSONAL_HOME="/Users/rocco""daffuso"
+if git grep -I -n "$PERSONAL_HOME" -- . >/dev/null; then
   fail "machine-specific personal path detected in the tracked tree"
 fi
 

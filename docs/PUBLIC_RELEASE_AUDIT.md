@@ -20,7 +20,7 @@ Changing the bundle identifier intentionally gives Corewise a new macOS applicat
 
 The tracked tree and all reachable Git commits were checked for common private-key markers, cloud-token prefixes, GitHub personal-access-token prefixes, App Store Connect key filenames, provisioning profiles, and other sensitive signing filenames. No credential-shaped match or tracked signing material was found.
 
-The current tree contains no machine-specific `/Users/roccodaffuso` path. Preview and test fixtures use explicit synthetic accounts such as `/Users/preview` and `/Users/example`; a test also asserts that copied AI-session output contains no `/Users/` path.
+The current tree contains no machine-specific owner home path. Preview and test fixtures use explicit synthetic accounts such as `/Users/preview` and `/Users/example`; a test also asserts that copied AI-session output contains no `/Users/` path.
 
 Published commits retain the author's earlier Gmail address. This is intentional: history will not be rewritten solely to replace an author email. Future repository-local author configuration uses `Rocco D’Affuso <265598188+roccodaffuso@users.noreply.github.com>`.
 
