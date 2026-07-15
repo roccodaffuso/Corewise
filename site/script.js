@@ -2,17 +2,10 @@
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const header = document.querySelector(".site-header");
-const product = document.querySelector("[data-product-depth]");
 const reveals = document.querySelectorAll(".reveal");
 
 const updateChrome = () => {
   header?.classList.toggle("is-scrolled", window.scrollY > 24);
-
-  if (!product || reducedMotion) return;
-  const progress = Math.min(Math.max(window.scrollY / window.innerHeight, 0), 1.2);
-  product.style.setProperty("--product-y", `${progress * -42}px`);
-  product.style.setProperty("--product-rotate-y", `${-7 + progress * 5}deg`);
-  product.style.setProperty("--product-rotate-x", `${2 - progress * 1.4}deg`);
 };
 
 let scrollFrame = 0;
@@ -25,28 +18,6 @@ window.addEventListener("scroll", () => {
 }, { passive: true });
 
 updateChrome();
-
-if (product && !reducedMotion) {
-  const hero = product.closest(".hero");
-  let pointerFrame = 0;
-
-  hero?.addEventListener("pointermove", (event) => {
-    if (pointerFrame) return;
-    pointerFrame = window.requestAnimationFrame(() => {
-      const bounds = hero.getBoundingClientRect();
-      const x = (event.clientX - bounds.left) / Math.max(bounds.width, 1) - 0.5;
-      const y = (event.clientY - bounds.top) / Math.max(bounds.height, 1) - 0.5;
-      product.style.setProperty("--product-pointer-x", `${x * 18}px`);
-      product.style.setProperty("--product-pointer-y", `${y * 12}px`);
-      pointerFrame = 0;
-    });
-  }, { passive: true });
-
-  hero?.addEventListener("pointerleave", () => {
-    product.style.setProperty("--product-pointer-x", "0px");
-    product.style.setProperty("--product-pointer-y", "0px");
-  }, { passive: true });
-}
 
 if (reducedMotion || !("IntersectionObserver" in window)) {
   reveals.forEach((element) => element.classList.add("is-visible"));

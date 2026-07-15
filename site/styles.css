@@ -277,13 +277,8 @@ h2 em {
   width: min(1080px, 69vw);
   right: clamp(-360px, -14vw, -100px);
   top: clamp(178px, 22vh, 250px);
-  transform: perspective(1500px) translate3d(var(--product-pointer-x, 0px), calc(var(--product-y, 0px) + var(--product-pointer-y, 0px)), 0) rotateY(var(--product-rotate-y, -7deg)) rotateX(var(--product-rotate-x, 2deg));
+  transform: perspective(1500px) rotateY(-7deg) rotateX(2deg);
   transform-origin: 45% 35%;
-  will-change: transform;
-}
-
-.hero-product.hero-enter {
-  animation-name: product-reveal;
 }
 
 .product-window {
@@ -293,8 +288,6 @@ h2 em {
   border-radius: clamp(16px, 2vw, 28px);
   background: #0d1513;
   box-shadow: 0 70px 180px rgba(0, 0, 0, 0.66), 0 0 0 1px rgba(255, 255, 255, 0.025) inset;
-  animation: product-float 7s ease-in-out infinite;
-  will-change: transform;
 }
 
 .product-window::after {
@@ -311,26 +304,6 @@ h2 em {
   height: auto;
 }
 
-.window-scan {
-  position: absolute;
-  inset: -22% 0 auto;
-  height: 26%;
-  background: linear-gradient(180deg, transparent, rgba(104, 222, 212, 0.04) 55%, rgba(138, 243, 233, 0.42) 98%, transparent);
-  mix-blend-mode: screen;
-  animation: window-scan 5.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  pointer-events: none;
-}
-
-.window-glint {
-  position: absolute;
-  inset: 0 auto 0 -12%;
-  width: 1px;
-  background: linear-gradient(180deg, transparent 4%, rgba(138, 243, 233, 0.6) 42%, transparent 94%);
-  box-shadow: 0 0 28px rgba(104, 222, 212, 0.5);
-  animation: window-glint 8s var(--ease) infinite;
-  pointer-events: none;
-}
-
 .product-aura {
   position: absolute;
   inset: -10%;
@@ -338,39 +311,6 @@ h2 em {
   border-radius: 50%;
   background: rgba(72, 211, 198, 0.1);
   filter: blur(100px);
-}
-
-.product-orbit {
-  position: absolute;
-  z-index: -1;
-  border: 1px solid rgba(104, 222, 212, 0.18);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.product-orbit::after {
-  position: absolute;
-  left: 13%;
-  top: 7%;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 22px rgba(104, 222, 212, 0.88);
-  content: "";
-}
-
-.orbit-a {
-  inset: -28% -12% -24% -18%;
-  transform: rotate(-8deg);
-  animation: orbit-drift-a 14s ease-in-out infinite alternate;
-}
-
-.orbit-b {
-  inset: -12% 8% -10% -32%;
-  border-color: rgba(104, 222, 212, 0.1);
-  transform: rotate(14deg);
-  animation: orbit-drift-b 17s ease-in-out infinite alternate;
 }
 
 .scroll-cue {
@@ -917,11 +857,6 @@ footer nav { justify-self: end; gap: 20px; }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes product-reveal {
-  from { opacity: 0; filter: blur(10px); }
-  to { opacity: 1; filter: blur(0); }
-}
-
 @keyframes hero-atmosphere {
   from { opacity: 0.45; transform: rotate(-4deg) scale(0.96); }
   to { opacity: 0.9; transform: rotate(7deg) scale(1.04); }
@@ -930,35 +865,6 @@ footer nav { justify-self: end; gap: 20px; }
 @keyframes live-ring {
   0% { opacity: 0.9; transform: scale(0.65); }
   70%, 100% { opacity: 0; transform: scale(1.5); }
-}
-
-@keyframes product-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes window-scan {
-  0%, 14% { transform: translateY(0); opacity: 0; }
-  22% { opacity: 0.9; }
-  74% { opacity: 0.72; }
-  88%, 100% { transform: translateY(470%); opacity: 0; }
-}
-
-@keyframes window-glint {
-  0%, 20% { transform: translateX(0); opacity: 0; }
-  28% { opacity: 0.8; }
-  68% { opacity: 0.44; }
-  82%, 100% { transform: translateX(1220px); opacity: 0; }
-}
-
-@keyframes orbit-drift-a {
-  from { opacity: 0.4; transform: rotate(-10deg) scale(0.98); }
-  to { opacity: 0.85; transform: rotate(-3deg) scale(1.03); }
-}
-
-@keyframes orbit-drift-b {
-  from { opacity: 0.2; transform: rotate(17deg) scale(1.03); }
-  to { opacity: 0.65; transform: rotate(9deg) scale(0.97); }
 }
 
 @keyframes scroll-line {
@@ -1021,7 +927,7 @@ footer nav { justify-self: end; gap: 20px; }
     width: 118vw;
     right: -22vw;
     top: 610px;
-    transform: perspective(1200px) translate3d(var(--product-pointer-x, 0px), calc(var(--product-y, 0px) + var(--product-pointer-y, 0px)), 0) rotateY(-4deg) rotateX(1deg);
+    transform: perspective(1200px) rotateY(-4deg) rotateX(1deg);
   }
 
   .scroll-cue { display: none; }
@@ -1077,8 +983,6 @@ footer nav { justify-self: end; gap: 20px; }
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
   .hero-enter,
   .reveal { opacity: 1; transform: none; }
-  .hero-product,
-  .hero-product.hero-enter,
-  .product-window { transform: none; }
+  .hero-product { transform: none; }
   .signal-track { animation: none; }
 }
