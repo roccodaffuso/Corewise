@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MPL-2.0
 set -euo pipefail
 
 MODE="${1:-run}"
@@ -49,6 +50,7 @@ chmod +x "$APP_BINARY"
 if [[ -d "$RESOURCE_BUNDLE" ]]; then
   cp -R "$RESOURCE_BUNDLE/." "$APP_RESOURCES/"
 fi
+cp "$ROOT_DIR/LICENSE" "$APP_RESOURCES/LICENSE.txt"
 
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

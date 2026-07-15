@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MPL-2.0
 set -euo pipefail
 
 MODE="${1:-preview}"
@@ -132,6 +133,7 @@ X86_64_BIN_DIR="$(swift build -c release --arch x86_64 --show-bin-path)"
   -output "$APP_BINARY"
 /bin/chmod +x "$APP_BINARY"
 /usr/bin/ditto "$ARM64_BIN_DIR/Corewise_Corewise.bundle" "$APP_RESOURCES"
+/bin/cp "$ROOT_DIR/LICENSE" "$APP_RESOURCES/LICENSE.txt"
 
 /usr/bin/plutil -create xml1 "$INFO_PLIST"
 /usr/bin/plutil -insert CFBundleDevelopmentRegion -string en "$INFO_PLIST"

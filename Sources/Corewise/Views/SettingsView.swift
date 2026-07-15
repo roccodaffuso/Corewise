@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import SwiftUI
 
 struct SettingsView: View {
@@ -63,10 +65,16 @@ private struct GeneralSettingsPane: View {
 
         Section("Project & Support") {
           SettingsExternalLinkRow(
-            title: "View on GitHub",
-            detail: "Explore the source, roadmap, and public development history.",
+            title: "Source code on GitHub",
+            detail: "Corewise source is available under the Mozilla Public License 2.0.",
             systemImage: "chevron.left.forwardslash.chevron.right",
             destination: URL(string: "https://github.com/roccodaffuso/CoreWise")!
+          )
+          SettingsExternalLinkRow(
+            title: "View MPL-2.0 license",
+            detail: "Read the complete license that governs Corewise source files.",
+            systemImage: "doc.text",
+            destination: URL(string: "https://github.com/roccodaffuso/CoreWise/blob/main/LICENSE")!
           )
           SettingsExternalLinkRow(
             title: "Report an Issue",

@@ -11,6 +11,7 @@
 <p align="center">
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-1f6feb?style=flat-square">
   <img alt="Swift 5.9+" src="https://img.shields.io/badge/Swift-5.9%2B-f05138?style=flat-square">
+  <img alt="License MPL-2.0" src="https://img.shields.io/badge/License-MPL--2.0-7d5fff?style=flat-square">
   <img alt="Local only" src="https://img.shields.io/badge/Data-local_only-2db8bd?style=flat-square">
   <img alt="Beta status" src="https://img.shields.io/badge/Status-public_beta_in_preparation-d29922?style=flat-square">
 </p>
@@ -101,8 +102,12 @@ Found a reproducible problem? [Report an issue](https://github.com/roccodaffuso/
 
 Before proposing a new diagnostic, document its public macOS source, failure mode, privacy boundary, and user-facing wording.
 
-## Project status and license
+## License
 
-Corewise is under active beta development. The source is public for inspection and collaboration, but an open-source license has not yet been selected. Until a `LICENSE` file is added, copyright law reserves reuse and redistribution rights by default.
+Corewise source code is licensed under the [Mozilla Public License 2.0](LICENSE). MPL-2.0 uses file-level copyleft: modified Corewise source files distributed outside an organization remain available under MPL-2.0, while separate files can use other licenses.
 
-Selecting an OSI-approved license, freezing the permanent bundle identifier, auditing the public repository, and validating the notarized release candidate on a second Mac remain explicit gates before the first public binary.
+Source files carry machine-readable `SPDX-License-Identifier: MPL-2.0` notices. Public binaries include the complete license and a link to the corresponding source repository.
+
+## Project status
+
+Corewise is under active beta development. Freezing the permanent bundle identifier and copyright metadata, completing the public repository audit, and validating the notarized release candidate on another physical Mac remain explicit gates before the first public binary.

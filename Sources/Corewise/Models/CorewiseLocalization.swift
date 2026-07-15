@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Foundation
 
 func corewiseText(_ key: String, comment: String = "") -> String {

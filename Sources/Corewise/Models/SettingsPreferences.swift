@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 enum CorewiseSettingsKeys {
   static let performanceDefaultFocus = "settings.performance.defaultFocus"
   static let reportDefaultFormat = "settings.report.defaultFormat"

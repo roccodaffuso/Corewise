@@ -97,7 +97,7 @@ The local `0.1.0 (1)` universal release candidate was accepted by Apple's notary
 - Architectures: `arm64`, `x86_64`
 - SHA-256: `66f15cb20959267e3fc835cf4f7e4aafc52de87f4bac61e66c1e54cb9248078f`
 
-This is a local release candidate, not a published binary. License, permanent identity, repository audit, clean-account/second-Mac validation, and Full Disk Access return-flow QA remain release gates.
+This is a local release candidate, not a published binary. The repository is now licensed under MPL-2.0, but this previously built artifact predates the bundled license/source notice and must be rebuilt before publication. Permanent identity, repository audit, clean-account/second-Mac validation, and Full Disk Access return-flow QA remain release gates.
 
 ## Planned user flow for the first beta
 
@@ -131,7 +131,7 @@ The App Store remains a possible later channel if a sandbox-compatible product s
 
 Before publishing an installable Corewise beta:
 
-- [ ] Select and add an OSI-approved source license.
+- [x] License Corewise source under MPL-2.0 and include the license and source-repository notice in public bundles.
 - [ ] Freeze the canonical name, permanent bundle identifier, version, and copyright metadata.
 - [ ] Confirm the repository and Git history contain no secrets, personal paths, signing material, or unlicensed assets.
 - [x] Build and test a universal Apple Silicon and Intel application bundle.

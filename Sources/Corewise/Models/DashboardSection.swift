@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import Foundation
 
 enum DashboardSection: String, CaseIterable, Identifiable, Hashable, Sendable {

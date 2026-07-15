@@ -5,7 +5,7 @@
 - [x] Add a reproducible repository-owned app icon and include it in the generated application bundle.
 - [x] Replace the prototype README with a public-facing product, privacy, build, and contribution overview.
 - [x] Document the recommended DMG, Homebrew, source-build, and Mac App Store distribution paths.
-- [ ] Select and add an OSI-approved license.
+- [x] License Corewise source under MPL-2.0 with per-file SPDX notices and bundled source/license disclosure.
 - [ ] Freeze the permanent bundle identifier, versioning policy, copyright metadata, and trademark boundary.
 - [x] Add universal Developer ID-signed, hardened-runtime, timestamped DMG packaging with checksum and mounted-artifact verification.
 - [x] Validate the `notarytool` Keychain profile, Apple acceptance, zero-issue log, stapling, and local Gatekeeper assessment in public release mode.

@@ -1,6 +1,6 @@
 # Corewise Project Status
 
-Last updated: 2026-07-14
+Last updated: 2026-07-15
 
 ## Public release foundation
 
@@ -10,7 +10,9 @@ Last updated: 2026-07-14
 - Added separate preview and release packaging modes. Both build arm64 and x86_64, merge one universal executable, sign with Developer ID and hardened runtime, create and remount a compressed DMG, and write a SHA-256 checksum.
 - The `0.1.0 (1)` release candidate was accepted by Apple under submission `bac00019-d99a-431e-b13a-8db5e1bd8d39`. The notarization log reports `Ready for distribution`, status code `0`, and no issues; stapling, ticket validation, local Gatekeeper assessment, signature verification, and checksum verification all pass. SHA-256: `66f15cb20959267e3fc835cf4f7e4aafc52de87f4bac61e66c1e54cb9248078f`.
 - Added GitHub Actions gates for Swift tests and strict concurrency on clean ARM64 and Intel macOS runners, plus exact-DMG release-candidate validation from a Draft Release without exposing Apple credentials to GitHub.
-- Remaining public-release blockers are explicit: choose an OSI-approved license, freeze permanent identity and copyright metadata, audit public history/assets, validate on a clean account and second physical Mac, and retest Full Disk Access on the exact distribution-signed bundle.
+- Licensed Corewise source under MPL-2.0 with per-file SPDX notices. Development and release bundles now include the complete license and a source-repository notice; Settings links directly to both the public source and license.
+- The notarized `0.1.0 (1)` candidate predates the bundled MPL/source notice and must be rebuilt before publication.
+- Remaining public-release blockers are explicit: freeze permanent identity and copyright metadata, audit public history/assets, validate on a clean account and second physical Mac, and retest Full Disk Access on the exact distribution-signed bundle.
 
 ## Focused Diagnostics technical implementation
 
