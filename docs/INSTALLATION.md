@@ -34,8 +34,8 @@ Official references:
 Until the first public binary exists:
 
 ```sh
-git clone https://github.com/roccodaffuso/CoreWise.git
-cd CoreWise
+git clone https://github.com/roccodaffuso/Corewise.git
+cd Corewise
 script/build_and_run.sh
 ```
 
@@ -97,7 +97,7 @@ The local `0.1.0 (1)` universal release candidate was accepted by Apple's notary
 - Architectures: `arm64`, `x86_64`
 - SHA-256: `66f15cb20959267e3fc835cf4f7e4aafc52de87f4bac61e66c1e54cb9248078f`
 
-This is a local release candidate, not a published binary. The repository is now licensed under MPL-2.0, but this previously built artifact predates the bundled license/source notice and must be rebuilt before publication. Permanent identity, repository audit, clean-account/second-Mac validation, and Full Disk Access return-flow QA remain release gates.
+This is a stale local release candidate, not a published binary. It predates the bundled license/source notice and the permanent `dev.corewise.Corewise` identity, so it must never be published. A fresh `0.1.0 (2)` beta candidate must be built and notarized. Repository audit, clean-account validation, external installation confirmation, and Full Disk Access return-flow QA remain release gates.
 
 ## Planned user flow for the first beta
 
@@ -132,14 +132,14 @@ The App Store remains a possible later channel if a sandbox-compatible product s
 Before publishing an installable Corewise beta:
 
 - [x] License Corewise source under MPL-2.0 and include the license and source-repository notice in public bundles.
-- [ ] Freeze the canonical name, permanent bundle identifier, version, and copyright metadata.
-- [ ] Confirm the repository and Git history contain no secrets, personal paths, signing material, or unlicensed assets.
+- [x] Freeze the canonical name, permanent bundle identifier, version, and copyright metadata.
+- [x] Audit the repository and Git history for secrets, personal paths, signing material, and asset provenance; keep the report current before each public release.
 - [x] Build and test a universal Apple Silicon and Intel application bundle.
 - [x] Sign every executable with Developer ID Application, hardened runtime, and secure timestamp.
 - [x] Submit the packaged DMG with `notarytool` using a Keychain profile.
 - [x] Review the zero-issue notarization log and staple the accepted ticket.
 - [x] Verify the release candidate locally with `codesign`, `stapler`, and `spctl`.
-- [ ] Validate installation and first launch with a clean user account and a second physical Mac.
+- [ ] Validate installation and first launch with a clean user account and at least one external tester; clean ARM64 and Intel runners cover architecture-level artifact validation.
 - [ ] Publish SHA-256 checksums and release notes with supported macOS versions and known limitations.
 - [ ] Test the optional Full Disk Access return flow on the exact distribution-signed bundle identifier.
 

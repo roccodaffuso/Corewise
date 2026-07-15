@@ -43,8 +43,8 @@ Requirements:
 - Git
 
 ```sh
-git clone https://github.com/roccodaffuso/CoreWise.git
-cd CoreWise
+git clone https://github.com/roccodaffuso/Corewise.git
+cd Corewise
 script/build_and_run.sh
 ```
 
@@ -96,18 +96,18 @@ Useful project documents:
 
 ## Contributing
 
-Issues and focused pull requests are welcome while the public beta is being prepared. Please keep changes narrow, preserve the local-first and non-destructive constraints, and never attach diagnostic reports containing usernames, personal paths, process arguments, prompts, or private file contents.
+Issues and focused pull requests are welcome while the public beta is being prepared. Read [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before participating. Please keep changes narrow, preserve the local-first and non-destructive constraints, and never attach diagnostic reports containing usernames, personal paths, process arguments, prompts, or private file contents.
 
-Found a reproducible problem? [Report an issue](https://github.com/roccodaffuso/CoreWise/issues/new). The same link is available in Corewise under **Settings → General → Project & Support**.
+Found a reproducible problem? [Report an issue](https://github.com/roccodaffuso/Corewise/issues/new/choose). Security vulnerabilities belong in the [private reporting channel](SECURITY.md), not in a public issue. The issue link is also available in Corewise under **Settings → General → Project & Support**.
 
 Before proposing a new diagnostic, document its public macOS source, failure mode, privacy boundary, and user-facing wording.
 
 ## License
 
-Corewise source code is licensed under the [Mozilla Public License 2.0](LICENSE). MPL-2.0 uses file-level copyleft: modified Corewise source files distributed outside an organization remain available under MPL-2.0, while separate files can use other licenses.
+Corewise source code is licensed under the [Mozilla Public License 2.0](LICENSE). MPL-2.0 uses file-level copyleft: modified Corewise source files distributed outside an organization remain available under MPL-2.0, while separate files can use other licenses. The Corewise name and logo are covered separately by the [trademark policy](TRADEMARKS.md).
 
 Source files carry machine-readable `SPDX-License-Identifier: MPL-2.0` notices. Public binaries include the complete license and a link to the corresponding source repository.
 
 ## Project status
 
-Corewise is under active beta development. Freezing the permanent bundle identifier and copyright metadata, completing the public repository audit, and validating the notarized release candidate on another physical Mac remain explicit gates before the first public binary.
+Corewise is under active beta development. The permanent identity is `Corewise`, `dev.corewise.Corewise`, and `corewise.dev`. Completing clean-account QA and validating the exact notarized beta artifact remain explicit gates before the first public binary.

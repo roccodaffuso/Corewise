@@ -3,9 +3,9 @@
 set -euo pipefail
 
 APP_NAME="Corewise"
-BUNDLE_ID="com.roccodaffuso.Corewise"
+BUNDLE_ID="dev.corewise.Corewise"
 EXPECTED_VERSION="${COREWISE_EXPECTED_VERSION:-0.1.0}"
-EXPECTED_BUILD="${COREWISE_EXPECTED_BUILD:-1}"
+EXPECTED_BUILD="${COREWISE_EXPECTED_BUILD:-2}"
 EXPECTED_MIN_SYSTEM="14.0"
 
 usage() {
@@ -84,7 +84,7 @@ SOURCE_NOTICE="$APP_BUNDLE/Contents/Resources/SourceCode.txt"
 [[ -f "$LICENSE_FILE" ]] || fail "MPL-2.0 license is missing from the app bundle"
 [[ -f "$SOURCE_NOTICE" ]] || fail "source-code notice is missing from the app bundle"
 grep -q "Mozilla Public License Version 2.0" "$LICENSE_FILE" || fail "bundled license is not MPL-2.0"
-grep -q "https://github.com/roccodaffuso/CoreWise" "$SOURCE_NOTICE" || fail "source-code notice does not identify the public repository"
+grep -q "https://github.com/roccodaffuso/Corewise" "$SOURCE_NOTICE" || fail "source-code notice does not identify the public repository"
 
 /usr/bin/codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 /usr/sbin/spctl --assess --type execute --verbose=2 "$APP_BUNDLE"

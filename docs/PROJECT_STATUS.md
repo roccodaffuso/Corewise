@@ -12,7 +12,8 @@ Last updated: 2026-07-15
 - Added GitHub Actions gates for Swift tests and strict concurrency on clean ARM64 and Intel macOS runners, plus exact-DMG release-candidate validation from a Draft Release without exposing Apple credentials to GitHub.
 - Licensed Corewise source under MPL-2.0 with per-file SPDX notices. Development and release bundles now include the complete license and a source-repository notice; Settings links directly to both the public source and license.
 - The notarized `0.1.0 (1)` candidate predates the bundled MPL/source notice and must be rebuilt before publication.
-- Remaining public-release blockers are explicit: freeze permanent identity and copyright metadata, audit public history/assets, validate on a clean account and second physical Mac, and retest Full Disk Access on the exact distribution-signed bundle.
+- Permanent public identity is frozen as Corewise, `dev.corewise.Corewise`, `corewise.dev`, and © 2026 Rocco D’Affuso. The repository/history/assets audit is documented in `docs/PUBLIC_RELEASE_AUDIT.md`.
+- Remaining public-release blockers are explicit: rebuild and notarize `0.1.0 (2)`, validate it on a clean account, confirm one external installation, and retest Full Disk Access on the exact distribution-signed bundle.
 
 ## Focused Diagnostics technical implementation
 

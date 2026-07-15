@@ -4,10 +4,10 @@ set -euo pipefail
 
 MODE="${1:-run}"
 APP_NAME="Corewise"
-BUNDLE_ID="com.roccodaffuso.Corewise"
+BUNDLE_ID="dev.corewise.Corewise"
 MIN_SYSTEM_VERSION="14.0"
 APP_VERSION="${COREWISE_VERSION:-0.1.0}"
-BUILD_NUMBER="${COREWISE_BUILD_NUMBER:-1}"
+BUILD_NUMBER="${COREWISE_BUILD_NUMBER:-2}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
@@ -65,6 +65,8 @@ cat >"$INFO_PLIST" <<PLIST
   <string>Corewise.icns</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2026 Rocco D’Affuso</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

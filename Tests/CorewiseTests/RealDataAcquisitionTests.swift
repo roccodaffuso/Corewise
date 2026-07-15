@@ -9,14 +9,14 @@ import UniformTypeIdentifiers
   let classifier = StorageCategoryClassifier()
 
   #expect(classifier.category(for: URL(fileURLWithPath: "/Applications/Foo.app"), isDirectory: true, isPackage: true, contentType: .applicationBundle) == .applications)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/Library/Developer/Xcode/DerivedData/App/file.o"), isDirectory: false, isPackage: false, contentType: nil) == .development)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/project/node_modules/pkg/index.js"), isDirectory: false, isPackage: false, contentType: .sourceCode) == .development)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/Pictures/photo.png"), isDirectory: false, isPackage: false, contentType: .png) == .photos)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/Movies/clip.mov"), isDirectory: false, isPackage: false, contentType: .quickTimeMovie) == .video)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/Music/song.mp3"), isDirectory: false, isPackage: false, contentType: .mp3) == .music)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/Downloads/archive.zip"), isDirectory: false, isPackage: false, contentType: .zip) == .archivesInstallers)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/Library/Caches/cache.bin"), isDirectory: false, isPackage: false, contentType: nil) == .cacheTemporary)
-  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/rocco/unknown.custom"), isDirectory: false, isPackage: false, contentType: nil) == .other)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/Library/Developer/Xcode/DerivedData/App/file.o"), isDirectory: false, isPackage: false, contentType: nil) == .development)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/project/node_modules/pkg/index.js"), isDirectory: false, isPackage: false, contentType: .sourceCode) == .development)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/Pictures/photo.png"), isDirectory: false, isPackage: false, contentType: .png) == .photos)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/Movies/clip.mov"), isDirectory: false, isPackage: false, contentType: .quickTimeMovie) == .video)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/Music/song.mp3"), isDirectory: false, isPackage: false, contentType: .mp3) == .music)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/Downloads/archive.zip"), isDirectory: false, isPackage: false, contentType: .zip) == .archivesInstallers)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/Library/Caches/cache.bin"), isDirectory: false, isPackage: false, contentType: nil) == .cacheTemporary)
+  #expect(classifier.category(for: URL(fileURLWithPath: "/Users/example/unknown.custom"), isDirectory: false, isPackage: false, contentType: nil) == .other)
 }
 
 @Test func targetedStorageScanReadsOnlyChosenFolder() throws {

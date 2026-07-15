@@ -10,10 +10,10 @@ else
 fi
 
 APP_NAME="Corewise"
-BUNDLE_ID="com.roccodaffuso.Corewise"
+BUNDLE_ID="dev.corewise.Corewise"
 MIN_SYSTEM_VERSION="14.0"
 APP_VERSION="${COREWISE_VERSION:-0.1.0}"
-BUILD_NUMBER="${COREWISE_BUILD_NUMBER:-1}"
+BUILD_NUMBER="${COREWISE_BUILD_NUMBER:-2}"
 NOTARY_PROFILE="${COREWISE_NOTARY_PROFILE:-}"
 DEVELOPER_IDENTITY="${COREWISE_DEVELOPER_IDENTITY:-}"
 
@@ -147,6 +147,7 @@ X86_64_BIN_DIR="$(swift build -c release --arch x86_64 --show-bin-path)"
 /usr/bin/plutil -insert CFBundleVersion -string "$BUILD_NUMBER" "$INFO_PLIST"
 /usr/bin/plutil -insert LSApplicationCategoryType -string public.app-category.utilities "$INFO_PLIST"
 /usr/bin/plutil -insert LSMinimumSystemVersion -string "$MIN_SYSTEM_VERSION" "$INFO_PLIST"
+/usr/bin/plutil -insert NSHumanReadableCopyright -string "Copyright © 2026 Rocco D’Affuso" "$INFO_PLIST"
 /usr/bin/plutil -insert NSHighResolutionCapable -bool true "$INFO_PLIST"
 /usr/bin/plutil -insert NSPrincipalClass -string NSApplication "$INFO_PLIST"
 /usr/bin/plutil -lint "$INFO_PLIST"

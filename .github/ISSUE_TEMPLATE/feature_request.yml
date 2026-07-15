@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a focused improvement grounded in a real user problem.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What user problem should Corewise solve?
+      description: Describe the situation and decision the user is trying to make.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Explain what Corewise should make clearer or easier.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Safe local data source
+      description: If this requires a new diagnostic, identify the public macOS source and privacy boundary. Leave blank if not applicable.
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Product constraints
+      options:
+        - label: This request does not depend on telemetry, automatic cleanup, process termination, private APIs, or elevated helpers.
+          required: true

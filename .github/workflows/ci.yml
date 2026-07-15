@@ -36,6 +36,9 @@ jobs:
       - name: Check patch whitespace
         run: git diff --check "$(git merge-base HEAD origin/main)" HEAD
 
+      - name: Audit public release surface
+        run: script/audit_public_release.sh
+
       - name: Run tests
         run: swift test
 

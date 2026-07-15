@@ -6,10 +6,10 @@
 - [x] Replace the prototype README with a public-facing product, privacy, build, and contribution overview.
 - [x] Document the recommended DMG, Homebrew, source-build, and Mac App Store distribution paths.
 - [x] License Corewise source under MPL-2.0 with per-file SPDX notices and bundled source/license disclosure.
-- [ ] Freeze the permanent bundle identifier, versioning policy, copyright metadata, and trademark boundary.
+- [x] Freeze the permanent bundle identifier, versioning policy, copyright metadata, and trademark boundary.
 - [x] Add universal Developer ID-signed, hardened-runtime, timestamped DMG packaging with checksum and mounted-artifact verification.
 - [x] Validate the `notarytool` Keychain profile, Apple acceptance, zero-issue log, stapling, and local Gatekeeper assessment in public release mode.
-- [ ] Validate the distribution artifact on a clean account and a second physical Mac before publishing the first binary.
+- [ ] Validate the distribution artifact on a clean account and through at least one external installation before publishing the stable binary.
 
 ## Implemented: Focused Diagnostics technical foundation
 

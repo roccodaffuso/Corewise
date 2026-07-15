@@ -68,19 +68,19 @@ private struct GeneralSettingsPane: View {
             title: "Source code on GitHub",
             detail: "Corewise source is available under the Mozilla Public License 2.0.",
             systemImage: "chevron.left.forwardslash.chevron.right",
-            destination: URL(string: "https://github.com/roccodaffuso/CoreWise")!
+            destination: URL(string: "https://github.com/roccodaffuso/Corewise")!
           )
           SettingsExternalLinkRow(
             title: "View MPL-2.0 license",
             detail: "Read the complete license that governs Corewise source files.",
             systemImage: "doc.text",
-            destination: URL(string: "https://github.com/roccodaffuso/CoreWise/blob/main/LICENSE")!
+            destination: URL(string: "https://github.com/roccodaffuso/Corewise/blob/main/LICENSE")!
           )
           SettingsExternalLinkRow(
             title: "Report an Issue",
             detail: "Open a new GitHub issue for a bug, regression, or reproducible problem.",
             systemImage: "exclamationmark.bubble",
-            destination: URL(string: "https://github.com/roccodaffuso/CoreWise/issues/new")!
+            destination: URL(string: "https://github.com/roccodaffuso/Corewise/issues/new/choose")!
           )
         }
 

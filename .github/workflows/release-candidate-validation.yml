@@ -13,7 +13,7 @@ on:
       release_tag:
         description: Draft or published GitHub Release tag
         required: true
-        default: v0.1.0-rc.1
+        default: v0.1.0-beta.1
       asset_name:
         description: DMG asset name
         required: true
@@ -44,9 +44,11 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ github.token }}
-      RELEASE_TAG: ${{ inputs.release_tag || 'v0.1.0-rc.1' }}
+      RELEASE_TAG: ${{ inputs.release_tag || 'v0.1.0-beta.1' }}
       ASSET_NAME: ${{ inputs.asset_name || 'Corewise-0.1.0-universal.dmg' }}
       PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      COREWISE_EXPECTED_VERSION: 0.1.0
+      COREWISE_EXPECTED_BUILD: 2
     steps:
       - name: Check out validation script
         uses: actions/checkout@v6
@@ -57,8 +59,13 @@ jobs:
           releases="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100")"
           targetish="$(jq -r --arg tag "$RELEASE_TAG" '.[] | select(.tag_name == $tag) | .target_commitish' <<<"$releases")"
           if [[ -z "$targetish" || "$targetish" == "null" ]]; then
-            echo "Release not found: $RELEASE_TAG" >&2
-            exit 1
+            echo "current=false" >>"$GITHUB_OUTPUT"
+            {
+              echo "### Release candidate not available yet"
+              echo
+              echo "Release \`$RELEASE_TAG\` does not exist. Build and notarize it from the merged public baseline before publication."
+            } >>"$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
           target_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$targetish" --jq '.sha')"
 
