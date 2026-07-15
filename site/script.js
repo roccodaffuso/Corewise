@@ -107,16 +107,6 @@ const createSignalField = (canvas, options = {}) => {
       }
     }
 
-    if (options.sweep && !reducedMotion) {
-      const sweepX = ((time * 0.000075) % 1) * width;
-      const sweep = context.createLinearGradient(sweepX - 54, 0, sweepX + 8, 0);
-      sweep.addColorStop(0, "rgba(104, 222, 212, 0)");
-      sweep.addColorStop(0.88, "rgba(104, 222, 212, 0.025)");
-      sweep.addColorStop(1, "rgba(138, 243, 233, 0.18)");
-      context.fillStyle = sweep;
-      context.fillRect(sweepX - 54, 0, 62, height);
-    }
-
     const gradient = context.createRadialGradient(
       pointer.x * width,
       pointer.y * height,
@@ -163,5 +153,5 @@ const createSignalField = (canvas, options = {}) => {
 const heroCanvas = document.querySelector("[data-signal-canvas]");
 const ctaCanvas = document.querySelector("[data-cta-canvas]");
 
-if (heroCanvas) createSignalField(heroCanvas, { lineCount: 8, centerY: 0.52, intensity: 1.55, sweep: true });
+if (heroCanvas) createSignalField(heroCanvas, { lineCount: 8, centerY: 0.52, intensity: 1.55 });
 if (ctaCanvas) createSignalField(ctaCanvas, { lineCount: 4, centerY: 0.5 });
