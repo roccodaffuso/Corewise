@@ -13,7 +13,7 @@ Last updated: 2026-07-15
 - Licensed Corewise source under MPL-2.0 with per-file SPDX notices. Development and release bundles now include the complete license and a source-repository notice; Settings links directly to both the public source and license.
 - GitHub Actions run `29404942676` validated the exact beta.2 DMG on clean ARM64 and Intel runners. `v0.1.0-beta.2` is now a public prerelease with an anonymously downloadable DMG and checksum. Primary-Mac beta.2 QA passes installation, Gatekeeper, Quick Actions keyboard focus/routing, AI Workloads, and overlay dismissal; the broader beta.1 visual/Storage QA remains valid for unchanged code paths.
 - Permanent public identity is frozen as Corewise, `dev.corewise.Corewise`, `corewise.dev`, and © 2026 Rocco D’Affuso. The repository/history/assets audit is documented in `docs/PUBLIC_RELEASE_AUDIT.md`.
-- The distribution-signed Full Disk Access flow passes grant, relaunch detection, a complete 11-scope read-only analysis without folder prompts, revocation, and return to the access-required state. Remaining manual and external checks now run during the public beta and gate only stable promotion. GitHub Pages is deployed with `corewise.dev` configured; DNS cutover and HTTPS issuance remain pending.
+- The distribution-signed Full Disk Access flow passes grant, relaunch detection, a complete 11-scope read-only analysis without folder prompts, revocation, and return to the access-required state. Remaining manual and external checks now run during the public beta and gate only stable promotion. GitHub Pages is deployed with `corewise.dev` configured; the DNS cutover is propagated and GitHub certificate issuance remains pending before HTTPS can be enforced.
 
 ## Focused Diagnostics technical implementation
 

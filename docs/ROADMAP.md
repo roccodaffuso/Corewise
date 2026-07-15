@@ -15,7 +15,7 @@
 - [x] Validate Full Disk Access grant, relaunch detection, complete read-only scan without folder prompts, revocation, and access-required return on the distribution-signed app.
 - [x] Publish `v0.1.0-beta.2` with the exact notarized DMG and checksum.
 - [x] Deploy the static site through GitHub Pages and configure `corewise.dev` as its custom domain.
-- [ ] Replace Hostinger DNS records with GitHub Pages records and verify HTTPS for the apex and `www` hostnames.
+- [ ] Enable HTTPS after GitHub finishes certificate issuance, then verify the apex and `www` hostnames. The Hostinger-to-GitHub Pages DNS cutover is complete and propagated.
 - [ ] Validate the distribution artifact on a clean account and through at least one external installation before publishing the stable binary.
 
 ## Implemented: Focused Diagnostics technical foundation
