@@ -131,32 +131,50 @@ Codice e issue: https://github.com/roccodaffuso/Corewise
 
 ## Reddit post
 
-Use `corewise-launch-privacy-open-source.jpg`.
+### Community choice
 
-Title:
+Checked on 2026-07-23:
+
+- **Publish first in `r/MacOSApps`** with the `Utilities` flair. It accepts focused macOS app showcases and has an active open-source audience interested in local utilities and AI/system monitors.
+- **Treat `r/MacApps` as the higher-reach follow-up**, not the first cold post. Its current rules require a verified email, an account older than seven days, at least 10 comment-karma points earned inside `r/MacApps`, and explicit acknowledgement of the community rules. Open-source titles use the `[OS]` prefix, self-promotion is limited to once per 30 days, and concise posts are preferred.
+- `r/macOS` is secondary because developer promotion is limited to Saturday, 00:00–23:59 UTC.
+- Do not publish identical posts across communities at the same time. Publish in `r/MacOSApps`, answer substantive comments, then adapt the evidence and wording for `r/MacApps` after meeting its participation gate.
+
+Use `corewise-launch-ai-workloads.jpg`. Lead with the distinctive workload-attribution problem rather than a generic product announcement.
+
+Title for `r/MacOSApps`:
 
 ```text
-I built Corewise, an open-source local-first Mac signal console with AI workload attribution
+I built Corewise — a free, open-source Mac monitor for performance, storage, and local AI workloads
+```
+
+Title for a later eligible `r/MacApps` post:
+
+```text
+[OS] Corewise — a free Mac monitor for performance, storage, and local AI workloads
 ```
 
 Body:
 
 ```text
-Hi — I am the developer of Corewise, and I have just published its first public beta.
+Hi, I’m the developer of Corewise.
 
-Corewise is a macOS 14+ utility for understanding performance, storage, battery, thermal state, startup activity, and recurring app issues without reducing everything to a “health score” or offering automatic cleanup.
+I use several AI tools on my Mac and wanted a clearer answer to a simple question: how much CPU and memory belongs to the app itself, and how much comes from builds, shells, and helper processes running underneath it?
 
-One view I could not find elsewhere in the form I wanted is AI Workloads. Corewise observes supported local tools such as Codex, Claude, Cursor, and Ollama and separates directly attributable app footprint from related local work and ambiguous shared hosts. It does not claim to count agents, and cloud activity is outside its coverage.
+That became AI Workloads in Corewise. It observes supported local tools such as Codex, Claude, Cursor, and Ollama, while keeping three things separate: the directly identified app footprint, related local work, and shared hosts that cannot be attributed safely. It reports local processes, not “agent counts,” and cloud activity stays outside its coverage.
 
-The app has no account, backend, telemetry, or network collector. It does not inspect prompts, projects, process arguments, environments, or working directories. Storage analysis is read-only and any broader access is optional.
+The rest of the app brings performance, storage, battery, thermal state, startup activity, and recurring app issues into one native macOS signal console. It is not a process killer or automatic cleaner, and it does not claim that one score represents the health of your Mac.
 
-Corewise is open source under MPL-2.0. The public beta is a signed and notarized universal build:
+Corewise has no account, backend, or telemetry. It does not inspect prompts, projects, process arguments, environments, or working directories. Full Storage Analysis is read-only and its broader permission is optional.
 
-https://corewise.dev
+The public beta is free, open source under MPL-2.0, universal, Developer ID signed, and notarized for macOS 14+.
 
+Website and download: https://corewise.dev
 Source: https://github.com/roccodaffuso/Corewise
 
-I would especially value feedback about confusing language, incorrect attribution, accessibility, and cases where the app fails to explain what you are seeing. Bugs and feature requests can go directly into GitHub Issues.
+Full disclosure: AI coding tools were part of my development workflow. The source, tests, data boundaries, and release process are public so they can be inspected rather than taken on trust.
+
+If you try it, I’d especially value feedback on AI attribution: does the separation between app footprint and related work match what you see, and is a local tool missing or misclassified?
 ```
 
 ## Short variants
