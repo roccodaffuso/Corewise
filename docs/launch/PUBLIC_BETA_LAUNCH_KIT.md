@@ -44,7 +44,7 @@ Do not say:
 
 1. Publish the X post from `@rodabuilds` with the Overview image. Put links in the first reply.
 2. Publish the LinkedIn post with the AI Workloads image and the website link in the body or first comment.
-3. The next day, share the transparent Reddit post in a relevant macOS community with the Privacy/Open Source image. Check each community's self-promotion rules first.
+3. The next day, share the transparent Reddit post in a relevant macOS community with the AI Workloads image. Check each community's self-promotion rules first.
 4. Reply to every substantive question and convert reproducible defects or requests into GitHub Issues.
 5. Two or three days later, publish a short builder follow-up about what early users noticed. Do not invent adoption numbers or testimonials.
 
@@ -130,6 +130,8 @@ Codice e issue: https://github.com/roccodaffuso/Corewise
 ```
 
 ## Reddit post
+
+Published on 2026-07-23 in [`r/MacOSApps`](https://www.reddit.com/r/MacOSApps/comments/1v4fqie/i_built_corewise_free_opensource_mac_monitor_for/) with the AI Workloads image. The immediate measurement baseline was 16 gross DMG downloads and 9 gross checksum downloads; release asset requests are not unique users or confirmed installations.
 
 ### Community choice
 
