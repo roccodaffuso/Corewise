@@ -131,8 +131,6 @@ Codice e issue: https://github.com/roccodaffuso/Corewise
 
 ## Reddit post
 
-Published on 2026-07-23 in [`r/MacOSApps`](https://www.reddit.com/r/MacOSApps/comments/1v4fqie/i_built_corewise_free_opensource_mac_monitor_for/) with the AI Workloads image. The immediate measurement baseline was 16 gross DMG downloads and 9 gross checksum downloads; release asset requests are not unique users or confirmed installations.
-
 ### Community choice
 
 Checked on 2026-07-23:
